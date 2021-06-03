@@ -1,0 +1,2 @@
+/usr/bin/ar qc libili9341.a  CMakeFiles/ili9341.dir/Adafruit_ILI9341.o
+/usr/bin/ranlib libili9341.a

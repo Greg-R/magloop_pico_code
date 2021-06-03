@@ -1,0 +1,2 @@
+/home/pi/projects_pico/magloop_pico/Adafruit_ILI9341/build/CMakeFiles/rebuild_cache.dir
+/home/pi/projects_pico/magloop_pico/Adafruit_ILI9341/build/CMakeFiles/edit_cache.dir

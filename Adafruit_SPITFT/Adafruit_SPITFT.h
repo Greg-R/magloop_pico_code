@@ -20,7 +20,7 @@ A modified version for testing on the Raspberry Pi Pico.
 
 #include "Adafruit_GFX.h"
 #include "pico/stdlib.h"
-#include "hardware/spi.h"  // Pico SPI
+#include "hardware/spi.h" // Pico SPI
 
 //  Setup for Pico hardware SPI
 #define SPI_MODE0 0x00
@@ -30,11 +30,11 @@ A modified version for testing on the Raspberry Pi Pico.
 
 #define SPI_PORT spi0
 #define PIN_MISO 16
-#define PIN_CS   17
-#define PIN_SCK  18
+#define PIN_CS 17
+#define PIN_SCK 18
 #define PIN_MOSI 19
 
-#define DISP_DC 15    // GPIO for Data/Command wire.
+#define DISP_DC 15 // GPIO for Data/Command wire.
 
 // CLASS DEFINITION --------------------------------------------------------
 
@@ -51,7 +51,8 @@ A modified version for testing on the Raspberry Pi Pico.
           again to avoid breaking a lot of other code. If in doubt, read
           the comments.
 */
-class Adafruit_SPITFT : public Adafruit_GFX {
+class Adafruit_SPITFT : public Adafruit_GFX
+{
 
 public:
   // CONSTRUCTORS --------------------------------------------------------
@@ -175,7 +176,7 @@ public:
   // display interface, the names have been kept for backward
   // compatibility (some subclasses may be invoking these):
   void SPI_WRITE16(uint16_t *w); // Not inline
-  void SPI_WRITE32(uint32_t l); // Not inline
+  void SPI_WRITE32(uint32_t l);  // Not inline
   // Old code had both a spiWrite16() function and SPI_WRITE16 macro
   // in addition to the SPI_WRITE32 macro. The latter two have been
   // made into functions here, and spiWrite16() removed (use SPI_WRITE16()
@@ -192,7 +193,8 @@ public:
               Despite function name, this is used even if the display
               connection is parallel.
   */
-  void SPI_CS_HIGH(void) {
+  void SPI_CS_HIGH(void)
+  {
     gpio_put(PIN_CS, 1);
   }
   /*!
@@ -201,20 +203,23 @@ public:
               Despite function name, this is used even if the display
               connection is parallel.
   */
-  void SPI_CS_LOW(void) {
+  void SPI_CS_LOW(void)
+  {
     gpio_put(PIN_CS, 0);
   }
   /*!
       @brief  Set the data/command line HIGH (data mode).
   */
-  void SPI_DC_HIGH(void) {
+  void SPI_DC_HIGH(void)
+  {
     gpio_put(DISP_DC, 1);
   }
 
   /*!
       @brief  Set the data/command line LOW (command mode).
   */
-  void SPI_DC_LOW(void) {
+  void SPI_DC_LOW(void)
+  {
     gpio_put(DISP_DC, 0);
   }
 
@@ -234,28 +239,32 @@ protected:
   // will be only one of these. The order of some things is a little weird
   // in an attempt to get values to align and pack better in RAM.
 
-  union {
-    struct {          //   Values specific to HARDWARE SPI:
+  union
+  {
+    struct
+    {                 //   Values specific to HARDWARE SPI:
       uint32_t _mode; ///< SPI data mode (transactions or no)
     } hwspi;          ///< Hardware SPI values
-    struct {          //   Values specific to SOFTWARE SPI:
-      int8_t _mosi;              ///< MOSI pin #
-      int8_t _miso;              ///< MISO pin #
-      int8_t _sck;               ///< SCK pin #
-    } swspi;                     ///< Software SPI values
-    struct {                     //   Values specific to 8-bit parallel:
-      int8_t _d0;              ///< Data pin 0 #
-      int8_t _wr;              ///< Write strobe pin #
-      int8_t _rd;              ///< Read strobe pin # (or -1)
-      bool wide = 0;           ///< If true, is 16-bit interface
-    } tft8;                    ///< Parallel interface settings
+    struct
+    {               //   Values specific to SOFTWARE SPI:
+      int8_t _mosi; ///< MOSI pin #
+      int8_t _miso; ///< MISO pin #
+      int8_t _sck;  ///< SCK pin #
+    } swspi;        ///< Software SPI values
+    struct
+    {                //   Values specific to 8-bit parallel:
+      int8_t _d0;    ///< Data pin 0 #
+      int8_t _wr;    ///< Write strobe pin #
+      int8_t _rd;    ///< Read strobe pin # (or -1)
+      bool wide = 0; ///< If true, is 16-bit interface
+    } tft8;          ///< Parallel interface settings
 
   }; ///< Only one interface is active
 
-  uint8_t connection;      ///< TFT_HARD_SPI, TFT_SOFT_SPI, etc.
-  int8_t _rst;             ///< Reset pin # (or -1)
-  int8_t _cs;              ///< Chip select pin # (or -1)
-  int8_t _dc;              ///< Data/command pin #
+  uint8_t connection; ///< TFT_HARD_SPI, TFT_SOFT_SPI, etc.
+  int8_t _rst;        ///< Reset pin # (or -1)
+  int8_t _cs;         ///< Chip select pin # (or -1)
+  int8_t _dc;         ///< Data/command pin #
 
   int16_t _xstart = 0;          ///< Internal framebuffer X offset
   int16_t _ystart = 0;          ///< Internal framebuffer Y offset

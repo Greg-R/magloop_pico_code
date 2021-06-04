@@ -9,17 +9,16 @@
 // The original library:
 // https://github.com/adafruit/Adafruit_ILI9341
 
-
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/timer.h"
 #include "hardware/clocks.h"
 #include "Adafruit_ILI9341/Adafruit_ILI9341.h"
 
-#define PIXELWIDTH                  320                 // Display limits
-#define PIXELHEIGHT                 240                 // These are the post-rotation dimensions.
-#define VERSION                     1.01
-#define RELEASEDATE                 "3-15-21"
+#define PIXELWIDTH 320  // Display limits
+#define PIXELHEIGHT 240 // These are the post-rotation dimensions.
+#define VERSION 1.01
+#define RELEASEDATE "3-15-21"
 
 //  Instantiate the display object.  Note that the SPI is handled in the display object.
 Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -52,23 +51,22 @@ void Splash()
   tft.print(VERSION);
   tft.setCursor(65, PIXELHEIGHT - 20);
   tft.print("Release Date ");
-  tft.print(RELEASEDATE );
+  tft.print(RELEASEDATE);
   tft.setTextSize(2);
 }
 
-
 int main()
 {
-//  Configure the display object.
-tft.initSPI();
-tft.begin();
-tft.setRotation(3);
+  //  Configure the display object.
+  tft.initSPI();
+  tft.begin();
+  tft.setRotation(3);
 
-//  Run the same Splash function as in the Mag Loop Controller project.
-Splash();
+  //  Run the same Splash function as in the Mag Loop Controller project.
+  Splash();
 
-// Test a GFX graphics primitive by drawing a border:
-tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
+  // Test a GFX graphics primitive by drawing a border:
+  tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
 
-    return 0;
+  return 0;
 }

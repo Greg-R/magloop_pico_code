@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 
+//#include "pico/stdlib.h"
+
 //#include <avr/pgmspace.h>
 //#include <avr/io.h>
 //#include <avr/interrupt.h>
@@ -142,7 +144,7 @@ void analogReference(uint8_t mode);
 void analogWrite(uint8_t pin, int val);
 
 unsigned long millis(void);
-unsigned long micros(void);
+////unsigned long time_us_32(void);
 void delay(unsigned long ms);
 void delayMicroseconds(unsigned int us);
 //unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);

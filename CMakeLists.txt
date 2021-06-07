@@ -23,7 +23,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(magloop_pico magloop_pico.cpp )
+add_executable(magloop_pico magloop_pico.cpp magloop/StepperManagement.cpp)
 
 pico_set_program_name(magloop_pico "magloop_pico")
 pico_set_program_version(magloop_pico "0.1")
@@ -35,8 +35,10 @@ add_subdirectory(Adafruit_ILI9341)
 add_subdirectory(Adafruit-GFX-Library)
 add_subdirectory(arduino_includes)
 add_subdirectory(Adafruit_SPITFT)
+add_subdirectory(AccelStepper)
+add_subdirectory(magloop)
 
-target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341)
+target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341 ./AccelStepper ./magloop)
 
 # Add any user requested libraries
 target_link_libraries(magloop_pico
@@ -49,6 +51,8 @@ target_link_libraries(magloop_pico
         gfx
         spitft
         print
+        stepper
+        steppermanagement
         )
 
 pico_add_extra_outputs(magloop_pico)

@@ -29,10 +29,11 @@ uint32_t stepperDirectionOld;
 float countPerHertz[100];
 
 
-StepperManagement::StepperManagement(AccelStepper stepper){
-  stepper = stepper;
-}
+//StepperManagement::StepperManagement(AccelStepper& stepper): stepper(stepper) {
+//  stepper = stepper;
+//}
 
+//AccelStepper& stepper;
 // This function was in the Encoders file!?
 void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPostion) {
   int stepperDirection;

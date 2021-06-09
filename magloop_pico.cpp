@@ -17,7 +17,6 @@
 #include "AccelStepper/AccelStepper.h"
 #include "magloop/StepperManagement.h"
 
-
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 #define VERSION 1.01
@@ -26,13 +25,13 @@
 //  Instantiate the display object.  Note that the SPI is handled in the display object.
 Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
 //  Instantiate the Stepper object:
-#define STEPPERDIR                  13
-#define STEPPERPUL                  12
-#define ZEROSWITCH                  10
-#define MAXSWITCH                   11
-//AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
+#define STEPPERDIR 13
+#define STEPPERPUL 12
+#define ZEROSWITCH 10
+#define MAXSWITCH 11
+AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
 //  Instantiate the Stepper Manager:
-//StepperManagement steppermanage = StepperManagement(stepper);
+StepperManagement steppermanage = StepperManagement(stepper);
 
 void ErasePage()
 {
@@ -40,6 +39,7 @@ void ErasePage()
 }
 
 // The Splash function from the Mag Loop Arduino .ino file.
+
 void Splash()
 {
   ErasePage();
@@ -68,26 +68,27 @@ void Splash()
 
 int main()
 {
+  stdio_init_all();
   //  Configure the display object.
   tft.initSPI();
   tft.begin();
   tft.setRotation(3);
 
-// Initialize stepper GPIOs:
-  gpio_init(STEPPERDIR);
-  gpio_init(STEPPERPUL);
-  gpio_set_dir(STEPPERDIR, GPIO_OUT);
-  gpio_set_dir(STEPPERPUL, GPIO_OUT);
-  gpio_put(STEPPERDIR, 0);
-  gpio_put(STEPPERPUL, 0);
-  //  Initialize limit switch inputs:
-  gpio_init(ZEROSWITCH);
-  gpio_init(MAXSWITCH);
-  gpio_set_dir(ZEROSWITCH, GPIO_IN);
-  gpio_set_dir(MAXSWITCH, GPIO_IN);
+  // Initialize stepper GPIOs:
+  gpio_set_function(10, GPIO_FUNC_SIO);
+  gpio_set_function(11, GPIO_FUNC_SIO);
+  gpio_set_function(12, GPIO_FUNC_SIO);
+  gpio_set_function(13, GPIO_FUNC_SIO);
+  gpio_set_dir(12, GPIO_OUT);
+  gpio_set_dir(13, GPIO_OUT);
+  gpio_set_dir(10, GPIO_IN);
+  gpio_set_dir(11, GPIO_IN);
+  gpio_put(12, 0);
+  gpio_put(13, 0);
+
   //  The limit switch inputs need pull-ups:
-  gpio_pull_up(ZEROSWITCH);
-  gpio_pull_up(MAXSWITCH);
+  gpio_pull_up(10);
+  gpio_pull_up(11);
 
   //  Run the same Splash function as in the Mag Loop Controller project.
   Splash();
@@ -95,9 +96,17 @@ int main()
   // Test a GFX graphics primitive by drawing a border:
   tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
 
-  //gpio_put(ZEROSWITCH, 1);
-  //gpio_put(MAXSWITCH, 1);
-  //steppermanage.ResetStepperToZero();
+  //  Create the stepper object:
+  AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
+  //  Instantiate the Stepper Manager:
+  StepperManagement steppermanage = StepperManagement(stepper);
+
+  steppermanage.ResetStepperToZero();
+
+stepper.setMaxSpeed(10000);
+stepper.setAcceleration(1100);
+
+ stepper.runToNewPosition(5000);
 
   return 0;
 }

@@ -28,13 +28,20 @@ A modified version for testing on the Raspberry Pi Pico.
 #define SPI_MODE2 0x08
 #define SPI_MODE3 0x0C
 
-#define SPI_PORT spi0
-#define PIN_MISO 16
-#define PIN_CS 17
-#define PIN_SCK 18
-#define PIN_MOSI 19
+//#define SPI_PORT spi0
+//#define PIN_MISO 16
+//#define PIN_CS 17
+//#define PIN_SCK 18
+//#define PIN_MOSI 19
 
-#define DISP_DC 15 // GPIO for Data/Command wire.
+#define SPI_PORT spi1
+//#define PIN_MISO 16  MISO not used
+#define PIN_CS   13
+#define PIN_SCK  14
+#define PIN_MOSI 15
+#define DISP_DC 19
+
+//#define DISP_DC 15 // GPIO for Data/Command wire.
 
 // CLASS DEFINITION --------------------------------------------------------
 

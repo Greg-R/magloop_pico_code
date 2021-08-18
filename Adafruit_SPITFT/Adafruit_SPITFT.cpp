@@ -34,12 +34,12 @@ Modified to work with the Raspberry Pi Pico.
 #include "pico/stdlib.h"
 #include "Adafruit_SPITFT.h"
 
-#define SPI_PORT spi0
-#define PIN_MISO 16
-#define PIN_CS   17
-#define PIN_SCK  18
-#define PIN_MOSI 19
-#define DISP_DC 15
+//#define SPI_PORT spi1
+//#define PIN_MISO 16  MISO not used
+//#define PIN_CS   13
+//#define PIN_SCK  14
+//#define PIN_MOSI 15
+//#define DISP_DC 19
 
 
 // CONSTRUCTORS ------------------------------------------------------------
@@ -88,8 +88,8 @@ void Adafruit_SPITFT::initSPI(void) {
 
 
     // SPI initialisation.
-    spi_init(SPI_PORT, 200*1000);  // Slow to 200 kHz due to using breadboard.
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
+    spi_init(SPI_PORT, 400*1000);  // Slow to 200 kHz due to using breadboard.
+    //gpio_set_function(PIN_MISO, GPIO_FUNC_SPI); MISO not used
     gpio_set_function(PIN_CS,   GPIO_FUNC_SIO);
     gpio_set_function(PIN_SCK,  GPIO_FUNC_SPI);
     gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
@@ -224,9 +224,9 @@ void Adafruit_SPITFT::writeColor(uint16_t color, uint32_t len) {
   uint8_t hi = color >> 8, lo = color;
  
     while (len--) {
-      spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
-      spi_write_blocking(spi0, &hi, 1);
-      spi_write_blocking(spi0, &lo, 1);
+      spi_set_format(SPI_PORT, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+      spi_write_blocking(SPI_PORT, &hi, 1);
+      spi_write_blocking(SPI_PORT, &lo, 1);
     }
       }
 
@@ -785,8 +785,8 @@ uint16_t Adafruit_SPITFT::readcommand16(uint16_t addr) {
     @param  b  8-bit value to write.
 */
 void Adafruit_SPITFT::spiWrite(uint8_t b) {
-  spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
-  spi_write_blocking(spi0, &b, 1); 
+  spi_set_format(SPI_PORT, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+  spi_write_blocking(SPI_PORT, &b, 1); 
 }
 
 /*!
@@ -799,8 +799,8 @@ void Adafruit_SPITFT::spiWrite(uint8_t b) {
 */
 void Adafruit_SPITFT::writeCommand(uint8_t cmd) {
   SPI_DC_LOW();
-  spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
-  spi_write_blocking(spi0, &cmd, 1);
+  spi_set_format(SPI_PORT, 8, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+  spi_write_blocking(SPI_PORT, &cmd, 1);
   SPI_DC_HIGH();
 }
 
@@ -866,8 +866,8 @@ uint16_t Adafruit_SPITFT::read16(void) {
     @param  w  16-bit value to write.
 */
 void Adafruit_SPITFT::SPI_WRITE16(uint16_t *w) {
-spi_set_format(spi0, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
- spi_write16_blocking(spi0, w, 1);
+spi_set_format(SPI_PORT, 16, SPI_CPOL_0, SPI_CPHA_0, SPI_MSB_FIRST);
+ spi_write16_blocking(SPI_PORT, w, 1);
 }
 
 /*!

@@ -7,7 +7,7 @@ class StepperManagement {
 
 public:
 
-StepperManagement(AccelStepper stepper) : stepper(stepper) {}
+StepperManagement(AccelStepper & stepper) : stepper(stepper) {}
 
 AccelStepper stepper;
 // This function was in the Encoders file!?

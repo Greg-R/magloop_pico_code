@@ -25,10 +25,10 @@
 //  Instantiate the display object.  Note that the SPI is handled in the display object.
 Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
 //  Instantiate the Stepper object:
-#define STEPPERDIR 13
+#define STEPPERDIR 9
 #define STEPPERPUL 12
-#define ZEROSWITCH 10
-#define MAXSWITCH 11
+#define ZEROSWITCH 11
+#define MAXSWITCH 10
 AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
 //  Instantiate the Stepper Manager:
 StepperManagement steppermanage = StepperManagement(stepper);
@@ -75,16 +75,16 @@ int main()
   tft.setRotation(3);
 
   // Initialize stepper GPIOs:
+  gpio_set_function( 9, GPIO_FUNC_SIO);
   gpio_set_function(10, GPIO_FUNC_SIO);
   gpio_set_function(11, GPIO_FUNC_SIO);
   gpio_set_function(12, GPIO_FUNC_SIO);
-  gpio_set_function(13, GPIO_FUNC_SIO);
+  gpio_set_dir( 9, GPIO_OUT);
   gpio_set_dir(12, GPIO_OUT);
-  gpio_set_dir(13, GPIO_OUT);
-  gpio_set_dir(10, GPIO_IN);
-  gpio_set_dir(11, GPIO_IN);
+  gpio_set_dir(10, GPIO_IN);  // Limit switch
+  gpio_set_dir(11, GPIO_IN);  // Limit switch
+  gpio_put( 9, 0);
   gpio_put(12, 0);
-  gpio_put(13, 0);
 
   //  The limit switch inputs need pull-ups:
   gpio_pull_up(10);
@@ -103,10 +103,12 @@ int main()
 
   steppermanage.ResetStepperToZero();
 
-stepper.setMaxSpeed(10000);
-stepper.setAcceleration(1100);
+  stepper.setMaxSpeed(5000);
+  stepper.setAcceleration(1100);
 
- stepper.runToNewPosition(5000);
+  stepper.runToNewPosition(2500);
+
+  stepper.disableOutputs();
 
   return 0;
 }

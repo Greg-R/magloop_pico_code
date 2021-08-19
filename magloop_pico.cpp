@@ -33,6 +33,13 @@ AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
 //  Instantiate the Stepper Manager:
 StepperManagement steppermanage = StepperManagement(stepper);
 
+//  Instantiate the DDS object.
+#define DDS_RST   3
+#define DDS_DATA  2
+#define DDS_FQ_UD 1
+#define WLCK      0
+DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
+
 void ErasePage()
 {
   tft.fillScreen(ILI9341_BLACK);

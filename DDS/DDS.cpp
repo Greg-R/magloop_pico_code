@@ -1,7 +1,5 @@
-#ifndef BEENHERE
-#include "MagLoop.h"
-#endif
-#include <Arduino.h>
+
+//#include <Arduino.h>
 
 
 // The routines in this file are use to interface with the AD9850 DDS in stead of using a library

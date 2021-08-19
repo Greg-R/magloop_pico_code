@@ -38,6 +38,7 @@ add_subdirectory(arduino_includes)
 add_subdirectory(Adafruit_SPITFT)
 add_subdirectory(AccelStepper)
 add_subdirectory(magloop)
+add_subdirectory(DDS)
 
 target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341 ./AccelStepper ./magloop)
 #target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341)
@@ -55,6 +56,7 @@ target_link_libraries(magloop_pico
         print
         stepper
         steppermanagement
+        dds
         )
 
 pico_add_extra_outputs(magloop_pico)

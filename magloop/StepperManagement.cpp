@@ -20,28 +20,22 @@
 #define LOWEND20M                  14000000L
 #define HIGHEND20M                 14350000L
 
-uint32_t currPosition;
-uint32_t stepperDistanceOld;
-uint32_t bandLimitPositionCounts[100][2];
-uint32_t moveToStepperIndex;
-uint32_t currentBand;
-uint32_t stepperDirectionOld;
-float countPerHertz[100];
 
 
-//StepperManagement::StepperManagement(AccelStepper& stepper): stepper(stepper) {
+
+StepperManagement::StepperManagement(AccelStepper & stepper): stepper(stepper) {
 //  stepper = stepper;
-//}
+}
 
 //AccelStepper& stepper;
 // This function was in the Encoders file!?
-void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPostion) {
+void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPosition) {
   int stepperDirection;
   long stepperDistance;
   while (1)
   {
     stepperDistanceOld = stepperDistance;
-    stepper.moveTo(currentPostion);
+    stepper.moveTo(currentPosition);
     stepper.run();
     stepperDistance = stepper.distanceToGo();
     if (stepper.distanceToGo() == 0)
@@ -62,7 +56,7 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPostion) 
   }
   if (stepperDirection != stepperDirectionOld)
   {
-    stepper.setCurrentPosition(currentPostion - 1);
+    stepper.setCurrentPosition(currentPosition - 1);
   }
   stepperDirectionOld = stepperDirection;
 }

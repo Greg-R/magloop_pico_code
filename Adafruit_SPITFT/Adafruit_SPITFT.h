@@ -18,6 +18,7 @@ A modified version for testing on the Raspberry Pi Pico.
  * BSD license, all text here must be included in any redistribution.
  */
 
+#pragma once
 #include "Adafruit_GFX.h"
 #include "pico/stdlib.h"
 #include "hardware/spi.h" // Pico SPI

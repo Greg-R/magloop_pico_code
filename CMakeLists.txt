@@ -39,8 +39,11 @@ add_subdirectory(Adafruit_SPITFT)
 add_subdirectory(AccelStepper)
 add_subdirectory(magloop)
 add_subdirectory(DDS)
+add_subdirectory(AutoTune)
+add_subdirectory(SWR)
+add_subdirectory(DisplayManagement)
 
-target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341 ./AccelStepper ./magloop)
+target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341 ./AccelStepper ./magloop ./DDS ./AutoTune ./SWR ./DisplayManagement)
 #target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341)
 
 # Add any user requested libraries
@@ -50,6 +53,7 @@ target_link_libraries(magloop_pico
  #       hardware_dma
         hardware_timer
         hardware_clocks
+        hardware_adc
         ili9341
         gfx
         spitft
@@ -57,6 +61,9 @@ target_link_libraries(magloop_pico
         stepper
         steppermanagement
         dds
+        AutoTune
+        SWR
+        DisplayManagement
         )
 
 pico_add_extra_outputs(magloop_pico)

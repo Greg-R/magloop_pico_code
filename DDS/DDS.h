@@ -1,21 +1,19 @@
 #include <stdint.h>
 #include "pico/stdlib.h"
 
-//  Class for controlling the DDS signal generator module.
+
+//  Class/library for controlling the DDS signal generator module.
 
 class DDS {
 
-    reset 
-    data
-    fq_ud
-    wlck
+uint    RESET;
+uint    DATA;
+uint    FQ_UD;
+uint    WCLK;
 
 public:
 
-DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK) {
-
-
-}
+DDS(uint DDS_RST, uint DDS_DATA, uint DDS_FQ_UD, uint DDS_WCLK);
 
 void DDSWakeUp();
 

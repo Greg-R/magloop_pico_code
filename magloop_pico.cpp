@@ -16,6 +16,8 @@
 #include "Adafruit_ILI9341/Adafruit_ILI9341.h"
 #include "AccelStepper/AccelStepper.h"
 #include "magloop/StepperManagement.h"
+#include "DDS/DDS.h"
+#include "SWR/SWR.h"
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
@@ -23,33 +25,34 @@
 #define RELEASEDATE "3-15-21"
 
 //  Instantiate the display object.  Note that the SPI is handled in the display object.
-Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
+// Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
+
 //  Instantiate the Stepper object:
 #define STEPPERDIR 9
 #define STEPPERPUL 12
 #define ZEROSWITCH 11
 #define MAXSWITCH 10
-AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
+//AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
 //  Instantiate the Stepper Manager:
-StepperManagement steppermanage = StepperManagement(stepper);
+//StepperManagement steppermanage = StepperManagement(stepper);
 
-//  Instantiate the DDS object.
+//  Interface for the DDS object.
 #define DDS_RST   3
 #define DDS_DATA  2
 #define DDS_FQ_UD 1
 #define WLCK      0
-DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
 
-void ErasePage()
+
+void ErasePage(Adafruit_ILI9341 tft)
 {
   tft.fillScreen(ILI9341_BLACK);
 }
 
 // The Splash function from the Mag Loop Arduino .ino file.
 
-void Splash()
+void Splash(Adafruit_ILI9341 tft)
 {
-  ErasePage();
+  ErasePage(tft);
   tft.setTextSize(2);
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_BLACK);
   tft.setCursor(10, 20);
@@ -76,10 +79,7 @@ void Splash()
 int main()
 {
   stdio_init_all();
-  //  Configure the display object.
-  tft.initSPI();
-  tft.begin();
-  tft.setRotation(3);
+
 
   // Initialize stepper GPIOs:
   gpio_set_function( 9, GPIO_FUNC_SIO);
@@ -97,8 +97,20 @@ int main()
   gpio_pull_up(10);
   gpio_pull_up(11);
 
+  //gpio_set_function( 0, GPIO_FUNC_SIO);
+  //gpio_set_dir( 0, GPIO_OUT);
+  //gpio_put( 0, 0);
+  //gpio_put( 0, 1);
+
+  //  Instantiate the display object.  Note that the SPI is handled in the display object.
+  Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
+  //  Configure the display object.
+  tft.initSPI();
+  tft.begin();
+  tft.setRotation(3);
+
   //  Run the same Splash function as in the Mag Loop Controller project.
-  Splash();
+  Splash(tft);
 
   // Test a GFX graphics primitive by drawing a border:
   tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
@@ -116,6 +128,30 @@ int main()
   stepper.runToNewPosition(2500);
 
   stepper.disableOutputs();
+
+  //  Next test the DDS.
+  DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
+  dds.DDSWakeUp();
+  dds.SendFrequency(7045000);
+
+  // Instantiate SWR object.
+  SWR swr = SWR(steppermanage, tft);
+
+  const float conversion_factor = 3.3f/(1 << 12);
+  double VSWR;
+  VSWR = swr.ReadSWRValue();
+  ErasePage(tft);
+  tft.setTextSize(2);
+  while(1){
+  ErasePage(tft);
+  tft.setCursor(10, 20);
+  adc_select_input(0);
+  tft.print(adc_read() * conversion_factor);
+  tft.setCursor(10, 50);
+  adc_select_input(1);
+  tft.print(adc_read() * conversion_factor);
+  busy_wait_us_32(20000);
+  }
 
   return 0;
 }

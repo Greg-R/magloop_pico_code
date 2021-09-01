@@ -42,8 +42,10 @@ add_subdirectory(DDS)
 add_subdirectory(AutoTune)
 add_subdirectory(SWR)
 add_subdirectory(DisplayManagement)
+add_subdirectory(Calibrate)
 
-target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341 ./AccelStepper ./magloop ./DDS ./AutoTune ./SWR ./DisplayManagement)
+target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341 ./AccelStepper ./magloop 
+                                   ./DDS ./AutoTune ./SWR ./DisplayManagement ./Calibrate)
 #target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341)
 
 # Add any user requested libraries
@@ -64,6 +66,7 @@ target_link_libraries(magloop_pico
         AutoTune
         SWR
         DisplayManagement
+        Calibrate
         )
 
 pico_add_extra_outputs(magloop_pico)

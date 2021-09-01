@@ -3,7 +3,7 @@
 
 
 
-DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft): tft(tft) {
+DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate): tft(tft), calibrate(calibrate) {
 
 }
 

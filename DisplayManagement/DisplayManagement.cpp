@@ -3,7 +3,7 @@
 
 
 
-DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate): tft(tft), calibrate(calibrate) {
+DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr): tft(tft), calibrate(calibrate), dds(dds), swr(swr) {
 
 }
 
@@ -19,21 +19,21 @@ void DisplayManagement::frequencyMenuOption() {
   int backCount = 0;
   long aveMinPosition;
 
-  updateMessage("Select Frequency");
+  //updateMessage("Select Frequency"); TEMPORARILY COMMENTED
 
   whichBandOption = SelectBand();
   if (quickCalFlag == 1) {                  //Check if Single Band Button has been pushed.
-    DoSingleBandCalibrate(whichBandOption);
+    calibrate.DoSingleBandCalibrate(whichBandOption);
     quickCalFlag = 0;
   }
   currentFrequency = presetFrequencies[whichBandOption][3];    //Set initial frequency for each band from Preset list
   //currentFrequency = 7150000L;
-  ChangeFrequency(whichBandOption);                          //Alter the frequency
-  SendFrequency(currentFrequency);
-  MyDelay(100L);                                 // Let DDS catch up
-  SWRValue = ReadSWRValue();
+  //ChangeFrequency(whichBandOption);                          //Alter the frequency TEMPORARILY COMMENTED
+  dds.SendFrequency(currentFrequency);
+  busy_wait_us_32(100L);                                 // Let DDS catch up
+  SWRValue = swr.ReadSWRValue();
   readSWRValue        = SWRValue;
-  ShowSubmenuData(SWRValue);
+  //ShowSubmenuData(SWRValue);        TEMPORARILY COMMENTED
   tft.fillRect(0, 100, 311, 150, ILI9341_BLACK);
                           //Backup 20 counts to approach from CW direction
   currPosition = -50 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
@@ -41,7 +41,7 @@ void DisplayManagement::frequencyMenuOption() {
   stepper.setAcceleration(1100);
   //MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
   //AutoTuneSWRQuick();        
-  AutoTuneSWR();  //Auto tune here
+  autotune.AutoTuneSWR();  //Auto tune here
  /* switch (whichBandOption) {   //Set amount to backup from final AutoTune position so nothing is missed
     case 0:
       backCount = 60;
@@ -57,11 +57,11 @@ void DisplayManagement::frequencyMenuOption() {
   MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
   //delay(100);
   AutoTuneSWR();*/
-  UpdateFrequency();
-  ShowSubmenuData(readSWRValueAuto);
-  GraphAxis(whichBandOption);
-  PlotSWRValueNew(whichBandOption);
-  updateMessage("Freq Encoder to Adjust");
+  dds.UpdateFrequency();
+  //ShowSubmenuData(readSWRValueAuto); TEMPORARILY COMMENTED
+  //GraphAxis(whichBandOption);        TEMPORARILY COMMENTED
+  //PlotSWRValueNew(whichBandOption);  TEMPORARILY COMMENTED
+  //updateMessage("Freq Encoder to Adjust"); TEMPORARILY COMMENTED
   //====================
   while (digitalRead(FREQUENCYENCODERSWITCH) != LOW) {
     if (quickCalFlag == 1) {
@@ -233,9 +233,9 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
     }
     if (digitalRead(FREQUENCYENCODERSWITCH) == LOW) {   //Exit from routine
       menuIndex = FREQMENU;
-      SendFrequency(currentFrequency);    // Send the frequency
-      ShowMainDisplay(0, SWR);       // Draws top menu line
-      ShowSubmenuData(SWR);          // Draws SWR and Freq info
+      dds.SendFrequency(currentFrequency);    // Send the frequency
+      //ShowMainDisplay(0, SWR);       // Draws top menu line        TEMPORARILY COMMENTED
+      //ShowSubmenuData(SWR);          // Draws SWR and Freq info    TEMPORARILY COMMENTED
       menuIndex = MakeMenuSelection();
       loop();
       //break;

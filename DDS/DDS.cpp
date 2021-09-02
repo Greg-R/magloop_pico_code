@@ -3,28 +3,16 @@
 
 // The routines in this file are use to interface with the AD9850 DDS in stead of using a library
 
-//class DDS {
 
-//uint    reset;
-//uint    data;
-//uint    fq_ud;
-//uint    WLCK;
-
-//public:
-
-DDS::DDS(uint DDS_RST, uint DDS_DATA, uint DDS_FQ_UD, uint DDS_WCLK) {
-  WCLK = DDS_WCLK;
-  DATA = DDS_DATA;
-  FQ_UD = DDS_FQ_UD;
-  RESET = DDS_RST;
-gpio_set_function( DDS_RST, GPIO_FUNC_SIO);
-gpio_set_function( DDS_DATA, GPIO_FUNC_SIO);
-gpio_set_function( DDS_FQ_UD, GPIO_FUNC_SIO);
-gpio_set_function( DDS_WCLK, GPIO_FUNC_SIO);
-gpio_set_dir( DDS_RST, GPIO_OUT);
-gpio_set_dir( DDS_DATA, GPIO_OUT);
-gpio_set_dir( DDS_FQ_UD, GPIO_OUT);
-gpio_set_dir( DDS_WCLK, GPIO_OUT);
+DDS::DDS(uint DDS_RST, uint DDS_DATA, uint DDS_FQ_UD, uint DDS_WCLK): RESET(DDS_RST), DATA(DDS_DATA), FQ_UD(DDS_FQ_UD), WCLK(WCLK) {
+gpio_set_function( RESET, GPIO_FUNC_SIO);
+gpio_set_function( DATA, GPIO_FUNC_SIO);
+gpio_set_function( FQ_UD, GPIO_FUNC_SIO);
+gpio_set_function( WCLK, GPIO_FUNC_SIO);
+gpio_set_dir( RESET, GPIO_OUT);
+gpio_set_dir( DATA, GPIO_OUT);
+gpio_set_dir( FQ_UD, GPIO_OUT);
+gpio_set_dir( WCLK, GPIO_OUT);
 }
 
 void DDS::DDSWakeUp() {          //initialize DDS

@@ -4,8 +4,13 @@
 #include "../Adafruit_ILI9341/Adafruit_ILI9341.h"
 #include "Arduino.h"
 #include "Calibrate.h"
+#include "DDS.h"
+#include "SWR.h"
 
 #define PRESETSPERBAND   6
+#define PIXELWIDTH 320
+
+class Calibrate;
 
 class DisplayManagement {
 
@@ -13,13 +18,17 @@ public:
 
 Adafruit_ILI9341 & tft;
 Calibrate & calibrate;
+DDS & dds;
+SWR & swr;
 int whichBandOption;
 int quickCalFlag;
 long currentFrequency;
 long presetFrequencies[10][PRESETSPERBAND];
+float SWRValue;
+float readSWRValue;
+int currPosition;
 
-
-DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate);
+DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr);
 
 void frequencyMenuOption();
 

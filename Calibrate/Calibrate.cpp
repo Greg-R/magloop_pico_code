@@ -2,7 +2,9 @@
 #include "Calibrate.h"
 
 
-Calibrate::Calibrate(DisplayManagement & display, AccelStepper & stepper, StepperManagement & steppermanage, Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds):display(display), stepper(stepper), steppermanage(steppermanage), tft(tft), calibrate(calibrate), dds(dds) {}
+Calibrate::Calibrate(DisplayManagement & display, AccelStepper & stepper, StepperManagement & steppermanage, Adafruit_ILI9341 & tft,
+                     DDS & dds, SWR & swr, AutoTune & autotune):display(display), stepper(stepper), steppermanage(steppermanage), tft(tft),
+                     dds(dds), swr(swr), autotune(autotune) {}
 
 //Calibrate(DisplayManagement & display, AccelStepper & stepper, StepperManagement & steppermanage, Adafruit_ILI9341 & tft, Calibrate & calibrate);
 
@@ -47,7 +49,7 @@ void Calibrate::DoNewCalibrate2()  //Al modified 9-14-19
       currentFrequency = bandEdges[i][j];     // Select a band edge
       currPosition = bandLimitPositionCounts[i][j] - 200;       //Set Band limit count -200 counts to approach band limit from CW direction
       dds.SendFrequency(currentFrequency);        // Tell the DDS the edge frequency...
-      MyDelay(100L);
+      busy_wait_us_32(100L);
       display.UpdateFrequency();                   // Change main display data
 
       while (true) {
@@ -55,10 +57,10 @@ void Calibrate::DoNewCalibrate2()  //Al modified 9-14-19
           steppermanage.ResetStepperToZero();                         // Reset back to zero
           return;
         }
-        currentSWR = ReadSWRValue();
-        AutoTuneSWR();
+        currentSWR = swr.ReadSWRValue();
+        autotune.AutoTuneSWR();
 
-        UpdateFrequency();
+        display.UpdateFrequency();
         if (minSWRAuto < TARGETMAXSWR) {                   //Ignore values greater than Target Max
           bandLimitPositionCounts[i][j] = SWRMinPosition;
           tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
@@ -81,17 +83,17 @@ void Calibrate::DoNewCalibrate2()  //Al modified 9-14-19
     currPosition = SWRFinalPosition + 50;
   }         // end for (i
 
-  WritePositionCounts();                      // Write values to EEPROM
-  MyDelay(100L);
-  updateMessage("Press Exit");
+  // WritePositionCounts();                      // Write values to EEPROM  TEMPORARILY COMMENTED
+  busy_wait_us_32(100L);
+  //updateMessage("Press Exit");  TEMPORARILY COMMENTED
 
   while (digitalRead(FREQUENCYENCODERSWITCH) != LOW) { //Wait until Freq Encoder switch is pressed
 
   }
-  ShowMainDisplay(0, SWR);       // Draws top menu line
-  ShowSubmenuData(SWR);
+  //ShowMainDisplay(0, SWR);       // Draws top menu line  TEMPORARILY COMMENTED
+  //ShowSubmenuData(SWR);                                  TEMPORARILY COMMENTED
   loop();
-  MyDelay(100L);
+  busy_wait_us_32(100L);
 }
 
 
@@ -110,13 +112,13 @@ void Calibrate::DoFirstCalibrate()  //Al modified 9-14-19
   int i, j, whichLine;
   long localPosition, minCount;
   float currentSWR;
-  updateMessage("Initial Calibrate");
+  // updateMessage("Initial Calibrate");  TEMPORARILY COMMENTED
   //tft.print("1st Cal ");
   bandBeingCalculated = 0;
-  ResetStepperToZero();
+  steppermanage.ResetStepperToZero();
   stepper.setCurrentPosition(0);        //Set Stepper count to zero
   currPosition = 100L;
-  MoveStepperToPositionCorrected(currPosition);
+  steppermanage.MoveStepperToPositionCorrected(currPosition);
   tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   tft.drawFastHLine(0, 45, 320, ILI9341_RED);
@@ -137,25 +139,25 @@ void Calibrate::DoFirstCalibrate()  //Al modified 9-14-19
       Serial.print("j=  "); Serial.println(j);                   // So we can see the EEPROM values
 #endif
       currentFrequency = bandEdges[i][j];     // Select a band edge to calibrate
-      SendFrequency(currentFrequency);        // Tell the DDS the edge frequency...
-      MyDelay(100L);
-      UpdateFrequency();                   // Change main display data
-      updateMessage("Moving to Freq");
+      dds.SendFrequency(currentFrequency);        // Tell the DDS the edge frequency...
+      busy_wait_us_32(100L);
+      //UpdateFrequency();                   // Change main display data  TEMPORARILY COMMENTED
+      //updateMessage("Moving to Freq");                                  TEMPORARILY COMMENTED
       while (true) {
         if (digitalRead(MAXSWITCH) != HIGH) {           // At the end stop switch?
-          ResetStepperToZero();                         // Yep, so leave.
+          steppermanage.ResetStepperToZero();                         // Yep, so leave.
           return;
         }
-        while (ReadSWRValue() > 5) {    //Move stepper in CW direction in larger steps for SWR>5
+        while (swr.ReadSWRValue() > 5) {    //Move stepper in CW direction in larger steps for SWR>5
           currPosition += 20;
-          UpdateFrequency();
-          ShowSubmenuData(ReadSWRValue());
-          MoveStepperToPositionCorrected(currPosition);
+          //UpdateFrequency();                     TEMPORARILY COMMENTED
+          //ShowSubmenuData(ReadSWRValue());       TEMPORARILY COMMENTED
+          steppermanage.MoveStepperToPositionCorrected(currPosition);
         }
-        currentSWR = ReadSWRValue();
-        AutoTuneSWR();
+        currentSWR = swr.ReadSWRValue();
+        autotune.AutoTuneSWR();
 
-        UpdateFrequency();
+        // UpdateFrequency(); TEMPORARILY COMMENTED
         if (minSWRAuto < TARGETMAXSWR) {                   //Ignore values greater than Target Max
           bandLimitPositionCounts[i][j] = SWRMinPosition;
           tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
@@ -178,8 +180,8 @@ void Calibrate::DoFirstCalibrate()  //Al modified 9-14-19
     currPosition = SWRFinalPosition - 50;
   }         // end for (i
 
-  WritePositionCounts();                      // Write values to EEPROM
-  MyDelay(100L);
+  //WritePositionCounts();                      // Write values to EEPROM TEMPORARILY COMMENTED
+  busy_wait_us_32(100L);
   tft.fillRect(0, PIXELHEIGHT - 40, 311, 25, ILI9341_BLACK);
   tft.setTextColor(ILI9341_YELLOW, ILI9341_BLACK);
   tft.setTextSize(1);
@@ -189,11 +191,11 @@ void Calibrate::DoFirstCalibrate()  //Al modified 9-14-19
   while (digitalRead(FREQUENCYENCODERSWITCH) != LOW) {
 
   }
-  ShowMainDisplay(0, SWR);       // Draws top menu line
-  ShowSubmenuData(SWR);
+  //ShowMainDisplay(0, SWR);       // Draws top menu line  TEMPORARILY COMMENTED
+  //ShowSubmenuData(SWR);                                  TEMPORARILY COMMENTED
   quickCalFlag = 0;
   loop();
-  MyDelay(100L);
+  busy_wait_us_32(100L);
 
 }
 
@@ -209,8 +211,8 @@ void Calibrate::DoFirstCalibrate()  //Al modified 9-14-19
 *****/
 void Calibrate::CalSWR() {
   currentFrequency = 7150000L;
-  SendFrequency(currentFrequency);
-  MyDelay(100L);
+  dds.SendFrequency(currentFrequency);
+  busy_wait_us_32(100L);
   int i;
 
   float VSWR;
@@ -241,9 +243,9 @@ void Calibrate::CalSWR() {
     Serial.print("VSWR=  "); Serial.println(VSWR);
      Serial.println(" ");*/
     //#endif
-     SWR = ReadSWRValue();
-      ShowSubmenuData(SWR); 
-MyDelay(500);
+     //SWR = swr.ReadSWRValue();
+     // ShowSubmenuData(swr.ReadSWRValue());    TEMPORARILY COMMENTED
+busy_wait_us_32(500);
   }
 }
 
@@ -263,7 +265,7 @@ void Calibrate::DoSingleBandCalibrate(int whichBandOption) { //Al Added 4-18-20
   long localPosition, minCount;
   float currentSWR;
   bandBeingCalculated = 0;
-  ResetStepperToZero();
+  steppermanage.ResetStepperToZero();
   stepper.setCurrentPosition(0);        //Set Stepper count to zero
 
   tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
@@ -282,20 +284,20 @@ void Calibrate::DoSingleBandCalibrate(int whichBandOption) { //Al Added 4-18-20
     currentFrequency = bandEdges[whichBandOption][j];     // Select a band edge
     currPosition = bandLimitPositionCounts[whichBandOption][j] - 50;
     stepper.setMaxSpeed(FASTMOVESPEED);
-    MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-    SendFrequency(currentFrequency);        // Tell the DDS the edge frequency...
-    MyDelay(100L);
-    UpdateFrequency();                   // Change main display data
+    steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
+    dds.SendFrequency(currentFrequency);        // Tell the DDS the edge frequency...
+    busy_wait_us_32(100L);
+    //UpdateFrequency();                   // Change main display data  TEMPORARILY COMMENTED
 
     while (true) {
       if (digitalRead(MAXSWITCH) != HIGH) {           // At the end stop switch?
-        ResetStepperToZero();                         // Yep, so leave.
+        steppermanage.ResetStepperToZero();                         // Yep, so leave.
         return;
       }
-      currentSWR = ReadSWRValue();
+      currentSWR = swr.ReadSWRValue();
 
-      AutoTuneSWRQuick();
-      UpdateFrequency();
+      autotune.AutoTuneSWRQuick();
+      // UpdateFrequency();     TEMPORARILY COMMENTED
       if (minSWRAuto < TARGETMAXSWR) {                   //Ignore values greater than Target Max
         bandLimitPositionCounts[whichBandOption][j] = SWRMinPosition;
 
@@ -318,16 +320,16 @@ void Calibrate::DoSingleBandCalibrate(int whichBandOption) { //Al Added 4-18-20
 
   }       // end for (j
   currPosition = SWRFinalPosition + 50;
-  WritePositionCounts();                      // Write values to EEPROM
-  MyDelay(100L);
-  updateMessage("Press Exit");
+  //WritePositionCounts();                      // Write values to EEPROM  TEMPORARILY COMMENTED
+  busy_wait_us_32(100L);
+  //updateMessage("Press Exit");     TEMPORARILY COMMENTED
   while (digitalRead(FREQUENCYENCODERSWITCH) != LOW) {
 
   }
-  ShowMainDisplay(0, SWR);       // Draws top menu line
-  ShowSubmenuData(SWR);
+  //ShowMainDisplay(0, SWR);       // Draws top menu line   TEMPORARILY COMMENTED
+  //ShowSubmenuData(SWR);                                   TEMPORARILY COMMENTED
   quickCalFlag = 0;
   loop();
-  MyDelay(100L);
+  busy_wait_us_32(100L);
 
 }

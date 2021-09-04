@@ -19,6 +19,10 @@
 #include "DDS/DDS.h"
 #include "SWR/SWR.h"
 
+#include <Fonts/FreeSerif24pt7b.h>
+#include <Fonts/FreeSerif9pt7b.h>
+#include <Fonts/FreeSerif12pt7b.h>
+
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 #define VERSION 1.01

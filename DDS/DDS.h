@@ -6,12 +6,12 @@
 
 class DDS {
 
+public:
+
 uint    RESET;
 uint    DATA;
 uint    FQ_UD;
 uint    WCLK;
-
-public:
 
 DDS(uint DDS_RST, uint DDS_DATA, uint DDS_FQ_UD, uint DDS_WCLK);
 

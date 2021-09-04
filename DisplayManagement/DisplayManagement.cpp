@@ -3,7 +3,7 @@
 
 
 
-DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr): tft(tft), calibrate(calibrate), dds(dds), swr(swr) {
+DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, AccelStepper & stepper, AutoTune & autotune, StepperManagement & steppermanage, Buttons & buttons): tft(tft), calibrate(calibrate), dds(dds), swr(swr), stepper(stepper), autotune(autotune), steppermanage(steppermanage), buttons(buttons) {
 
 }
 
@@ -57,7 +57,7 @@ void DisplayManagement::frequencyMenuOption() {
   MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
   //delay(100);
   AutoTuneSWR();*/
-  dds.UpdateFrequency();
+  DisplayManagement::UpdateFrequency();
   //ShowSubmenuData(readSWRValueAuto); TEMPORARILY COMMENTED
   //GraphAxis(whichBandOption);        TEMPORARILY COMMENTED
   //PlotSWRValueNew(whichBandOption);  TEMPORARILY COMMENTED
@@ -65,33 +65,33 @@ void DisplayManagement::frequencyMenuOption() {
   //====================
   while (digitalRead(FREQUENCYENCODERSWITCH) != LOW) {
     if (quickCalFlag == 1) {
-      DoSingleBandCalibrate(whichBandOption);
+      calibrate.DoSingleBandCalibrate(whichBandOption);
       quickCalFlag = 0;
     }
     if (menuEncoderMovement != 0) {          //Allow stepper to be moved maually
-      ManualStepperControl();
+      swr.ManualStepperControl();
     }
     if (frequencyEncoderMovement != 0) {     //Allow frequency to be changed maually
 
-      ManualFrequencyControl(whichBandOption);  // In SWR.cpp
+      swr.ManualFrequencyControl(whichBandOption);  // In SWR.cpp
       frequencyEncoderMovement = 0;
     }
     if (digitalRead(AUTOTUNE) == LOW && digitalRead(MAXSWITCH) != LOW) {   //Redo the Autotune at new frequency/position
       currPosition = -80 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
       stepper.setMaxSpeed(1000);
       stepper.setAcceleration(1100);
-      MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-      AutoTuneSWR();   //Auto tune here
-      GraphAxis(whichBandOption);
-      PlotSWRValueNew(whichBandOption);
-      updateMessage("Freq: Adjust - ATune: Refine");
+      steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
+      autotune.AutoTuneSWR();   //Auto tune here
+      //GraphAxis(whichBandOption);          TEMPORARILY COMMENTED
+      //PlotSWRValueNew(whichBandOption);    TEMPORARILY COMMENTED
+      //updateMessage("Freq: Adjust - ATune: Refine");  TEMPORARILY COMMENTED
     }
   }
   // graphFlag == 0;
-  MyDelay(100L);
-  EraseBelowMenu();
-  ShowMainDisplay(0, SWR);       // Draws top menu line
-  ShowSubmenuData(SWR);
+  busy_wait_us_32(100L);
+  //EraseBelowMenu();                                       TEMPORARILY COMMENTED
+  //ShowMainDisplay(0, SWR);       // Draws top menu line   TEMPORARILY COMMENTED
+  //ShowSubmenuData(SWR);                                   TEMPORARILY COMMENTED
   loop();
 
 }
@@ -163,13 +163,13 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
 
   while (digitalRead(AUTOTUNE) != LOW and digitalRead(MENUENCODERSWITCH) != LOW) {
     if (quickCalFlag == 1) {
-      DoSingleBandCalibrate(whichBandOption);
+      calibrate.DoSingleBandCalibrate(whichBandOption);
       quickCalFlag = 0;
     }
     //--------------------------
     if (digitalRead(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
       //DoNewCalibrate2();
-      executeButton3();
+      buttons.executeButton3();
     }
     //------------------------
     tft.setTextColor(ILI9341_WHITE);
@@ -211,19 +211,19 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
     }
     tft.setTextColor(ILI9341_GREEN);
     digitEncoderMovement = 0;
-#ifdef DEBUG
-    Serial.print("In ChangeFreq: defaultIncrement = ");
-    Serial.print(defaultIncrement);
-    Serial.print("   incrementPad = ");
-    Serial.println(incrementPad);
-#endif
+//#ifdef DEBUG
+//    Serial.print("In ChangeFreq: defaultIncrement = ");
+//    Serial.print(defaultIncrement);
+//    Serial.print("   incrementPad = ");
+//    Serial.println(incrementPad);
+//#endif
     menuEncoderMovement = 0;
     if (frequencyEncoderMovement) {     //Change digit value
       currentFrequency += (long) (frequencyEncoderMovement * defaultIncrement);
-      SendFrequency(currentFrequency);    // Send the frequency
-      SWR = ReadSWRValue();
-      ShowSubmenuData(SWR);   
-      currPosition = ConvertFrequencyToStepperCount(currentFrequency);
+      dds.SendFrequency(currentFrequency);    // Send the frequency
+      //SWR = ReadSWRValue();
+      ShowSubmenuData(swr.ReadSWRValue());   
+      currPosition = steppermanage.ConvertFrequencyToStepperCount(currentFrequency);
       tft.fillRect(insetMargin, halfScreen - 35, PIXELWIDTH * .80, 40, ILI9341_BLACK);
       tft.setCursor(insetMargin, halfScreen);
       tft.setTextSize(1);
@@ -262,17 +262,17 @@ int DisplayManagement::MakeMenuSelection() //Al Mod 9-8-19
   int i, index = 0;
   while (digitalRead(MENUENCODERSWITCH) != LOW) {
     if (quickCalFlag == 1) {
-      DoSingleBandCalibrate(whichBandOption);
+      calibrate.DoSingleBandCalibrate(whichBandOption);
       quickCalFlag = 0;
     }
     //---------------------------
     if (digitalRead(MENUBUTTON1) == LOW) {        //Menu Button1 Band select Option
-      executeButton1();
+      buttons.executeButton1();
     }
     //------------------------
     if (digitalRead(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
       //DoNewCalibrate2();
-      executeButton3();
+      buttons.executeButton3();
     }
     //------------------------
     if (menuEncoderMovement) {                             // Must be i (CW) or -1 (CCW)
@@ -320,7 +320,7 @@ int DisplayManagement::MakeMenuSelection() //Al Mod 9-8-19
 *****/
 int SelectBand()
 {
-  updateMessage("Select Band");
+  //updateMessage("Select Band");  // TEMPORARILY COMMENTED
   // tft.print("Select Band");
   tft.setTextSize(1);
   tft.setFont(&FreeSerif12pt7b);
@@ -337,22 +337,22 @@ int SelectBand()
   tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
   tft.print(bands[0]);
   digitalWrite(MENUENCODERSWITCH, HIGH);
-  MyDelay(100L);
+  busy_wait_us_32(100L);
   index = 0;
   while (true) {
     if (quickCalFlag == 1) {
-      DoSingleBandCalibrate(whichBandOption);
+      calibrate.DoSingleBandCalibrate(whichBandOption);
       quickCalFlag = 0;
     }
 
     //---------------------------
     if (digitalRead(MENUBUTTON1) == LOW) {        //Menu Button1 Band select Option
-      executeButton1();
+      buttons.executeButton1();
     }
     //------------------------
     if (digitalRead(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
       //DoNewCalibrate2();
-      executeButton3();
+      buttons.executeButton3();
     }
     //------------------------
     if (menuEncoderMovement) {
@@ -409,7 +409,7 @@ void DisplayManagement::EraseBelowMenu() //al mod 9-8-19
   Return value:
     void
 *****/
-void ErasePage()
+void DisplayManagement::ErasePage()
 {
   tft.fillScreen(ILI9341_BLACK);
 }

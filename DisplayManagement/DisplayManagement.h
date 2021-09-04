@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+//#include <string>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -21,6 +22,8 @@
 class Calibrate;
 
 class Buttons;
+
+class AutoTune;
 
 class DisplayManagement {
 

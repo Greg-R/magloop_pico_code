@@ -3,8 +3,8 @@
 #include "pico/stdlib.h"
 #include "DisplayManagement.h"
 #include "AccelStepper.h"
-#include "../magloop/StepperManagement.h"
-#include "../Adafruit_ILI9341/Adafruit_ILI9341.h"
+#include "StepperManagement.h"
+#include "Adafruit_ILI9341.h"
 #include "Arduino.h"
 #include "DDS.h"
 #include "SWR.h"
@@ -33,13 +33,13 @@ DDS & dds;
 SWR & swr;
 AutoTune & autotune;
 long SWRMinPosition;
-
 long currPosition;
 long currentFrequency;
 long bandEdges[10][2];
 long bandLimitPositionCounts[10][10];
 int quickCalFlag;
-//float SWR;
+int minSWRAuto;
+int SWRFinalPosition;
 
 Calibrate(DisplayManagement & display, AccelStepper & stepper, StepperManagement & steppermanage, Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, AutoTune & autotune);
 

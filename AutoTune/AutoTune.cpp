@@ -12,16 +12,8 @@
 *****/
 
 
-AutoTune::AutoTune(AccelStepper stepper, SWR swr, Adafruit_ILI9341 tft, StepperManagement steppermanage):swr(swr), tft(tft), steppermanage(steppermanage) {
-
-stepper = stepper;
-//swr = swr;
-//tft = tft;
-steppermanage = steppermanage;
+AutoTune::AutoTune(AccelStepper & stepper, SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage, DisplayManagement & display): stepper(stepper), swr(swr), tft(tft), steppermanage(steppermanage), display(display) {
 }
-
-
-
 
 void AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   float oldMinSWR;
@@ -32,7 +24,7 @@ void AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   SWRMinPosition = 20000;
   //updateMessage("Auto Tuning"); TEMPORARILY COMMENTED
 
-  delay(100);
+  busy_wait_us_32(100);
   stepper.setMaxSpeed(FASTMOVESPEED);
   MoveStepperToPositionCorrected(currPosition);  //Move to initial position
   stepper.setMaxSpeed(NORMALMOVESPEED);
@@ -45,11 +37,11 @@ void AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   //  ShowSubmenuData(minSWR); TEMPORARILY COMMENTED
     tempSWR[i] = minSWR;                       //Array of SWR values
     tempCurrentPosition[i] = currPosition;     //Array of Count position values
-#ifdef DEBUG                          // So we can see the EEPROM values
-    Serial.print("i = "); Serial.print(i); Serial.print("  currPosition = "); Serial.print(currPosition);
-    Serial.print("  stepper.currentPosition() = "); Serial.print(stepper.currentPosition());
-    Serial.print("   minSWR = "); Serial.println(minSWR);
-#endif
+//#ifdef DEBUG                          // So we can see the EEPROM values
+//    Serial.print("i = "); Serial.print(i); Serial.print("  currPosition = "); Serial.print(currPosition);
+//    Serial.print("  stepper.currentPosition() = "); Serial.print(stepper.currentPosition());
+//    Serial.print("   minSWR = "); Serial.println(minSWR);
+//#endif
     if ( minSWR < minSWRAuto) {             // Test to find minimum SWR value
       minSWRAuto = minSWR;
       SWRMinPosition = currPosition;
@@ -78,7 +70,7 @@ void AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   minSWR = swr.ReadSWRValue();
   currPosition = SWRMinPosition;
   MoveStepperToPositionCorrected(SWRMinPosition - 50);   // back up position to take out backlash
-  delay(200);
+  busy_wait_us_32(200);
   MoveStepperToPositionCorrected(SWRMinPosition);        //Move to final position in CW direction
   iMax = i; //max value in array for plot
  // ShowSubmenuData(minSWRAuto);  //Update SWR value  TEMPORARILY COMMENTED
@@ -104,27 +96,35 @@ void AutoTune::AutoTuneSWRQuick() {    //Al Modified 9-14-19
   int i;
   long currPositionTemp;
   SWRMinPosition = 20000;
-  if (digitalRead(ACCURACYBUTTON) == LOW) {
+  if (gpio_get(ACCURACYBUTTON) == LOW) {
     currPositionTemp = currPosition;
     steppermanage.ResetStepperToZero();
     currPosition = currPositionTemp;
   }
   //updateMessage("Auto Quick Tuning");  TEMPORARILY COMMENTED
-  delay(100);
+  busy_wait_us_32(100);
 
-  stepper.setMaxSpeed(10000);
+  stepper.setMaxSpeed(5000);
   stepper.setAcceleration(1100);
-  MoveStepperToPositionCorrected(currPosition);
+  //MoveStepperToPositionCorrected(currPosition);
+  MoveStepperToPositionCorrected(2500);   //  Move stepper to mid-range.
   stepper.setMaxSpeed(500);
 
   for (i = 0; i < MAXNUMREADINGS; i++) {       // loop to increment and find min SWR and save values to plot
     minSWR = swr.ReadSWRValue();
+
+  display.ErasePage();
+  tft.setTextSize(2);
+  tft.setCursor(10, 20);
+  tft.print(minSWR);
+
+
   //  ShowSubmenuData(minSWR);  TEMPORARILY COMMENTED
-#ifdef DEBUG                          // So we can see the EEPROM values
-    Serial.print("i = "); Serial.print(i); Serial.print("  currPosition = "); Serial.print(currPosition);
-    Serial.print("  stepper.currentPosition() = "); Serial.print(stepper.currentPosition());
-    Serial.print("   minSWR = "); Serial.println(minSWR);
-#endif
+//#ifdef DEBUG                          // So we can see the EEPROM values
+//    Serial.print("i = "); Serial.print(i); Serial.print("  currPosition = "); Serial.print(currPosition);
+//    Serial.print("  stepper.currentPosition() = "); Serial.print(stepper.currentPosition());
+//    Serial.print("   minSWR = "); Serial.println(minSWR);
+//#endif
     if ( minSWR < minSWRAuto) {             // Test to find minimum SWR value
       minSWRAuto = minSWR;
       SWRMinPosition = currPosition;
@@ -155,7 +155,7 @@ void AutoTune::AutoTuneSWRQuick() {    //Al Modified 9-14-19
   minSWR = swr.ReadSWRValue();
   currPosition = SWRMinPosition;
   MoveStepperToPositionCorrected(SWRMinPosition - 20);    // back up position to take out backlash
-  delay(100);
+  busy_wait_us_32(100);
   MoveStepperToPositionCorrected(SWRMinPosition);         //Move to final position in CW direction 
   iMax = i; //max value in array for plot
 //  ShowSubmenuData(minSWRAuto);  //Update SWR value  TEMPORARILY COMMENTED

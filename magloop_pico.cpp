@@ -18,6 +18,7 @@
 #include "magloop/StepperManagement.h"
 #include "DDS/DDS.h"
 #include "SWR/SWR.h"
+#include "AutoTune/AutoTune.h"
 
 #include <Fonts/FreeSerif24pt7b.h>
 #include <Fonts/FreeSerif9pt7b.h>
@@ -131,7 +132,7 @@ int main()
 
   stepper.runToNewPosition(2500);
 
-  stepper.disableOutputs();
+  //stepper.disableOutputs();
 
   //  Next test the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
@@ -139,8 +140,9 @@ int main()
   dds.SendFrequency(7045000);
 
   // Instantiate SWR object.
+  
   SWR swr = SWR(steppermanage, tft);
-
+  /*
   const float conversion_factor = 3.3f/(1 << 12);
   double VSWR;
   VSWR = swr.ReadSWRValue();
@@ -156,6 +158,20 @@ int main()
   tft.print(adc_read() * conversion_factor);
   busy_wait_us_32(20000);
   }
+  */
+ 
+ 
+ 
+AutoTune autotune = AutoTune(stepper, swr, tft, steppermanage, display);
+Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
+Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
+Buttons buttons = Buttons(display, presets, dds, calibrate);
+DisplayManagement display = DisplayManagement(tft, calibrate, dds, swr, stepper, autotune, steppermanage, buttons);
+
+ 
+ //autotune.AutoTuneSWRQuick();
+autotune.MoveStepperToPositionCorrected(2000);
+
 
   return 0;
 }

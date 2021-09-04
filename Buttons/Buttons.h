@@ -1,12 +1,12 @@
 #pragma once
 #include <stdint.h>
 #include "pico/stdlib.h"
-#include "Adafruit_ILI9341.h"
+//#include "Adafruit_ILI9341.h"
 #include "Arduino.h"
 #include "Calibrate.h"
 #include "DDS.h"
-#include "SWR.h"
-#include "AutoTune.h"
+//#include "SWR.h"
+//#include "AutoTune.h"
 #include "Presets.h"
 #include "DisplayManagement.h"
 #include "Calibrate.h"
@@ -14,6 +14,8 @@
 #define FREQMENU  0  // Menuing indexes
 
 class DisplayManagement;
+class Presets;
+class Calibrate;
 
 class Buttons {
 

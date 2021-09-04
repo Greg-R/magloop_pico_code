@@ -110,8 +110,8 @@ autotune.AutoTuneSWR();
       currPosition = -80 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
       stepper.setMaxSpeed(1000);
       stepper.setAcceleration(1100);
-      MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-      AutoTuneSWR();   //Auto tune here
+      steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
+      autotune.AutoTuneSWR();   //Auto tune here
       //GraphAxis(whichBandOption);                   TEMPORARILY COMMENTED
       //PlotSWRValueNew(whichBandOption);             TEMPORARILY COMMENTED
       //updateMessage("Freq: Adjust - ATune: Refine");  TEMPORARILY COMMENTED

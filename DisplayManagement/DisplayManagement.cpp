@@ -1,8 +1,6 @@
 
 #include "DisplayManagement.h"
 
-
-
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, AccelStepper & stepper, AutoTune & autotune, StepperManagement & steppermanage, Buttons & buttons): tft(tft), calibrate(calibrate), dds(dds), swr(swr), stepper(stepper), autotune(autotune), steppermanage(steppermanage), buttons(buttons) {
 
 }
@@ -117,7 +115,7 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
   insetMargin      = 20;
   defaultIncrement = 1000L;
   halfScreen   = PIXELHEIGHT / 2 - 25;
-  updateMessage("Enter Frequency");
+  // updateMessage("Enter Frequency");  TEMPORARILY COMMENTED
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0) {                 // 40M
     insetPad = 32;           // smaller number, so less spacing to a given digit
@@ -318,13 +316,13 @@ int DisplayManagement::MakeMenuSelection() //Al Mod 9-8-19
   Return value:
     int                       the menu selected
 *****/
-int SelectBand()
+int DisplayManagement::SelectBand()
 {
   //updateMessage("Select Band");  // TEMPORARILY COMMENTED
   // tft.print("Select Band");
   tft.setTextSize(1);
   tft.setFont(&FreeSerif12pt7b);
-  char *bands[] = {"40M", "30M", "20M"};
+  const char * bands[] = {"40M", "30M", "20M"};
   int currBand[] = {40, 30, 20};
   int i, index, where = 0;
   tft.fillRect(0, 52, PIXELWIDTH, PIXELHEIGHT, ILI9341_BLACK);
@@ -384,7 +382,7 @@ int SelectBand()
       break;
   }
 
-  MyDelay(500L);
+  busy_wait_us_32(500L);
   currentBand = currBand[index];
   return index;
 }

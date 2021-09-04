@@ -23,7 +23,7 @@ void Calibrate::DoNewCalibrate2()  //Al modified 9-14-19
   int i, j, whichLine;
   long localPosition, minCount;
   float currentSWR;
-  display.updateMessage("Full Calibrate");
+  //display.updateMessage("Full Calibrate"); TEMPORARILY COMMENTED
   bandBeingCalculated = 0;
   steppermanage.ResetStepperToZero();                  //Start off at zero
   stepper.setCurrentPosition(0);        //Set Stepper count to zero

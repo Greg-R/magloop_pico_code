@@ -1,10 +1,10 @@
 
 #include "DDS.h"
 
-// The routines in this file are use to interface with the AD9850 DDS in stead of using a library
+// The routines in this file are use to interface with the AD9850 DDS.
 
 
-DDS::DDS(uint DDS_RST, uint DDS_DATA, uint DDS_FQ_UD, uint DDS_WCLK): RESET(DDS_RST), DATA(DDS_DATA), FQ_UD(DDS_FQ_UD), WCLK(WCLK) {
+DDS::DDS(unsigned int DDS_RST, unsigned int DDS_DATA, unsigned int DDS_FQ_UD, unsigned int DDS_WCLK): RESET(DDS_RST), DATA(DDS_DATA), FQ_UD(DDS_FQ_UD), WCLK(DDS_WCLK) {
 gpio_set_function( RESET, GPIO_FUNC_SIO);
 gpio_set_function( DATA, GPIO_FUNC_SIO);
 gpio_set_function( FQ_UD, GPIO_FUNC_SIO);

@@ -13,6 +13,8 @@
 
 #define PRESETSPERBAND  6 // Allow this many preset frequencies on each band
 
+class DisplayManagement;
+
 class Presets {
 
 public:
@@ -32,6 +34,7 @@ long currPosition;
 long bandLimitPositionCounts[10][2];
 long bandEdges[10][2];
 float hertzPerStepperUnitVVC[100];
+volatile long frequencyEncoderMovement;
 
 Presets(Adafruit_ILI9341 & tft, StepperManagement & steppermanage, AccelStepper & stepper, DDS & dds, AutoTune & autotune, SWR & swr, DisplayManagement & display);
 

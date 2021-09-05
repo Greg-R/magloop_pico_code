@@ -1,8 +1,8 @@
 #pragma once
 #include "pico/stdlib.h"
 #include "hardware/adc.h"
-#include "../magloop/StepperManagement.h"
-#include "../Adafruit_ILI9341/Adafruit_ILI9341.h"
+#include "StepperManagement.h"
+#include "Adafruit_ILI9341.h"
 
 #define XAXISEND                    315
 #define XAXISSTART                  25

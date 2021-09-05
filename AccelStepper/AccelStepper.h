@@ -249,8 +249,6 @@
 // Copyright (C) 2009-2013 Mike McCauley
 // $Id: AccelStepper.h,v 1.27 2016/08/14 10:26:54 mikem Exp mikem $
 
-#ifndef AccelStepper_h
-#define AccelStepper_h
 #include "Arduino.h"
 
 // These defs cause trouble on some versions of Arduino
@@ -318,8 +316,6 @@ public:
 	HALF3WIRE = 6, ///< 3 wire half stepper, such as HDD spindle, 3 motor pins required
 	HALF4WIRE = 8  ///< 4 wire half stepper, 4 motor pins required
     } MotorInterfaceType;
-
-    
 
     /// Constructor. You can have multiple simultaneous steppers, all moving
     /// at different speeds and accelerations, provided you call their run()
@@ -726,4 +722,3 @@ private:
 /// Itead Studio Arduino Dual Stepper Motor Driver Shield
 /// model IM120417015
 
-#endif 

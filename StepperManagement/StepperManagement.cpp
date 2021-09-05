@@ -1,6 +1,3 @@
-//#ifndef BEENHERE
-//#include "MagLoop.h"
-//#endif
 
 #include "StepperManagement.h"
 
@@ -21,10 +18,7 @@
 #define HIGHEND20M                 14350000L
 
 
-
-
-StepperManagement::StepperManagement(AccelStepper & stepper): stepper(stepper) {
-//  stepper = stepper;
+StepperManagement::StepperManagement(uint8_t interface = AccelStepper::FULL4WIRE, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true): AccelStepper(interface, pin1, pin2) {
 }
 
 //AccelStepper& stepper;

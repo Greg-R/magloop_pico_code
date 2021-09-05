@@ -15,7 +15,7 @@
 #include "hardware/clocks.h"
 #include "Adafruit_ILI9341/Adafruit_ILI9341.h"
 #include "AccelStepper/AccelStepper.h"
-#include "magloop/StepperManagement.h"
+#include "StepperManagement/StepperManagement.h"
 #include "DDS/DDS.h"
 #include "SWR/SWR.h"
 #include "AutoTune/AutoTune.h"
@@ -121,16 +121,16 @@ int main()
   tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
 
   //  Create the stepper object:
-  AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
+  //AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
   //  Instantiate the Stepper Manager:
-  StepperManagement steppermanage = StepperManagement(stepper);
+  StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
 
   steppermanage.ResetStepperToZero();
 
-  stepper.setMaxSpeed(5000);
-  stepper.setAcceleration(1100);
+  steppermanage.setMaxSpeed(5000);
+  steppermanage.setAcceleration(1100);
 
-  stepper.runToNewPosition(2500);
+  steppermanage.runToNewPosition(2500);
 
   //stepper.disableOutputs();
 
@@ -162,15 +162,15 @@ int main()
  
  
  
-AutoTune autotune = AutoTune(stepper, swr, tft, steppermanage, display);
-Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
-Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
-Buttons buttons = Buttons(display, presets, dds, calibrate);
-DisplayManagement display = DisplayManagement(tft, calibrate, dds, swr, stepper, autotune, steppermanage, buttons);
+//AutoTune autotune = AutoTune(stepper, swr, tft, steppermanage, display);
+//Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
+//Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
+//Buttons buttons = Buttons(display, presets, dds, calibrate);
+//DisplayManagement display = DisplayManagement(tft, calibrate, dds, swr, stepper, autotune, steppermanage, buttons);
 
  
  //autotune.AutoTuneSWRQuick();
-autotune.MoveStepperToPositionCorrected(2000);
+//autotune.MoveStepperToPositionCorrected(2000);
 
 
   return 0;

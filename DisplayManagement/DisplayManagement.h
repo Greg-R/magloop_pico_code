@@ -34,7 +34,6 @@ Calibrate & calibrate;
 DDS & dds;
 SWR & swr;
 AutoTune & autotune;
-AccelStepper & stepper;
 StepperManagement & steppermanage;
 Buttons & buttons;
 int whichBandOption;
@@ -54,7 +53,7 @@ char *menuOptions[100];
 volatile long frequencyEncoderMovement;
 int menuIndex;
 
-DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, AccelStepper & stepper, AutoTune & autotune, StepperManagement & steppermanage, Buttons & buttons);
+DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, AutoTune & autotune, StepperManagement & steppermanage, Buttons & buttons);
 
 void frequencyMenuOption();
 

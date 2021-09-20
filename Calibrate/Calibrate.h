@@ -10,9 +10,9 @@
 #include "SWR.h"
 #include "AutoTune.h"
 
-#include <Fonts/FreeSerif24pt7b.h>
-#include <Fonts/FreeSerif9pt7b.h>
-#include <Fonts/FreeSerif12pt7b.h>
+#include <FreeSerif24pt7b.h>
+#include <FreeSerif9pt7b.h>
+#include <FreeSerif12pt7b.h>
 
 #define MAXBANDS   3 
 #define MAXSWITCH 10

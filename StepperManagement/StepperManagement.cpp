@@ -18,7 +18,9 @@
 #define HIGHEND20M                 14350000L
 
 
-StepperManagement::StepperManagement(uint8_t interface = AccelStepper::FULL4WIRE, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true): AccelStepper(interface, pin1, pin2) {
+StepperManagement::StepperManagement(uint8_t interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): AccelStepper(interface, pin1, pin2, pin3, pin4, enable) {
+currPosition = 2500;  // Default to approximately midrange.
+setCurrentPosition(2500);  //
 }
 
 //AccelStepper& stepper;
@@ -29,10 +31,10 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPosition)
   while (1)
   {
     stepperDistanceOld = stepperDistance;
-    stepper.moveTo(currentPosition);
-    stepper.run();
-    stepperDistance = stepper.distanceToGo();
-    if (stepper.distanceToGo() == 0)
+    moveTo(currentPosition);
+    run();
+    stepperDistance = distanceToGo();
+    if (distanceToGo() == 0)
     {
       if (stepperDistanceOld >= 0)
       {
@@ -69,38 +71,38 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPosition)
 void StepperManagement::ResetStepperToZero()
 {
   //updateMessage("Resetting to Zero");
-  stepper.setMaxSpeed(10000);
-  stepper.setAcceleration(1100);
+  setMaxSpeed(5000);
+  setAcceleration(1100);
   while (gpio_get(ZEROSWITCH) != 0) {      // move to zero position
-    stepper.moveTo(currPosition);
-    stepper.run();
+    moveTo(currPosition);
+    run();
     currPosition--;
   }
-  stepper.setCurrentPosition(0);
-  stepper.setMaxSpeed(100);
+  setCurrentPosition(0);
+  setMaxSpeed(100);
   currPosition = 0;
   gpio_put(ZEROSWITCH, 1);
   currPosition = 50;
   //Serial.print("before 200 move = ");
   MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
   while (true) {      // move to zero position
-    stepper.setMaxSpeed(100);
+    setMaxSpeed(100);
     currPosition--;
-    stepper.moveTo(currPosition);
-    stepper.run();
+    moveTo(currPosition);
+    run();
     if (gpio_get(ZEROSWITCH) == 0)
       break;
   }
-  stepper.setCurrentPosition(0);
-  currPosition = 200;
+  setCurrentPosition(0);
+  currPosition = 380;
   while (1) {
-    stepper.moveTo(currPosition);
-    stepper.run();
-    if (stepper.distanceToGo() == 0) {
+    moveTo(currPosition);
+    run();
+    if (distanceToGo() == 0) {
       break;
     }
   }
-  stepper.setMaxSpeed(100);
+  setMaxSpeed(100);
 }
 
 

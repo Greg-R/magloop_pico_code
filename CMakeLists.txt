@@ -46,8 +46,10 @@ add_subdirectory(Calibrate)
 add_subdirectory(Buttons)
 add_subdirectory(Presets)
 
-target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341 ./AccelStepper ./StepperManagement ./DDS ./AutoTune ./SWR ./DisplayManagement ./Calibrate ./Buttons ./Presets)
-#target_include_directories(magloop_pico INTERFACE  ./Adafruit_ILI9341)
+#target_include_directories(magloop_pico INTERFACE  ./arduino_includes ./Adafruit_ILI9341 ./AccelStepper ./StepperManagement ./DDS ./AutoTune ./SWR ./DisplayManagement ./Calibrate ./Buttons ./Presets)
+#target_include_directories(magloop_pico INTERFACE  ./arduino_includes ./Adafruit_ILI9341 ./AccelStepper ./StepperManagement ./DisplayManagement)
+#target_include_directories(magloop_pico INTERFACE  ./arduino_includes ./AccelStepper ./Adafruit-GFX-Library ./Adafruit-GFX-Library/Fonts ./StepperManagement)
+#target_include_directories(magloop_pico INTERFACE ./DDS)
 
 # Add any user requested libraries
 target_link_libraries(magloop_pico

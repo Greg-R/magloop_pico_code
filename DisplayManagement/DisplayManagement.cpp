@@ -1,7 +1,7 @@
 
 #include "DisplayManagement.h"
 
-DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, AccelStepper & stepper, AutoTune & autotune, StepperManagement & steppermanage, Buttons & buttons): tft(tft), calibrate(calibrate), dds(dds), swr(swr), stepper(stepper), autotune(autotune), steppermanage(steppermanage), buttons(buttons) {
+DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, AutoTune & autotune, StepperManagement & steppermanage, Buttons & buttons): tft(tft), calibrate(calibrate), dds(dds), swr(swr), autotune(autotune), steppermanage(steppermanage), buttons(buttons) {
 
 }
 
@@ -35,8 +35,8 @@ void DisplayManagement::frequencyMenuOption() {
   tft.fillRect(0, 100, 311, 150, ILI9341_BLACK);
                           //Backup 20 counts to approach from CW direction
   currPosition = -50 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
-  stepper.setMaxSpeed(10000);
-  stepper.setAcceleration(1100);
+  steppermanage.setMaxSpeed(10000);
+  steppermanage.setAcceleration(1100);
   //MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
   //AutoTuneSWRQuick();        
   autotune.AutoTuneSWR();  //Auto tune here
@@ -61,7 +61,7 @@ void DisplayManagement::frequencyMenuOption() {
   //PlotSWRValueNew(whichBandOption);  TEMPORARILY COMMENTED
   //updateMessage("Freq Encoder to Adjust"); TEMPORARILY COMMENTED
   //====================
-  while (digitalRead(FREQUENCYENCODERSWITCH) != LOW) {
+  while (gpio_get(FREQUENCYENCODERSWITCH) != LOW) {
     if (quickCalFlag == 1) {
       calibrate.DoSingleBandCalibrate(whichBandOption);
       quickCalFlag = 0;
@@ -74,10 +74,10 @@ void DisplayManagement::frequencyMenuOption() {
       swr.ManualFrequencyControl(whichBandOption);  // In SWR.cpp
       frequencyEncoderMovement = 0;
     }
-    if (digitalRead(AUTOTUNE) == LOW && digitalRead(MAXSWITCH) != LOW) {   //Redo the Autotune at new frequency/position
+    if (gpio_get(AUTOTUNE) == LOW && gpio_get(MAXSWITCH) != LOW) {   //Redo the Autotune at new frequency/position
       currPosition = -80 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
-      stepper.setMaxSpeed(1000);
-      stepper.setAcceleration(1100);
+      steppermanage.setMaxSpeed(1000);
+      steppermanage.setAcceleration(1100);
       steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
       autotune.AutoTuneSWR();   //Auto tune here
       //GraphAxis(whichBandOption);          TEMPORARILY COMMENTED
@@ -121,12 +121,12 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
     insetPad = 32;           // smaller number, so less spacing to a given digit
   }
   EraseBelowMenu();
-#ifdef DEBUG
-  Serial.print("In ChangeFrequency() bandIndex = ");
-  Serial.print(bandIndex);
-  Serial.print("   insetMargin = ");
-  Serial.println(insetMargin);
-#endif
+//#ifdef DEBUG
+//  Serial.print("In ChangeFrequency() bandIndex = ");
+//  Serial.print(bandIndex);
+ // Serial.print("   insetMargin = ");
+//  Serial.println(insetMargin);
+//#endif
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
   tft.setTextColor(ILI9341_WHITE);                      // Messages
@@ -159,13 +159,13 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
   ShowSubmenuData(SWRValue);                 // Update screen SWR and freq
   tft.setFont(&FreeSerif24pt7b);
 
-  while (digitalRead(AUTOTUNE) != LOW and digitalRead(MENUENCODERSWITCH) != LOW) {
+  while (gpio_get(AUTOTUNE) != LOW and gpio_get(MENUENCODERSWITCH) != LOW) {
     if (quickCalFlag == 1) {
       calibrate.DoSingleBandCalibrate(whichBandOption);
       quickCalFlag = 0;
     }
     //--------------------------
-    if (digitalRead(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
+    if (gpio_get(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
       //DoNewCalibrate2();
       buttons.executeButton3();
     }
@@ -220,7 +220,7 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
       currentFrequency += (long) (frequencyEncoderMovement * defaultIncrement);
       dds.SendFrequency(currentFrequency);    // Send the frequency
       //SWR = ReadSWRValue();
-      ShowSubmenuData(swr.ReadSWRValue());   
+     // ShowSubmenuData(swr.ReadSWRValue());   TEMPORARILY COMMENTED
       currPosition = steppermanage.ConvertFrequencyToStepperCount(currentFrequency);
       tft.fillRect(insetMargin, halfScreen - 35, PIXELWIDTH * .80, 40, ILI9341_BLACK);
       tft.setCursor(insetMargin, halfScreen);
@@ -258,17 +258,17 @@ int DisplayManagement::MakeMenuSelection() //Al Mod 9-8-19
   tft.setFont();
   tft.setTextSize(2);
   int i, index = 0;
-  while (digitalRead(MENUENCODERSWITCH) != LOW) {
+  while (gpio_get(MENUENCODERSWITCH) != LOW) {
     if (quickCalFlag == 1) {
       calibrate.DoSingleBandCalibrate(whichBandOption);
       quickCalFlag = 0;
     }
     //---------------------------
-    if (digitalRead(MENUBUTTON1) == LOW) {        //Menu Button1 Band select Option
+    if (gpio_get(MENUBUTTON1) == LOW) {        //Menu Button1 Band select Option
       buttons.executeButton1();
     }
     //------------------------
-    if (digitalRead(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
+    if (gpio_get(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
       //DoNewCalibrate2();
       buttons.executeButton3();
     }
@@ -344,11 +344,11 @@ int DisplayManagement::SelectBand()
     }
 
     //---------------------------
-    if (digitalRead(MENUBUTTON1) == LOW) {        //Menu Button1 Band select Option
+    if (gpio_get(MENUBUTTON1) == LOW) {        //Menu Button1 Band select Option
       buttons.executeButton1();
     }
     //------------------------
-    if (digitalRead(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
+    if (gpio_get(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
       //DoNewCalibrate2();
       buttons.executeButton3();
     }
@@ -378,7 +378,7 @@ int DisplayManagement::SelectBand()
       tft.print(bands[index]);
 
     }
-    if (digitalRead(MENUENCODERSWITCH) == LOW)
+    if (gpio_get(MENUENCODERSWITCH) == LOW)
       break;
   }
 

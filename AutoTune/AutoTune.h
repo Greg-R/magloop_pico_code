@@ -5,8 +5,7 @@
 #include "SWR.h"
 #include "Adafruit_ILI9341.h"
 #include "StepperManagement.h"
-#include "DisplayManagement.h"
-
+//#include "DisplayManagement.h"
 
 #define FASTMOVESPEED               1000
 #define NORMALMOVESPEED             100
@@ -14,25 +13,16 @@
 #define PIXELHEIGHT                 240
 #define ACCURACYBUTTON         6
 
-//long  SWRMinPosition;
-//float tempSWR[10];
-//int tempCurrentPosition[10];
-//float readSWRValue;
-//int iMax;
-//uint32_t stepperDistanceOld;
-//int stepperDirectionOld;
-
 class DisplayManagement;
 
 class AutoTune {
 
 public:
 
-AccelStepper & stepper;
 SWR & swr;
 Adafruit_ILI9341 & tft;
 StepperManagement & steppermanage;
-DisplayManagement & display;
+//DisplayManagement & display;
 int stepperDirectionOld;
 uint32_t currPosition;
 uint32_t stepperDistanceOld;
@@ -45,15 +35,15 @@ float minSWR;
 int whichBandOption;
 long  SWRFinalPosition;
 
-//float minSWRAuto;
 
-AutoTune(AccelStepper & stepper, SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage, DisplayManagement & display);
+AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage);
 
 void AutoTuneSWR();
 
 void AutoTuneSWRQuick();
 
 void MoveStepperToPositionCorrected(long currentPosition);
+
 
 
 };

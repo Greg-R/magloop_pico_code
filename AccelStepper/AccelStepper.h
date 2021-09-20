@@ -249,10 +249,11 @@
 // Copyright (C) 2009-2013 Mike McCauley
 // $Id: AccelStepper.h,v 1.27 2016/08/14 10:26:54 mikem Exp mikem $
 
+#pragma once
 #include "Arduino.h"
 
 // These defs cause trouble on some versions of Arduino
-#undef round
+//#undef round
 
 /////////////////////////////////////////////////////////////////////
 /// \class AccelStepper AccelStepper.h <AccelStepper.h>

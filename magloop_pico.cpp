@@ -14,15 +14,17 @@
 #include "hardware/timer.h"
 #include "hardware/clocks.h"
 #include "Adafruit_ILI9341/Adafruit_ILI9341.h"
+#include "arduino_includes/Arduino.h"
 #include "AccelStepper/AccelStepper.h"
 #include "StepperManagement/StepperManagement.h"
 #include "DDS/DDS.h"
 #include "SWR/SWR.h"
 #include "AutoTune/AutoTune.h"
 
-#include <Fonts/FreeSerif24pt7b.h>
-#include <Fonts/FreeSerif9pt7b.h>
-#include <Fonts/FreeSerif12pt7b.h>
+//#include "Adafruit-GFX-Library/gfxfont.h"
+#include "Adafruit-GFX-Library/Fonts/FreeSerif24pt7b.h"
+#include "Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
+#include "Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
@@ -113,7 +115,7 @@ int main()
   tft.initSPI();
   tft.begin();
   tft.setRotation(3);
-
+  tft.fillScreen(ILI9341_BLACK);
   //  Run the same Splash function as in the Mag Loop Controller project.
   Splash(tft);
 
@@ -125,53 +127,68 @@ int main()
   //  Instantiate the Stepper Manager:
   StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
 
-  steppermanage.ResetStepperToZero();
+  //steppermanage.ResetStepperToZero();
 
-  steppermanage.setMaxSpeed(5000);
-  steppermanage.setAcceleration(1100);
+  //steppermanage.setMaxSpeed(5000);
+  //steppermanage.setAcceleration(1100);
 
-  steppermanage.runToNewPosition(2500);
+  //steppermanage.runToNewPosition(2500);
 
-  //stepper.disableOutputs();
+  //steppermanage.disableOutputs();
 
   //  Next test the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
+  //dds.DDSWakeUp();
+  //dds.DDSWakeUp();
   dds.DDSWakeUp();
-  dds.SendFrequency(7045000);
+  dds.SendFrequency(8045000);
+  dds.SendFrequency(8045000);
 
   // Instantiate SWR object.
   
   SWR swr = SWR(steppermanage, tft);
-  /*
+  
+  
   const float conversion_factor = 3.3f/(1 << 12);
   double VSWR;
+  /*
+  for (int i = 0; i < 2501; i = i + 1) {
   VSWR = swr.ReadSWRValue();
   ErasePage(tft);
   tft.setTextSize(2);
-  while(1){
-  ErasePage(tft);
   tft.setCursor(10, 20);
+  //while(1){
+  tft.print(VSWR);
+  //steppermanage.runToNewPosition(i);
+  //}
+  tft.setCursor(10, 50);
   adc_select_input(0);
   tft.print(adc_read() * conversion_factor);
-  tft.setCursor(10, 50);
+  tft.setCursor(10, 80);
   adc_select_input(1);
   tft.print(adc_read() * conversion_factor);
   busy_wait_us_32(20000);
   }
   */
- 
- 
- 
-//AutoTune autotune = AutoTune(stepper, swr, tft, steppermanage, display);
+
+AutoTune autotune = AutoTune(swr, tft, steppermanage);
 //Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
 //Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
 //Buttons buttons = Buttons(display, presets, dds, calibrate);
 //DisplayManagement display = DisplayManagement(tft, calibrate, dds, swr, stepper, autotune, steppermanage, buttons);
 
- 
- //autotune.AutoTuneSWRQuick();
-//autotune.MoveStepperToPositionCorrected(2000);
+tft.fillScreen(ILI9341_BLACK);
+tft.setTextSize(4);
+tft.setCursor(80, 40);
+tft.print("TUNING!");
+autotune.AutoTuneSWRQuick();
 
+VSWR = swr.ReadSWRValue();
+  tft.fillScreen(ILI9341_BLACK);
+  tft.setCursor(50, 40);
+  tft.print("TUNED SWR:");
+  tft.setCursor(110, 100);
+  tft.print(VSWR);
 
   return 0;
 }

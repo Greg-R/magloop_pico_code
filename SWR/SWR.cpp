@@ -225,8 +225,7 @@ float SWR::ReadSWRValue()
     }
   }
 //#endif
-//  return (VSWR);
-  return adc_read();
+return VSWR;
 }
 
 /*****

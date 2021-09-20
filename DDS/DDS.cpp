@@ -17,39 +17,39 @@ gpio_set_dir( WCLK, GPIO_OUT);
 
 void DDS::DDSWakeUp() {          //initialize DDS
   gpio_put(WCLK, 1);
-  busy_wait_us_32(200);
+  busy_wait_us_32(20000);
   gpio_put(WCLK, 0);
 
   gpio_put(RESET, 1);
-  busy_wait_us_32(200);
+  busy_wait_us_32(20000);
   gpio_put(RESET, 0);
 
   gpio_put(FQ_UD, 1);
-  busy_wait_us_32(200);
+  busy_wait_us_32(20000);
   gpio_put(FQ_UD, 0);
-  busy_wait_us_32(200);
+  busy_wait_us_32(20000);
 }
 
 void DDS::outOne() {
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
   gpio_put (WCLK, 0);
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
   gpio_put (DATA, 1);
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
   gpio_put (WCLK, 1);
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
   gpio_put (DATA, 0);
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
 }
 
 void DDS::outZero() {
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
   gpio_put (WCLK, 0);
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
   gpio_put (DATA, 0);
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
   gpio_put (WCLK, 1);
-  busy_wait_us_32(200);
+  busy_wait_us_32(2000);
 }
 
 void DDS::byte_out(unsigned char byte) {
@@ -67,6 +67,7 @@ void DDS::SendFrequency(long frequency) {   //Set DDS frequency
 
   long freq = frequency * 4294967295L / 125000000L; // note 125 MHz clock on 9850  Can be used to calibrate individual DDS
   gpio_put (FQ_UD, 0);
+  busy_wait_us_32(2000);
   for (int b = 0; b < 4; b++, freq >>= 8)
     byte_out (freq & 0xFF);
   byte_out (0x00);   // Final control byte, all 0 for 9850 chip

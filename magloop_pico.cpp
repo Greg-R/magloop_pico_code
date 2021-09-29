@@ -49,17 +49,11 @@
 #define DDS_FQ_UD 1
 #define WLCK      0
 
-
-void ErasePage(Adafruit_ILI9341 tft)
-{
-  tft.fillScreen(ILI9341_BLACK);
-}
-
 // The Splash function from the Mag Loop Arduino .ino file.
 
 void Splash(Adafruit_ILI9341 tft)
 {
-  ErasePage(tft);
+  tft.fillScreen(ILI9341_BLACK);
   tft.setTextSize(2);
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_BLACK);
   tft.setCursor(10, 20);
@@ -91,23 +85,19 @@ int main()
   // Initialize stepper GPIOs:
   gpio_set_function( 9, GPIO_FUNC_SIO);
   gpio_set_function(10, GPIO_FUNC_SIO);
+  //gpio_init(11);
+  //gpio_init(11);
   gpio_set_function(11, GPIO_FUNC_SIO);
   gpio_set_function(12, GPIO_FUNC_SIO);
-  gpio_set_dir( 9, GPIO_OUT);
-  gpio_set_dir(12, GPIO_OUT);
+  gpio_set_dir( 9, GPIO_OUT);  // Stepper Dir
+  gpio_set_dir(12, GPIO_OUT);  // Stepper Step
   gpio_set_dir(10, GPIO_IN);  // Limit switch
   gpio_set_dir(11, GPIO_IN);  // Limit switch
+//  The limit switch inputs need pull-ups:
   gpio_put( 9, 0);
   gpio_put(12, 0);
-
-  //  The limit switch inputs need pull-ups:
   gpio_pull_up(10);
   gpio_pull_up(11);
-
-  //gpio_set_function( 0, GPIO_FUNC_SIO);
-  //gpio_set_dir( 0, GPIO_OUT);
-  //gpio_put( 0, 0);
-  //gpio_put( 0, 1);
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -125,7 +115,22 @@ int main()
   //  Create the stepper object:
   //AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
   //  Instantiate the Stepper Manager:
+
+  /*
   StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
+
+  steppermanage.setAcceleration(110);
+  steppermanage.setCurrentPosition(500);  //  Sets max speed to zero!
+  steppermanage.setMaxSpeed(100);
+  
+//  for(int i = 0; i < 500; i = i + 1) {
+//  steppermanage.moveTo(500);
+//  steppermanage.run();
+//  }
+
+//  steppermanage.MoveStepperToPositionCorrected(3500);
+
+  steppermanage.ResetStepperToZero();
 
   //steppermanage.ResetStepperToZero();
 
@@ -151,10 +156,11 @@ int main()
   
   const float conversion_factor = 3.3f/(1 << 12);
   double VSWR;
-  /*
+  
+  
   for (int i = 0; i < 2501; i = i + 1) {
   VSWR = swr.ReadSWRValue();
-  ErasePage(tft);
+  tft.fillScreen(ILI9341_BLACK);
   tft.setTextSize(2);
   tft.setCursor(10, 20);
   //while(1){
@@ -169,7 +175,8 @@ int main()
   tft.print(adc_read() * conversion_factor);
   busy_wait_us_32(20000);
   }
-  */
+  
+  
 
 AutoTune autotune = AutoTune(swr, tft, steppermanage);
 //Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
@@ -181,7 +188,7 @@ tft.fillScreen(ILI9341_BLACK);
 tft.setTextSize(4);
 tft.setCursor(80, 40);
 tft.print("TUNING!");
-autotune.AutoTuneSWRQuick();
+//autotune.AutoTuneSWRQuick();
 
 VSWR = swr.ReadSWRValue();
   tft.fillScreen(ILI9341_BLACK);
@@ -189,6 +196,8 @@ VSWR = swr.ReadSWRValue();
   tft.print("TUNED SWR:");
   tft.setCursor(110, 100);
   tft.print(VSWR);
+
+  */
 
   return 0;
 }

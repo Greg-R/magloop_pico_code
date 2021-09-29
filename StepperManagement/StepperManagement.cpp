@@ -20,7 +20,7 @@
 
 StepperManagement::StepperManagement(uint8_t interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): AccelStepper(interface, pin1, pin2, pin3, pin4, enable) {
 currPosition = 2500;  // Default to approximately midrange.
-setCurrentPosition(2500);  //
+setCurrentPosition(5000);  //
 }
 
 //AccelStepper& stepper;
@@ -71,8 +71,8 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPosition)
 void StepperManagement::ResetStepperToZero()
 {
   //updateMessage("Resetting to Zero");
-  setMaxSpeed(5000);
-  setAcceleration(1100);
+  setMaxSpeed(500);
+  setAcceleration(110);
   while (gpio_get(ZEROSWITCH) != 0) {      // move to zero position
     moveTo(currPosition);
     run();
@@ -81,7 +81,7 @@ void StepperManagement::ResetStepperToZero()
   setCurrentPosition(0);
   setMaxSpeed(100);
   currPosition = 0;
-  gpio_put(ZEROSWITCH, 1);
+  //gpio_put(ZEROSWITCH, 1);  // This shouldn't be necessary due to pull-up.
   currPosition = 50;
   //Serial.print("before 200 move = ");
   MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
@@ -107,7 +107,7 @@ void StepperManagement::ResetStepperToZero()
 
 
 /*****
-  Purpose: To move the cap[acitor to the approximate location via the stepper motor
+  Purpose: To move the capacitor to the approximate location via the stepper motor
 
   Parameter list:
   int whichBandOption           the band selected (probably don't need since currentFrequency tells us

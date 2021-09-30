@@ -116,21 +116,21 @@ int main()
   //AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
   //  Instantiate the Stepper Manager:
 
-  /*
+  
   StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
 
   steppermanage.setAcceleration(110);
   steppermanage.setCurrentPosition(500);  //  Sets max speed to zero!
   steppermanage.setMaxSpeed(100);
   
-//  for(int i = 0; i < 500; i = i + 1) {
-//  steppermanage.moveTo(500);
-//  steppermanage.run();
-//  }
+  for(int i = 0; i < 500; i = i + 1) {
+  steppermanage.moveTo(500);
+  steppermanage.run();
+ }
 
 //  steppermanage.MoveStepperToPositionCorrected(3500);
 
-  steppermanage.ResetStepperToZero();
+//  steppermanage.ResetStepperToZero();
 
   //steppermanage.ResetStepperToZero();
 
@@ -157,7 +157,7 @@ int main()
   const float conversion_factor = 3.3f/(1 << 12);
   double VSWR;
   
-  
+  /*
   for (int i = 0; i < 2501; i = i + 1) {
   VSWR = swr.ReadSWRValue();
   tft.fillScreen(ILI9341_BLACK);
@@ -175,6 +175,7 @@ int main()
   tft.print(adc_read() * conversion_factor);
   busy_wait_us_32(20000);
   }
+  */
   
   
 
@@ -197,7 +198,7 @@ VSWR = swr.ReadSWRValue();
   tft.setCursor(110, 100);
   tft.print(VSWR);
 
-  */
+
 
   return 0;
 }

@@ -374,7 +374,7 @@ void AccelStepper::step1(long step)
     setOutputPins(_direction ? 0b11 : 0b01); // step HIGH
     // Caution 200ns setup time
     // Delay the minimum allowed pulse width
-    sleep_ms(_minPulseWidth);
+    busy_wait_ms(_minPulseWidth);
     setOutputPins(_direction ? 0b10 : 0b00); // step LOW
 }
 
@@ -596,8 +596,7 @@ void AccelStepper::setPinsInverted(bool pin1Invert, bool pin2Invert, bool pin3In
 // Blocks until the target position is reached and stopped
 void AccelStepper::runToPosition()
 {
-    while (run())
-        ;
+    while (run());
 }
 
 boolean AccelStepper::runSpeedToPosition()

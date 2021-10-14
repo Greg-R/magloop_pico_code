@@ -118,21 +118,21 @@ int main()
 
   
   StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
+busy_wait_ms(10000);
+//  steppermanage.setAcceleration(150);
+//  steppermanage.setCurrentPosition(0);  //  Sets max speed to zero!
+//  steppermanage.setMaxSpeed(1000);
 
-  steppermanage.setAcceleration(110);
-  steppermanage.setCurrentPosition(500);  //  Sets max speed to zero!
-  steppermanage.setMaxSpeed(100);
-  
-  for(int i = 0; i < 500; i = i + 1) {
-  steppermanage.moveTo(500);
-  steppermanage.run();
- }
+//while(1) {
+//steppermanage.runToNewPosition(0);
+//steppermanage.runToNewPosition(3200);
+//}
+
 
 //  steppermanage.MoveStepperToPositionCorrected(3500);
 
-//  steppermanage.ResetStepperToZero();
-
-  //steppermanage.ResetStepperToZero();
+  steppermanage.ResetStepperToZero();
+  steppermanage.runToNewPosition(2675);
 
   //steppermanage.setMaxSpeed(5000);
   //steppermanage.setAcceleration(1100);
@@ -189,7 +189,7 @@ tft.fillScreen(ILI9341_BLACK);
 tft.setTextSize(4);
 tft.setCursor(80, 40);
 tft.print("TUNING!");
-//autotune.AutoTuneSWRQuick();
+autotune.AutoTuneSWRQuick();
 
 VSWR = swr.ReadSWRValue();
   tft.fillScreen(ILI9341_BLACK);

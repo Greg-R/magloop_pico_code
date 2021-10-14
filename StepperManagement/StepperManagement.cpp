@@ -95,6 +95,7 @@ void StepperManagement::ResetStepperToZero()
   }
   setCurrentPosition(0);
   currPosition = 380;
+// This while loop can be eliminated by using runToPosition() function.
   while (1) {
     moveTo(currPosition);
     run();

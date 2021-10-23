@@ -81,7 +81,6 @@ int main()
 {
   stdio_init_all();
 
-
   // Initialize stepper GPIOs:
   gpio_set_function( 9, GPIO_FUNC_SIO);
   gpio_set_function(10, GPIO_FUNC_SIO);
@@ -98,9 +97,10 @@ int main()
   gpio_put(12, 0);
   gpio_pull_up(10);
   gpio_pull_up(11);
-
+  
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
+  //tft.fillScreen(ILI9341_BLACK);
   //  Configure the display object.
   tft.initSPI();
   tft.begin();
@@ -118,7 +118,7 @@ int main()
 
   
   StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
-busy_wait_ms(10000);
+busy_wait_ms(1000);
 //  steppermanage.setAcceleration(150);
 //  steppermanage.setCurrentPosition(0);  //  Sets max speed to zero!
 //  steppermanage.setMaxSpeed(1000);
@@ -177,8 +177,6 @@ busy_wait_ms(10000);
   }
   */
   
-  
-
 AutoTune autotune = AutoTune(swr, tft, steppermanage);
 //Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
 //Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
@@ -198,7 +196,7 @@ VSWR = swr.ReadSWRValue();
   tft.setCursor(110, 100);
   tft.print(VSWR);
 
-
+dds.SendFrequency(0);
 
   return 0;
 }

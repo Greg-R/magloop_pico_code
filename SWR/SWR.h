@@ -33,7 +33,6 @@ class SWR {
 public:
 
 StepperManagement steppermanage;
-
 Adafruit_ILI9341 tft;
 uint32_t currPosition;
 uint32_t bandLimitPositionCounts[100][2];
@@ -47,8 +46,12 @@ int iMax;
 float tempSWR[10];
 int tempCurrentPosition[10];
 long  SWRMinPosition;
+int forward_offset, reverse_offset;
+int forward_voltage, reverse_voltage;
 
 SWR(StepperManagement & steppermanage, Adafruit_ILI9341 & tft);
+
+void ReadADCoffsets();
 
 void ManualFrequencyControl(int whichBandOption);
 

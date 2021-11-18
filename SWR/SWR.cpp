@@ -5,13 +5,34 @@
 SWR::SWR(StepperManagement & steppermanage, Adafruit_ILI9341 & tft): steppermanage(steppermanage), tft(tft) {
 adc_init();
 adc_gpio_init(26);
+adc_gpio_init(27);
+forward_offset = 0;
+reverse_offset = 0;
 //  steppermanage = steppermanage;
+}
+
+/*
+Read and store the ADC offset values.  This must be done with the DDS off.
+
+*/
+void SWR::ReadADCoffsets(){
+  adc_select_input(0);
+  adc_read();
+  adc_select_input(1);
+  adc_read();
+  busy_wait_ms(1000);
+  adc_select_input(0);
+  reverse_offset = adc_read();
+  busy_wait_ms(1000);
+  adc_select_input(1);
+  
+  forward_offset = adc_read();
 }
 
 /*****
   Purpose: Manual Setting the Frequency
 
-  Paramter list:
+  Parameter list:
 
   Return value:
     void
@@ -78,7 +99,7 @@ void SWR::ManualFrequencyControl(int whichBandOption) {
 /*****
   Purpose: Manual Setting the Stepper
 
-  Paramter list:
+  Parameter list:
 
   Return value:
     void
@@ -174,7 +195,6 @@ void SWR::PlotSWRValueNew(int whichBandOption)
   CAUTION: Assumes that frequency has already been set
   ALTERNATIVE CALCULATION (Untested ?)
     p = sqrt( ((float)REV) / FWD );   // Calculate reflection coefficient
-
     VSWR = (1 + p) / (1 - p);         // Calculate VSWR
 *****/
 float SWR::ReadSWRValue()
@@ -186,45 +206,29 @@ float SWR::ReadSWRValue()
   float REV = 0.0;
   float VSWR;
   for (i = 0; i < MAXPOINTSPERSAMPLE; i++) {             // Take multiple samples at each frequency
-    busy_wait_us(5L * 1000);
-    adc_select_input(0);
-    sum[0] += (float) adc_read();  // Read forward voltage.
-    busy_wait_us(5L * 1000);
+    busy_wait_ms(500);
     adc_select_input(1);
-    sum[1] += (float) adc_read();  //  Read reverse voltage.
+    sum[0] += (float) adc_read(); // - (float) forward_offset;  // Read forward voltage.
+    busy_wait_ms(500);
+    adc_select_input(0);
+    sum[1] += (float) adc_read(); // - (float) reverse_offset;  //  Read reverse voltage.
   }
-  FWD = sum[0] / (float) MAXPOINTSPERSAMPLE;
-  REV = sum[1] / (float) MAXPOINTSPERSAMPLE;
-  REV = REV+SWRREVOFFSET; 
-  if (REV >= FWD) {
+  forward_voltage = sum[0] / (float) MAXPOINTSPERSAMPLE - (float) forward_offset;
+  reverse_voltage = sum[1] / (float) MAXPOINTSPERSAMPLE - (float) reverse_offset;
+  //REV = REV+SWRREVOFFSET; 
+  if (reverse_voltage >= forward_voltage) {
     VSWR = 999.0;                               // To avoid a divide by zero or negative VSWR then set to max 999
   } else {
-    VSWR = ((FWD + REV) / (FWD - REV));         // Calculate VSWR
+    VSWR = ((forward_voltage + reverse_voltage) / (forward_voltage - reverse_voltage));         // Calculate VSWR
   }
-  //  Serial.print("FWD=  ");Serial.println(FWD);
-  //Serial.print("REV=  ");Serial.println(REV);
-  // Serial.print("VSWR=  ");Serial.println(VSWR);
-//#ifdef DEBUG
   static float sNow = 1000.000, sLast = 1000.000;
   if (VSWR < 999.0) {
     sNow = VSWR;
     if (sNow < sLast) {
-      /*
-#ifdef DEBUG1
-      Serial.print("In REadSWRValue()   sNow = ");
-      Serial.print(sNow);
-      Serial.print("  sLast = ");
-      Serial.print(sLast);
-      Serial.print("   currPosition = ");
-      Serial.print(currPosition);
-      Serial.print("   sum[1] = ");
-      Serial.println(sum[1]);
-#endif
-*/
       sLast = sNow;
     }
   }
-//#endif
+
 return VSWR;
 }
 
@@ -254,20 +258,6 @@ float SWR::ReadNewSWRValue()
   } else {
     VSWR = ((float) (FWD + REV)) / ( (float) (FWD - REV));        // Calculate VSWR
   }
-  /*
-//#ifdef DEBUG1
-  Serial.print("FWD = ");
-  Serial.print(FWD);
-  Serial.print("   REV = ");
-  Serial.print(REV);
-  Serial.print("   SWR = ");
-  Serial.print(VSWR);
-  Serial.print("   sum[0] = ");
-  Serial.print(sum[0]);
-  Serial.print("   sum[1] = ");
-  Serial.println(sum[1]);
-  */
-//#endif
 
   return (VSWR);
 

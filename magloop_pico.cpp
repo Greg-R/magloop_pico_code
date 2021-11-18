@@ -49,6 +49,9 @@
 #define DDS_FQ_UD 1
 #define WLCK      0
 
+// +12V and +5V power switch GPIO:
+#define POWER_SWITCH 28
+
 // The Splash function from the Mag Loop Arduino .ino file.
 
 void Splash(Adafruit_ILI9341 tft)
@@ -97,6 +100,11 @@ int main()
   gpio_put(12, 0);
   gpio_pull_up(10);
   gpio_pull_up(11);
+
+  // Initialize power switch GPIO, and then set to OFF:
+  gpio_set_function(POWER_SWITCH, GPIO_FUNC_SIO);
+  gpio_set_dir(POWER_SWITCH, GPIO_OUT);
+  gpio_put(POWER_SWITCH, 0);
   
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -116,6 +124,9 @@ int main()
   //AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
   //  Instantiate the Stepper Manager:
 
+  //  Turn on the power!
+  gpio_put(POWER_SWITCH, 1);
+
   
   StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
 busy_wait_ms(1000);
@@ -130,10 +141,12 @@ busy_wait_ms(1000);
 
 
 //  steppermanage.MoveStepperToPositionCorrected(3500);
-
+/*
   steppermanage.ResetStepperToZero();
+  steppermanage.setMaxSpeed(500);
+  steppermanage.setAcceleration(110);
   steppermanage.runToNewPosition(2675);
-
+*/
   //steppermanage.setMaxSpeed(5000);
   //steppermanage.setAcceleration(1100);
 
@@ -146,13 +159,16 @@ busy_wait_ms(1000);
   //dds.DDSWakeUp();
   //dds.DDSWakeUp();
   dds.DDSWakeUp();
+  dds.SendFrequency(0);
+  //  Now measure the ADC offsets before the DDS is active.
+  SWR swr = SWR(steppermanage, tft);
+  swr.ReadADCoffsets();
   dds.SendFrequency(8045000);
   dds.SendFrequency(8045000);
-
+ // gpio_put(POWER_SWITCH, 0);
   // Instantiate SWR object.
   
-  SWR swr = SWR(steppermanage, tft);
-  
+
   
   const float conversion_factor = 3.3f/(1 << 12);
   double VSWR;
@@ -177,7 +193,7 @@ busy_wait_ms(1000);
   }
   */
   
-AutoTune autotune = AutoTune(swr, tft, steppermanage);
+//AutoTune autotune = AutoTune(swr, tft, steppermanage);
 //Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
 //Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
 //Buttons buttons = Buttons(display, presets, dds, calibrate);
@@ -187,16 +203,68 @@ tft.fillScreen(ILI9341_BLACK);
 tft.setTextSize(4);
 tft.setCursor(80, 40);
 tft.print("TUNING!");
-autotune.AutoTuneSWRQuick();
+//autotune.AutoTuneSWRQuick();
 
 VSWR = swr.ReadSWRValue();
   tft.fillScreen(ILI9341_BLACK);
-  tft.setCursor(50, 40);
+  tft.setCursor(50, 10);
   tft.print("TUNED SWR:");
-  tft.setCursor(110, 100);
+  tft.setCursor(110, 50);
   tft.print(VSWR);
 
-dds.SendFrequency(0);
+
+adc_init();
+adc_gpio_init(26);
+adc_gpio_init(27);
+
+
+  tft.setTextSize(3);
+  tft.setCursor(20, 90);
+  tft.print(swr.forward_offset);
+  tft.setCursor(110, 90);
+  tft.print(swr.forward_voltage);
+  tft.setCursor(20, 120);
+  tft.print(swr.reverse_offset);
+  tft.setCursor(110, 120);
+  tft.print(swr.reverse_voltage);
+
+//dds.SendFrequency(0);
+//gpio_put(POWER_SWITCH, 0);
+
+//busy_wait_ms(1000);
+
+//int forward, reverse;
+//  adc_select_input(0);
+//  reverse = adc_read();
+//busy_wait_ms(1000);
+//  adc_select_input(0);
+//  forward = adc_read();
+
+
+  float sum[2] = {0.0, 0.0};
+
+  float forward = 0.0;
+  float reverse = 0.0;
+  int average = 10;
+  for (int i = 0; i < average; i++) {             // Take multiple samples at each frequency
+    busy_wait_ms(500);
+    adc_select_input(1);
+    sum[0] += (float) adc_read(); // - (float) forward_offset;  // Read forward voltage.
+    busy_wait_ms(500);
+    adc_select_input(0);
+    sum[1] += (float) adc_read(); // - (float) reverse_offset;  //  Read reverse voltage.
+  }
+  forward = sum[0] / (float) average;
+  reverse = sum[1] / (float) average;
+
+  tft.setCursor(20, 150);
+  tft.print(reverse);
+  tft.setCursor(160, 150);
+  tft.print(forward);
+
+// Power down
+//dds.SendFrequency(0);
+//  gpio_put(POWER_SWITCH, 0);
 
   return 0;
 }

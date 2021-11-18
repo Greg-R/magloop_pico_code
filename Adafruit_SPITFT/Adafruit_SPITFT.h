@@ -40,7 +40,7 @@ A modified version for testing on the Raspberry Pi Pico.
 #define PIN_CS   13
 #define PIN_SCK  14
 #define PIN_MOSI 15
-#define DISP_DC 19
+#define DISP_DC 16  //  P2 changed from 19 to 16.
 
 //#define DISP_DC 15 // GPIO for Data/Command wire.
 

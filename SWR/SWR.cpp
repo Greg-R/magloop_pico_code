@@ -206,10 +206,10 @@ float SWR::ReadSWRValue()
   float REV = 0.0;
   float VSWR;
   for (i = 0; i < MAXPOINTSPERSAMPLE; i++) {             // Take multiple samples at each frequency
-    busy_wait_ms(500);
+    busy_wait_ms(20);
     adc_select_input(1);
     sum[0] += (float) adc_read(); // - (float) forward_offset;  // Read forward voltage.
-    busy_wait_ms(500);
+    busy_wait_ms(20);
     adc_select_input(0);
     sum[1] += (float) adc_read(); // - (float) reverse_offset;  //  Read reverse voltage.
   }

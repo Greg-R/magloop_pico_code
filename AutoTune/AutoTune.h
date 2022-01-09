@@ -44,6 +44,4 @@ void AutoTuneSWRQuick();
 
 void MoveStepperToPositionCorrected(long currentPosition);
 
-
-
 };

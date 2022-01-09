@@ -10,7 +10,7 @@
 #define YAXISSTART                  55
 #define FREQUENCYENCODERSWITCH      16
 #define ANALOGFORWARD               0
-#define MAXPOINTSPERSAMPLE          10
+#define MAXPOINTSPERSAMPLE          2
 #define ANALOGREFLECTED             1
 #define SWRREVOFFSET                75
 
@@ -47,7 +47,7 @@ float tempSWR[10];
 int tempCurrentPosition[10];
 long  SWRMinPosition;
 int forward_offset, reverse_offset;
-int forward_voltage, reverse_voltage;
+float forward_voltage, reverse_voltage;
 
 SWR(StepperManagement & steppermanage, Adafruit_ILI9341 & tft);
 

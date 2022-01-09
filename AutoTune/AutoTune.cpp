@@ -145,7 +145,7 @@ void AutoTune::AutoTuneSWRQuick() {    //Al Modified 9-14-19
       SWRMinPosition = currPosition;
       //MoveStepperToPositionCorrected(SWRMinPosition);
     }
-    if (minSWR > 3 ) {
+    if (minSWR > 3.0 ) {
       //if (minSWR > 3 and whichBandOption == 0) {
       steppermanage.setMaxSpeed(FASTMOVESPEED);
       currPosition = currPosition + 20;

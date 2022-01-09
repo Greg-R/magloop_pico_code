@@ -87,8 +87,6 @@ int main()
   // Initialize stepper GPIOs:
   gpio_set_function( 9, GPIO_FUNC_SIO);
   gpio_set_function(10, GPIO_FUNC_SIO);
-  //gpio_init(11);
-  //gpio_init(11);
   gpio_set_function(11, GPIO_FUNC_SIO);
   gpio_set_function(12, GPIO_FUNC_SIO);
   gpio_set_dir( 9, GPIO_OUT);  // Stepper Dir
@@ -108,7 +106,6 @@ int main()
   
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
-  //tft.fillScreen(ILI9341_BLACK);
   //  Configure the display object.
   tft.initSPI();
   tft.begin();
@@ -120,80 +117,33 @@ int main()
   // Test a GFX graphics primitive by drawing a border:
   tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
 
-  //  Create the stepper object:
-  //AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
-  //  Instantiate the Stepper Manager:
-
   //  Turn on the power!
   gpio_put(POWER_SWITCH, 1);
 
-  
+//  Instantiate the Stepper Manager: 
   StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
-busy_wait_ms(1000);
-//  steppermanage.setAcceleration(150);
+
+//  Examples of Stepper control functions:
+//  steppermanage.ResetStepperToZero();
 //  steppermanage.setCurrentPosition(0);  //  Sets max speed to zero!
-//  steppermanage.setMaxSpeed(1000);
+//  steppermanage.setMaxSpeed(500);
+//  steppermanage.setAcceleration(110);
+//  steppermanage.runToNewPosition(2675);
+//  steppermanage.disableOutputs();
 
-//while(1) {
-//steppermanage.runToNewPosition(0);
-//steppermanage.runToNewPosition(3200);
-//}
-
-
-//  steppermanage.MoveStepperToPositionCorrected(3500);
-/*
-  steppermanage.ResetStepperToZero();
-  steppermanage.setMaxSpeed(500);
-  steppermanage.setAcceleration(110);
-  steppermanage.runToNewPosition(2675);
-*/
-  //steppermanage.setMaxSpeed(5000);
-  //steppermanage.setAcceleration(1100);
-
-  //steppermanage.runToNewPosition(2500);
-
-  //steppermanage.disableOutputs();
-
-  //  Next test the DDS.
+//  Next test the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
-  //dds.DDSWakeUp();
-  //dds.DDSWakeUp();
   dds.DDSWakeUp();
   dds.SendFrequency(0);
-  //  Now measure the ADC offsets before the DDS is active.
+  
+// Instantiate SWR object.
   SWR swr = SWR(steppermanage, tft);
+//  Now measure the ADC offsets before the DDS is active.
   swr.ReadADCoffsets();
   dds.SendFrequency(8045000);
   dds.SendFrequency(8045000);
- // gpio_put(POWER_SWITCH, 0);
-  // Instantiate SWR object.
   
-
-  
-  const float conversion_factor = 3.3f/(1 << 12);
-  double VSWR;
-  
-  /*
-  for (int i = 0; i < 2501; i = i + 1) {
-  VSWR = swr.ReadSWRValue();
-  tft.fillScreen(ILI9341_BLACK);
-  tft.setTextSize(2);
-  tft.setCursor(10, 20);
-  //while(1){
-  tft.print(VSWR);
-  //steppermanage.runToNewPosition(i);
-  //}
-  tft.setCursor(10, 50);
-  adc_select_input(0);
-  tft.print(adc_read() * conversion_factor);
-  tft.setCursor(10, 80);
-  adc_select_input(1);
-  tft.print(adc_read() * conversion_factor);
-  busy_wait_us_32(20000);
-  }
-  */
-  
-//AutoTune autotune = AutoTune(swr, tft, steppermanage);
+AutoTune autotune = AutoTune(swr, tft, steppermanage);
 //Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
 //Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
 //Buttons buttons = Buttons(display, presets, dds, calibrate);
@@ -203,21 +153,17 @@ tft.fillScreen(ILI9341_BLACK);
 tft.setTextSize(4);
 tft.setCursor(80, 40);
 tft.print("TUNING!");
-//autotune.AutoTuneSWRQuick();
+autotune.AutoTuneSWRQuick();
 
+float VSWR;
 VSWR = swr.ReadSWRValue();
   tft.fillScreen(ILI9341_BLACK);
   tft.setCursor(50, 10);
   tft.print("TUNED SWR:");
   tft.setCursor(110, 50);
-  tft.print(VSWR);
+  tft.print(VSWR, 3);
 
-
-adc_init();
-adc_gpio_init(26);
-adc_gpio_init(27);
-
-
+/*  Troubleshoot VSWR Bridge
   tft.setTextSize(3);
   tft.setCursor(20, 90);
   tft.print(swr.forward_offset);
@@ -227,44 +173,21 @@ adc_gpio_init(27);
   tft.print(swr.reverse_offset);
   tft.setCursor(110, 120);
   tft.print(swr.reverse_voltage);
-
-//dds.SendFrequency(0);
-//gpio_put(POWER_SWITCH, 0);
-
-//busy_wait_ms(1000);
-
-//int forward, reverse;
-//  adc_select_input(0);
-//  reverse = adc_read();
-//busy_wait_ms(1000);
-//  adc_select_input(0);
-//  forward = adc_read();
-
-
-  float sum[2] = {0.0, 0.0};
-
-  float forward = 0.0;
-  float reverse = 0.0;
-  int average = 10;
-  for (int i = 0; i < average; i++) {             // Take multiple samples at each frequency
-    busy_wait_ms(500);
-    adc_select_input(1);
-    sum[0] += (float) adc_read(); // - (float) forward_offset;  // Read forward voltage.
-    busy_wait_ms(500);
-    adc_select_input(0);
-    sum[1] += (float) adc_read(); // - (float) reverse_offset;  //  Read reverse voltage.
-  }
-  forward = sum[0] / (float) average;
-  reverse = sum[1] / (float) average;
-
+  int forward, reverse;
+  adc_select_input(0);
+  reverse = adc_read();
+  busy_wait_ms(1000);
+  adc_select_input(0);
+  forward = adc_read();
   tft.setCursor(20, 150);
   tft.print(reverse);
   tft.setCursor(160, 150);
   tft.print(forward);
+*/
 
 // Power down
-//dds.SendFrequency(0);
-//  gpio_put(POWER_SWITCH, 0);
+dds.SendFrequency(0);
+gpio_put(POWER_SWITCH, 0);
 
   return 0;
 }

@@ -814,9 +814,9 @@ void Adafruit_SPITFT::writeCommand(uint8_t cmd) {
     @return  Unsigned 8-bit value read (always zero if USE_FAST_PINIO is
              not supported by the MCU architecture).
 */
-uint8_t Adafruit_SPITFT::spiRead(void) {
-
-}
+//uint8_t Adafruit_SPITFT::spiRead(void) {
+//
+//}
 
 /*!
     @brief  Issue a single 16-bit value to the display. Chip-select,
@@ -851,9 +851,9 @@ void Adafruit_SPITFT::writeCommand16(uint16_t cmd) {
     @return  Unsigned 16-bit value read (always zero if USE_FAST_PINIO is
              not supported by the MCU architecture).
 */
-uint16_t Adafruit_SPITFT::read16(void) {
- 
-}
+//uint16_t Adafruit_SPITFT::read16(void) {
+// 
+//}
 
 /*!
     @brief  Issue a single 16-bit value to the display. Chip-select,

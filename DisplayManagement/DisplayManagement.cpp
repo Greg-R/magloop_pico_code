@@ -1,9 +1,10 @@
 
 #include "DisplayManagement.h"
 
-DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, AutoTune & autotune, StepperManagement & steppermanage, Buttons & buttons): tft(tft), calibrate(calibrate), dds(dds), swr(swr), autotune(autotune), steppermanage(steppermanage), buttons(buttons) {
-
-}
+DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, Calibrate & calibrate, DDS & dds, SWR & swr, 
+                                     AutoTune & autotune, StepperManagement & steppermanage,
+                                     Buttons & buttons): tft(tft), calibrate(calibrate), dds(dds), swr(swr),
+                                     autotune(autotune), steppermanage(steppermanage), buttons(buttons) {}
 
 /*****
   Purpose: To execute the FREQ menu option

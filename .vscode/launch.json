@@ -6,7 +6,7 @@
   "configurations": [
     
     {
-      "name": "Cortex Debug",
+      "name": "Cortex Pi Pico Debug",
       "cwd": "${workspaceRoot}",
       "executable": "${command:cmake.launchTargetPath}",
       "request": "launch",

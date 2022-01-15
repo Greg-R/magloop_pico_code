@@ -18,7 +18,12 @@
 #define HIGHEND20M                 14350000L
 
 
-StepperManagement::StepperManagement(uint8_t interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): AccelStepper(interface, pin1, pin2, pin3, pin4, enable) {
+//StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): stepper(interface, pin1, pin2, pin3, pin4, enable) {
+//currPosition = 2500;  // Default to approximately midrange.
+//setCurrentPosition(5000);  //
+//}
+
+StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable):AccelStepper(interface, pin1, pin2) {
 currPosition = 2500;  // Default to approximately midrange.
 setCurrentPosition(5000);  //
 }
@@ -52,7 +57,8 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPosition)
   }
   if (stepperDirection != stepperDirectionOld)
   {
-    stepper.setCurrentPosition(currentPosition - 1);
+  //  stepper.setCurrentPosition(currentPosition - 1);
+              setCurrentPosition(currentPosition - 1);
   }
   stepperDirectionOld = stepperDirection;
 }
@@ -129,8 +135,10 @@ void StepperManagement::DoFastStepperMove(uint32_t whichBandOption)
   int yAxisPixelPerUnit, totalPixels, yDotIncrement;
   int startOffset;
   float pixelsPerTenth, swr;
-  stepper.setMaxSpeed(FASTMOVESPEED);       // Get ready for a fast move
-  stepper.setAcceleration(1100);
+  //stepper.setMaxSpeed(FASTMOVESPEED);       // Get ready for a fast move
+            setMaxSpeed(FASTMOVESPEED);
+  //stepper.setAcceleration(1100);
+  setAcceleration(1100);
   startOffset = 0;
   moveToStepperIndex = bandLimitPositionCounts[whichBandOption][0];
 #ifdef DEBUG1
@@ -146,9 +154,12 @@ void StepperManagement::DoFastStepperMove(uint32_t whichBandOption)
   Serial.println(hertzPerStepperUnitAir[whichBandOption]);
 #endif
   while (1) {
-    stepper.moveTo(moveToStepperIndex);
-    stepper.run();
-    if (stepper.distanceToGo() == 0) {
+    //stepper.moveTo(moveToStepperIndex);
+              moveTo(moveToStepperIndex);
+    //stepper.run();
+              run();
+    //if (stepper.distanceToGo() == 0) {c
+      if (        distanceToGo() == 0) {
       break;
     }
   }
@@ -160,7 +171,8 @@ void StepperManagement::DoFastStepperMove(uint32_t whichBandOption)
 
   totalPixels = YAXISEND - YAXISSTART;
   pixelsPerTenth = totalPixels / 50.0;      // HIghest SWR is 5, so 50 tenths.
-  stepper.setMaxSpeed(NORMALMOVESPEED);
+  //stepper.setMaxSpeed(NORMALMOVESPEED);
+            setMaxSpeed(NORMALMOVESPEED);
 }
 
 

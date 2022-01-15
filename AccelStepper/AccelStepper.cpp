@@ -173,7 +173,7 @@ boolean AccelStepper::run()
     return _speed != 0.0 || distanceToGo() != 0;
 }
 
-AccelStepper::AccelStepper(uint8_t interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable)
+AccelStepper::AccelStepper(MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable)
 {
     _interface = interface;
     _currentPos = 0;
@@ -210,7 +210,7 @@ AccelStepper::AccelStepper(uint8_t interface, uint8_t pin1, uint8_t pin2, uint8_
 
 AccelStepper::AccelStepper(void (*forward)(), void (*backward)())
 {
-    _interface = 0;
+    _interface = MotorInterfaceType::FUNCTION;
     _currentPos = 0;
     _targetPos = 0;
     _speed = 0.0;
@@ -306,31 +306,31 @@ void AccelStepper::step(long step)
 {
     switch (_interface)
     {
-    case FUNCTION:
+    case MotorInterfaceType::FUNCTION:
         step0(step);
         break;
 
-    case DRIVER:
+    case MotorInterfaceType::DRIVER:
         step1(step);
         break;
 
-    case FULL2WIRE:
+    case MotorInterfaceType::FULL2WIRE:
         step2(step);
         break;
 
-    case FULL3WIRE:
+    case MotorInterfaceType::FULL3WIRE:
         step3(step);
         break;
 
-    case FULL4WIRE:
+    case MotorInterfaceType::FULL4WIRE:
         step4(step);
         break;
 
-    case HALF3WIRE:
+    case MotorInterfaceType::HALF3WIRE:
         step6(step);
         break;
 
-    case HALF4WIRE:
+    case MotorInterfaceType::HALF4WIRE:
         step8(step);
         break;
     }
@@ -343,9 +343,9 @@ void AccelStepper::step(long step)
 void AccelStepper::setOutputPins(uint8_t mask)
 {
     uint8_t numpins = 2;
-    if (_interface == FULL4WIRE || _interface == HALF4WIRE)
+    if (_interface == MotorInterfaceType::FULL4WIRE || _interface == MotorInterfaceType::HALF4WIRE)
         numpins = 4;
-    else if (_interface == FULL3WIRE || _interface == HALF3WIRE)
+    else if (_interface == MotorInterfaceType::FULL3WIRE || _interface == MotorInterfaceType::HALF3WIRE)
         numpins = 3;
     uint8_t i;
     for (i = 0; i < numpins; i++)
@@ -525,7 +525,7 @@ void AccelStepper::step8(long step)
 // Prevents power consumption on the outputs
 void AccelStepper::disableOutputs()
 {
-    if (!_interface)
+    if (_interface == MotorInterfaceType::FUNCTION)
         return;
 
     setOutputPins(0); // Handles inversion automatically
@@ -538,17 +538,17 @@ void AccelStepper::disableOutputs()
 
 void AccelStepper::enableOutputs()
 {
-    if (!_interface)
+    if (_interface == MotorInterfaceType::FUNCTION)
         return;
 
     gpio_set_dir(_pin[0], OUTPUT);
     gpio_set_dir(_pin[1], OUTPUT);
-    if (_interface == FULL4WIRE || _interface == HALF4WIRE)
+    if (_interface == MotorInterfaceType::FULL4WIRE || _interface == MotorInterfaceType::HALF4WIRE)
     {
         gpio_set_dir(_pin[2], OUTPUT);
         gpio_set_dir(_pin[3], OUTPUT);
     }
-    else if (_interface == FULL3WIRE || _interface == HALF3WIRE)
+    else if (_interface == MotorInterfaceType::FULL3WIRE || _interface == MotorInterfaceType::HALF3WIRE)
     {
         gpio_set_dir(_pin[2], OUTPUT);
     }

@@ -307,7 +307,7 @@ public:
     /// Use this in the pins argument the AccelStepper constructor to 
     /// provide a symbolic name for the number of pins
     /// to use.
-    typedef enum
+    enum class MotorInterfaceType: uint8_t
     {
 	FUNCTION  = 0, ///< Use the functional interface, implementing your own driver functions (internal use only)
 	DRIVER    = 1, ///< Stepper Driver, 2 driver pins required
@@ -316,7 +316,7 @@ public:
     FULL4WIRE = 4, ///< 4 wire full stepper, 4 motor pins required
 	HALF3WIRE = 6, ///< 3 wire half stepper, such as HDD spindle, 3 motor pins required
 	HALF4WIRE = 8  ///< 4 wire half stepper, 4 motor pins required
-    } MotorInterfaceType;
+    };
 
     /// Constructor. You can have multiple simultaneous steppers, all moving
     /// at different speeds and accelerations, provided you call their run()
@@ -347,7 +347,7 @@ public:
     /// to pin 5.
     /// \param[in] enable If this is true (the default), enableOutputs() will be called to enable
     /// the output pins at construction time.
-    AccelStepper(uint8_t interface = AccelStepper::FULL4WIRE, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true);
+    AccelStepper(AccelStepper::MotorInterfaceType interface, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true);
 
     /// Alternate Constructor which will call your own functions for forward and backward steps. 
     /// You can have multiple simultaneous steppers, all moving
@@ -598,7 +598,7 @@ protected:
 private:
     /// Number of pins on the stepper motor. Permits 2 or 4. 2 pins is a
     /// bipolar, and 4 pins is a unipolar.
-    uint8_t        _interface;          // 0, 1, 2, 4, 8, See MotorInterfaceType
+    MotorInterfaceType        _interface;          // 0, 1, 2, 4, 8, See MotorInterfaceType
 
     /// Arduino pin number assignments for the 2 or 4 pins required to interface to the
     /// stepper motor or driver

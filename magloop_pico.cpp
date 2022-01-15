@@ -80,6 +80,17 @@ void Splash(Adafruit_ILI9341 tft)
   tft.setTextSize(2);
 }
 
+    enum class MotorInterfaceType: uint8_t
+    {
+	FUNCTION  = 0, ///< Use the functional interface, implementing your own driver functions (internal use only)
+	DRIVER    = 1, ///< Stepper Driver, 2 driver pins required
+	FULL2WIRE = 2, ///< 2 wire stepper, 2 motor pins required
+	FULL3WIRE = 3, ///< 3 wire stepper, such as HDD spindle, 3 motor pins required
+    FULL4WIRE = 4, ///< 4 wire full stepper, 4 motor pins required
+	HALF3WIRE = 6, ///< 3 wire half stepper, such as HDD spindle, 3 motor pins required
+	HALF4WIRE = 8  ///< 4 wire half stepper, 4 motor pins required
+    };
+
 int main()
 {
   stdio_init_all();
@@ -103,14 +114,31 @@ int main()
   gpio_set_function(POWER_SWITCH, GPIO_FUNC_SIO);
   gpio_set_dir(POWER_SWITCH, GPIO_OUT);
   gpio_put(POWER_SWITCH, 0);
-  
+
+  // Initialize 5 buttons and pull-ups.  Buttons are normally open.
+  gpio_set_function( 4, GPIO_FUNC_SIO);  // FULLCAL
+  gpio_set_function( 5, GPIO_FUNC_SIO);  // PRESETS
+  gpio_set_function( 6, GPIO_FUNC_SIO);  // ACCURACY
+  gpio_set_function( 7, GPIO_FUNC_SIO);  // AUTOTUNE
+  gpio_set_function( 8, GPIO_FUNC_SIO);  // BANDCAL
+  gpio_set_dir( 4, GPIO_IN);
+  gpio_set_dir( 5, GPIO_IN);
+  gpio_set_dir( 6, GPIO_IN);
+  gpio_set_dir( 7, GPIO_IN);
+  gpio_set_dir( 8, GPIO_IN);
+  gpio_pull_up(4);
+  gpio_pull_up(5);
+  gpio_pull_up(6);
+  gpio_pull_up(7);
+  gpio_pull_up(8);
+
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
   //  Configure the display object.
   tft.initSPI();
   tft.begin();
   tft.setRotation(3);
-  tft.fillScreen(ILI9341_BLACK);
+  tft.fillScreen(ILI9341_WHITE);
   //  Run the same Splash function as in the Mag Loop Controller project.
   Splash(tft);
 
@@ -121,7 +149,9 @@ int main()
   gpio_put(POWER_SWITCH, 1);
 
 //  Instantiate the Stepper Manager: 
-  StepperManagement steppermanage = StepperManagement(1, STEPPERPUL, STEPPERDIR);
+  StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
+
+//AccelStepper stepper =AccelStepper(1, STEPPERPUL, STEPPERDIR);
 
 //  Examples of Stepper control functions:
 //  steppermanage.ResetStepperToZero();
@@ -137,13 +167,13 @@ int main()
   dds.SendFrequency(0);
   
 // Instantiate SWR object.
-  SWR swr = SWR(steppermanage, tft);
+  SWR swr = SWR(stepper, tft);
 //  Now measure the ADC offsets before the DDS is active.
   swr.ReadADCoffsets();
   dds.SendFrequency(8045000);
   dds.SendFrequency(8045000);
   
-AutoTune autotune = AutoTune(swr, tft, steppermanage);
+AutoTune autotune = AutoTune(swr, tft, stepper);
 //Calibrate calibrate = Calibrate(display, stepper, steppermanage, tft, dds, swr, autotune);
 //Presets presets = Presets(tft, steppermanage, stepper, dds, autotune, swr, display);
 //Buttons buttons = Buttons(display, presets, dds, calibrate);
@@ -162,7 +192,7 @@ VSWR = swr.ReadSWRValue();
   tft.print("TUNED SWR:");
   tft.setCursor(110, 50);
   tft.print(VSWR, 3);
-
+busy_wait_ms(5000);
 /*  Troubleshoot VSWR Bridge
   tft.setTextSize(3);
   tft.setCursor(20, 90);
@@ -188,6 +218,21 @@ VSWR = swr.ReadSWRValue();
 // Power down
 dds.SendFrequency(0);
 gpio_put(POWER_SWITCH, 0);
+
+// Test the 5 pushbottons:
+tft.fillScreen(ILI9341_BLACK);
+tft.setTextSize(2);
+while(1) {
+if(!gpio_get(4)) tft.print("Button 4");
+else if(!gpio_get(5)) tft.print("Button 5");
+else if(!gpio_get(6)) tft.print("Button 6");
+else if(!gpio_get(7)) tft.print("Button 7");
+else if(!gpio_get(8)) tft.print("Button 8");
+else tft.print("No button pressed");
+busy_wait_ms(200);
+tft.fillScreen(ILI9341_BLACK);
+tft.setCursor(20, 90);
+}
 
   return 0;
 }

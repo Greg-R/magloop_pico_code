@@ -19,12 +19,18 @@
 // Counter-clockwise step.
 #define DIR_CCW 0x20
 
+//gpio_irq_callback_t encoderCallback1(uint gpio, uint32_t events);
+
 class Rotary
 {
   public:
     Rotary(char, char);
     unsigned char process();
     void begin(bool internalPullup=true, bool flipLogicForPulldown=false);
+    //volatile static uint8_t result;  // Set by encoder callback function.
+    gpio_irq_callback_t encoderCallback1(uint gpio, uint32_t events);
+ //   gpio_irq_callback_t encoderCallback2(uint gpio, uint32_t events);
+    uint8_t result;
   private:
     unsigned char state;
     unsigned char pin1;

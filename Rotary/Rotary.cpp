@@ -98,15 +98,22 @@ void Rotary::begin(bool internalPullup, bool flipLogicForPulldown) {
   //  pinMode(pin2, INPUT);
   }
   inverter = flipLogicForPulldown ? 1 : 0;
+//  gpio_set_irq_enabled_with_callback(17, 2, 1, Rotary::encoderCallback);
 }
+
+//gpio_irq_callback_t Rotary::encoderCallback1(uint gpio, uint32_t events){
+//result = process();
+//}
+
+//gpio_irq_callback_t Rotary::encoderCallback2(uint gpio, uint32_t events){
+//result = process();
+//}
 
 unsigned char Rotary::process() {
   // Grab state of input pins.
   unsigned char pinstate = ((inverter ^ gpio_get(pin2)) << 1) | (inverter ^ gpio_get(pin1));
-//  unsigned char pinstate = gpio_get(pin1);
   // Determine new state from the pins and state table.
   state = ttable[state & 0xf][pinstate];
   // Return emit bits, ie the generated event.
   return state & 0x30;
-//return pinstate;
 }

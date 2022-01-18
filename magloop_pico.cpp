@@ -80,7 +80,7 @@ void Splash(Adafruit_ILI9341 tft)
   tft.print(RELEASEDATE);
   tft.setTextSize(2);
 }
-
+/*
     enum class MotorInterfaceType: uint8_t
     {
 	FUNCTION  = 0, ///< Use the functional interface, implementing your own driver functions (internal use only)
@@ -91,8 +91,35 @@ void Splash(Adafruit_ILI9341 tft)
 	HALF3WIRE = 6, ///< 3 wire half stepper, such as HDD spindle, 3 motor pins required
 	HALF4WIRE = 8  ///< 4 wire half stepper, 4 motor pins required
     };
+*/
 
-    #define DIR_CW 0x10
+volatile uint8_t result;
+volatile uint32_t countEncoder;
+/*
+// GPIO interrupt callback function.
+void encoderCallback(uint gpio, uint32_t events){
+
+result = menuEncoder.process();
+}
+*/
+// Encoder interrupts:
+//gpio_set_irq_enabled_with_callback(17, 2, 1, menuEncoder.encoderCallback1);
+//gpio_set_irq_enabled_with_callback(18, 2, 1, menuEncoder.encoderCallback2);
+//gpio_irq_callback_t encoderCallback1(uint gpio, uint32_t events){
+//result = process();
+//}
+Rotary menuEncoder = Rotary(18, 17);
+
+void encoderCallback1(uint gpio, uint32_t events){
+result = menuEncoder.process();
+if(result == DIR_CW ) countEncoder = countEncoder + 1;
+if(result == DIR_CCW ) countEncoder = countEncoder - 1;
+}
+void encoderCallback2(uint gpio, uint32_t events){
+result = menuEncoder.process();
+//if(result == DIR_CW ) countEncoder = countEncoder + 1;
+//else countEncoder = countEncoder -1;
+}
 
 int main()
 {
@@ -115,7 +142,7 @@ int main()
 
   // Initialize power switch GPIO, and then set to OFF:
   gpio_set_function(POWER_SWITCH, GPIO_FUNC_SIO);
-  gpio_set_dir(POWER_SWITCH, GPIO_OUT);
+  
   gpio_put(POWER_SWITCH, 0);
 
   // Initialize 7 buttons and pull-ups.  Buttons are normally open.
@@ -190,7 +217,7 @@ int main()
 // Instantiate SWR object.
   SWR swr = SWR(stepper, tft);
 //  Now measure the ADC offsets before the DDS is active.
-  swr.ReadADCoffsets();
+//  swr.ReadADCoffsets();
   dds.SendFrequency(8045000);
   dds.SendFrequency(8045000);
   
@@ -258,23 +285,49 @@ tft.setCursor(20, 90);
 }
 */
 
+//Rotary menuEncoder = Rotary(17, 18);
+menuEncoder.begin(true, false);
+// Encoder interrupts:
+uint32_t events = 0x0000000C;  // Rising and falling edges.
+countEncoder = 0;
+gpio_set_irq_enabled_with_callback(18, events, 1, &encoderCallback1);
+gpio_set_irq_enabled_with_callback(17, events, 1, &encoderCallback1);
 // Test the rotary encoders:
 
-Rotary menuEncoder = Rotary(17, 18);
-menuEncoder.begin(true, false);
    tft.fillScreen(ILI9341_BLACK);
    tft.setTextSize(2);
-unsigned char result;
+
+tft.setCursor(20, 90);
 while(1) {
-    result = menuEncoder.process();
+//    result = menuEncoder.process();
   //  Serial.println(result == DIR_CW ? "Right" : "Left");
-    tft.print(result == DIR_CW ? "Right" : "Left");
-  //  tft.print(result);
-    busy_wait_ms(100);
-    tft.fillScreen(ILI9341_BLACK);
-    tft.setTextSize(2);
-    tft.setCursor(20, 90);
+  //  busy_wait_ms(100);
+
+    if(result) {
+      tft.fillScreen(ILI9341_BLACK);
+      tft.setCursor(20, 90);
+      tft.print(countEncoder);
 }
+//    else {
+ //     tft.fillScreen(ILI9341_BLACK);
+ //     tft.setCursor(20, 90);
+ //     tft.print("No result");
+  //  }
+}
+
+
+/*
+while(1){
+  tft.setCursor(20, 90);
+  tft.print("  No result");
+  busy_wait_ms(2000);
+  tft.setCursor(20, 90);
+  tft.print("a           a");
+  busy_wait_ms(2000);
+  tft.setCursor(20, 90);
+  tft.print("  XXXX");
+}
+*/
 
   return 0;
 }

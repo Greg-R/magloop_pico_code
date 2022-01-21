@@ -59,7 +59,7 @@ void SWR::ManualFrequencyControl(int whichBandOption) {
     currentFrequencyOld = currentFrequency;
 
 
-    while (digitalRead(FREQUENCYENCODERSWITCH) != LOW) {
+    while (gpio_get(FREQUENCYENCODERSWITCH) != LOW) {
       
       if (frequencyEncoderMovement2 != 0) {
         //Serial.print("if (frequencyEncoderMovement2  ");
@@ -84,7 +84,7 @@ void SWR::ManualFrequencyControl(int whichBandOption) {
     steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
     readSWRValue = ReadSWRValue();
    // Serial.print("readSWRValue=  "); Serial.println(readSWRValue);
-    delay(100);
+//    delay(100);
     int k = 0;
     frequencyEncoderMovement = 0;
     frequencyEncoderMovement2 = 0;
@@ -246,10 +246,11 @@ float SWR::ReadNewSWRValue()
   int FWD = 0;
   int REV = 0;
   float VSWR;
-  for (i = 0; i < MAXPOINTSPERSAMPLE; i++) {             // Take multiple samples at each frequency
-    sum[0] += analogRead(ANALOGFORWARD);
-    sum[1] += analogRead(ANALOGREFLECTED);
-  }
+  // Needs to be updated to Pi Pico:
+//  for (i = 0; i < MAXPOINTSPERSAMPLE; i++) {             // Take multiple samples at each frequency
+//    sum[0] += analogRead(ANALOGFORWARD);
+ //   sum[1] += analogRead(ANALOGREFLECTED);
+//  }
   FWD = sum[0] / MAXPOINTSPERSAMPLE;
   REV = sum[1] / MAXPOINTSPERSAMPLE;
 

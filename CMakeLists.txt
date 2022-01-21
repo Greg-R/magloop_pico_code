@@ -42,9 +42,9 @@ add_subdirectory(DDS)
 add_subdirectory(AutoTune)
 add_subdirectory(SWR)
 add_subdirectory(DisplayManagement)
-add_subdirectory(Calibrate)
-add_subdirectory(Buttons)
-add_subdirectory(Presets)
+#add_subdirectory(Calibrate)
+#add_subdirectory(Buttons)
+#add_subdirectory(Presets)
 add_subdirectory(Rotary)
 
 #target_include_directories(magloop_pico INTERFACE  ./arduino_includes ./Adafruit_ILI9341 ./AccelStepper ./StepperManagement ./DDS ./AutoTune ./SWR ./DisplayManagement ./Calibrate ./Buttons ./Presets)
@@ -70,9 +70,9 @@ target_link_libraries(magloop_pico
         AutoTune
         SWR
         DisplayManagement
-        Calibrate
-        Buttons
-        Presets
+  #      Calibrate
+  #      Buttons
+  #      Presets
         Rotary
         )
 

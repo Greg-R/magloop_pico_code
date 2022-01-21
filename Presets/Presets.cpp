@@ -1,10 +1,10 @@
 
 #include "Presets.h"
 
-Presets::Presets(Adafruit_ILI9341 & tft, StepperManagement & steppermanage, AccelStepper & stepper, DDS & dds, AutoTune & autotune, SWR & swr, DisplayManagement & display): tft(tft), steppermanage(steppermanage), stepper(stepper), dds(dds), autotune(autotune), swr(swr), display(display) {}
+Presets::Presets(Adafruit_ILI9341 & tft, StepperManagement & steppermanage, DDS & dds, AutoTune & autotune, SWR & swr, DisplayManagement & display): tft(tft), steppermanage(steppermanage), dds(dds), autotune(autotune), swr(swr), display(display) {}
 
 /*****
-  Purpose: To move the cap[acitor to the approximate location via the stepper motor
+  Purpose: To move the capacitor to the approximate location via the stepper motor
 
   Parameter list:
     Adafruit_ILI9341 tft      the display object
@@ -73,8 +73,8 @@ void Presets::ProcessPresets(int whichBandOption, int submenuIndex)
 
 
   currPosition = -25 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
-  stepper.setMaxSpeed(10000);
-  stepper.setAcceleration(1100);
+  steppermanage.setMaxSpeed(10000);
+  steppermanage.setAcceleration(1100);
   steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
  // AutoTuneSWRQuick();   //Auto tune here
 autotune.AutoTuneSWR();
@@ -108,8 +108,8 @@ autotune.AutoTuneSWR();
     }
     if (digitalRead(AUTOTUNE) == LOW && digitalRead(MAXSWITCH) != LOW) {   //Redo the Autotune at new frequency/position
       currPosition = -80 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
-      stepper.setMaxSpeed(1000);
-      stepper.setAcceleration(1100);
+      steppermanage.setMaxSpeed(1000);
+      steppermanage.setAcceleration(1100);
       steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
       autotune.AutoTuneSWR();   //Auto tune here
       //GraphAxis(whichBandOption);                   TEMPORARILY COMMENTED

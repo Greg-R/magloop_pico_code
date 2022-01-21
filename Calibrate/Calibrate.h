@@ -26,8 +26,7 @@ class Calibrate {
 public:
 
 DisplayManagement & display;
-AccelStepper & stepper;
-StepperManagement & steppermanage;
+StepperManagement & stepper;
 Adafruit_ILI9341 & tft;
 DDS & dds;
 SWR & swr;
@@ -41,7 +40,7 @@ int quickCalFlag;
 int minSWRAuto;
 int SWRFinalPosition;
 
-Calibrate(DisplayManagement & display, AccelStepper & stepper, StepperManagement & steppermanage, Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, AutoTune & autotune);
+Calibrate(DisplayManagement & display, StepperManagement & stepper, Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, AutoTune & autotune);
 
 void DoNewCalibrate2();
 

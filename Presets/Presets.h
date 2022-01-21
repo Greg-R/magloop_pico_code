@@ -3,11 +3,11 @@
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
-#include "Calibrate.h"
+//#include "Calibrate.h"
 #include "DDS.h"
 #include "SWR.h"
 #include "AutoTune.h"
-#include "AccelStepper.h"
+//#include "AccelStepper.h"
 #include "SWR.h"
 #include "DisplayManagement.h"
 
@@ -21,7 +21,7 @@ public:
 
 Adafruit_ILI9341 & tft;
 StepperManagement & steppermanage;
-AccelStepper & stepper;
+//AccelStepper & stepper;
 DDS & dds;
 AutoTune & autotune;
 SWR & swr;
@@ -36,7 +36,7 @@ long bandEdges[10][2];
 float hertzPerStepperUnitVVC[100];
 volatile long frequencyEncoderMovement;
 
-Presets(Adafruit_ILI9341 & tft, StepperManagement & steppermanage, AccelStepper & stepper, DDS & dds, AutoTune & autotune, SWR & swr, DisplayManagement & display);
+Presets(Adafruit_ILI9341 & tft, StepperManagement & steppermanage, DDS & dds, AutoTune & autotune, SWR & swr, DisplayManagement & display);
 
 void ProcessPresets(int whichBandOption, int submenuIndex);
 

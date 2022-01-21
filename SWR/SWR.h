@@ -8,7 +8,7 @@
 #define XAXISSTART                  25
 #define YAXISEND                    210
 #define YAXISSTART                  55
-#define FREQUENCYENCODERSWITCH      16
+#define FREQUENCYENCODERSWITCH      20
 #define ANALOGFORWARD               0
 #define MAXPOINTSPERSAMPLE          2
 #define ANALOGREFLECTED             1

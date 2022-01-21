@@ -250,6 +250,7 @@
 // $Id: AccelStepper.h,v 1.27 2016/08/14 10:26:54 mikem Exp mikem $
 
 #pragma once
+#include <algorithm>
 #include "Arduino.h"
 
 // These defs cause trouble on some versions of Arduino

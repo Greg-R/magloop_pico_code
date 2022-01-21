@@ -45,7 +45,7 @@ void DisplayManagement::frequencyMenuOption() {
   int backCount = 0;
   long aveMinPosition;
 
-  //updateMessage("Select Frequency"); TEMPORARILY COMMENTED
+  updateMessage("Select Frequency"); //TEMPORARILY COMMENTED
 
   whichBandOption = SelectBand();
   if (quickCalFlag == 1) {                  //Check if Single Band Button has been pushed.
@@ -54,9 +54,9 @@ void DisplayManagement::frequencyMenuOption() {
   }
   currentFrequency = presetFrequencies[whichBandOption][3];    //Set initial frequency for each band from Preset list
   //currentFrequency = 7150000L;
-  //ChangeFrequency(whichBandOption);                          //Alter the frequency TEMPORARILY COMMENTED
+  ChangeFrequency(whichBandOption);       //Alter the frequency TEMPORARILY COMMENTED
   dds.SendFrequency(currentFrequency);
-  busy_wait_us_32(100L);                                 // Let DDS catch up
+  busy_wait_us_32(100L);                  // Let DDS catch up
   SWRValue = swr.ReadSWRValue();
   readSWRValue        = SWRValue;
   //ShowSubmenuData(SWRValue);        TEMPORARILY COMMENTED
@@ -257,13 +257,13 @@ void DisplayManagement::ChangeFrequency(int bandIndex)  //Al Mod 9-8-19
       tft.print(currentFrequency);
       frequencyEncoderMovement = 0L;                   // Reset encoder flag
     }
-    if (digitalRead(FREQUENCYENCODERSWITCH) == LOW) {   //Exit from routine
+    if (gpio_get(FREQUENCYENCODERSWITCH) == LOW) {   //Exit from routine
       menuIndex = FREQMENU;
       dds.SendFrequency(currentFrequency);    // Send the frequency
       //ShowMainDisplay(0, SWR);       // Draws top menu line        TEMPORARILY COMMENTED
       //ShowSubmenuData(SWR);          // Draws SWR and Freq info    TEMPORARILY COMMENTED
       menuIndex = MakeMenuSelection();
-      loop();
+     // loop();
       //break;
     }
   }
@@ -296,7 +296,7 @@ int DisplayManagement::MakeMenuSelection() //Al Mod 9-8-19
       executeButton1();
     }
     //------------------------
-    if (gpio_get(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option
+    if (gpio_get(MENUBUTTON3) == LOW) {  //Menu Button3 Calibrate Menu option, also called BANDCAL
       //DoNewCalibrate2();
       executeButton3();
     }
@@ -346,11 +346,11 @@ int DisplayManagement::MakeMenuSelection() //Al Mod 9-8-19
 *****/
 int DisplayManagement::SelectBand()
 {
-  //updateMessage("Select Band");  // TEMPORARILY COMMENTED
-  // tft.print("Select Band");
+  updateMessage("Select Band");  // TEMPORARILY COMMENTED
+  tft.print("Select Band");
   tft.setTextSize(1);
   tft.setFont(&FreeSerif12pt7b);
-  const char * bands[] = {"40M", "30M", "20M"};
+  const std::string bands[3] = {"40M", "30M", "20M"};
   int currBand[] = {40, 30, 20};
   int i, index, where = 0;
   tft.fillRect(0, 52, PIXELWIDTH, PIXELHEIGHT, ILI9341_BLACK);
@@ -358,13 +358,13 @@ int DisplayManagement::SelectBand()
   for (int i = 0; i < 3; i++) {
     tft.setCursor(100, 110 + i * 30);
   //  char * band = &(bands[i][0]);
-    tft.print(bands[i]);
+    tft.print(bands[i].c_str());
    // tft.print(band);
   }
   tft.setCursor(100, 110);
   tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
   //char * bands0 = &(bands[0][0]);
-  tft.print(bands[0]);
+  tft.print(bands[0].c_str());
   //tft.print(bands0);
   //digitalWrite(MENUENCODERSWITCH, HIGH);
   busy_wait_us_32(100L);
@@ -403,14 +403,14 @@ int DisplayManagement::SelectBand()
       for (int i = 0; i < 3; i++) {
         tft.setCursor(100, 110 + i * 30);
       //  char * band = &(bands[i][0]);
-        tft.print(bands[i]);
+        tft.print(bands[i].c_str());
       //tft.print(band);
       }
 
       tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
       tft.setCursor(100, 110 + index * 30);
      // char * bands = &(bands[index]);
-      tft.print(bands[index]);
+      tft.print(bands[index].c_str());
       //tft.print(bands);
     }
     if (gpio_get(MENUENCODERSWITCH) == LOW)
@@ -507,7 +507,7 @@ void DisplayManagement::ShowSubmenuData(float SWR, int currentFrequency) //al mo
     }
     else
     {
-      tft.print(SWR, 3);                                //...real
+      tft.print(SWR, 2);                                //...real
     }
   }
   UpdateFrequency(currentFrequency);
@@ -580,14 +580,14 @@ void DisplayManagement::UpdateSWR(float SWR, std::string msg)
   Return value:
     void
 *****/
-void DisplayManagement::updateMessage(char messageToPrint[]) {
+void DisplayManagement::updateMessage(std::string messageToPrint) {
   tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
   tft.setCursor(91, 12);
-  tft.print(messageToPrint);
+  tft.print(messageToPrint.c_str());
 }
 
 /*****

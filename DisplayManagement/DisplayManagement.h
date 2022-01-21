@@ -3,7 +3,6 @@
 #include <string>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
-//#include <string>
 #include "Arduino.h"
 //#include "Calibrate.h"
 #include "DDS.h"
@@ -36,6 +35,18 @@
 #define FREQUENCYENCODERSWITCH 20
 #define FREQMENU  0  // Menuing indexes
 
+extern int menuEncoderMovement;
+extern int frequencyEncoderMovement;
+extern int digitEncoderMovement;
+
+//long presetFrequencies[MAXBANDS][PRESETSPERBAND];
+extern const long presetFrequencies[3][6];
+//{
+//  { 7030000L,  7040000L,  7100000L,  7150000L,  7250000L,  7285000L},   // 40M
+//  {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
+//  {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
+//};
+
 //class Calibrate;
 
 //class Buttons;
@@ -56,24 +67,26 @@ StepperManagement & stepper;
 int whichBandOption;
 int quickCalFlag;
 long currentFrequency;
-long presetFrequencies[10][PRESETSPERBAND];
+//long presetFrequencies[10][PRESETSPERBAND];
 float SWRValue;
 float readSWRValue;
 int currPosition;
 long bandLimitPositionCounts[10][2];
 long bandEdges[10][2];
 float hertzPerStepperUnitVVC[10];
-volatile int menuEncoderMovement;
-volatile int digitEncoderMovement;
+//volatile int menuEncoderMovement;
+//volatile int digitEncoderMovement;
 int currentBand;
 //char *menuOptions[100];
-volatile long frequencyEncoderMovement;
+//volatile int frequencyEncoderMovement;
 int menuIndex;
-    int submenuIndex;
-    int minSWRAuto;
+int submenuIndex;
+int minSWRAuto;
 int SWRFinalPosition;
 long SWRMinPosition;
 volatile int menuEncoderState;
+//volatile int menuEncoderMovement;
+//volatile int frequencyEncoderMovement;
 const std::string menuOptions[3] = {" Freq ", " Presets ", " 1st Cal"};
 
 DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, AutoTune & autotune, StepperManagement & stepper);
@@ -101,7 +114,7 @@ void UpdateFrequency(int frequency);
 //void UpdateSWR(float SWR, char msg[]);
 void UpdateSWR(float SWR, std::string msg);
 
-void updateMessage(char messageToPrint[]);
+void updateMessage(std::string messageToPrint);
 
 // The following 4 methods were consolidated from "Calibrate".
 void DoNewCalibrate2();

@@ -60,15 +60,24 @@ const std::string releaseDate = "3-15-21";
 // +12V and +5V power switch GPIO:
 #define POWER_SWITCH 28
 
-//Define default Presets.
-//To write to EEProm, uncomment "WriteDefaultEEPROMValues();" in setup and upload. then commentmout and uplad again.
-long presetFrequencies[MAXBANDS][PRESETSPERBAND] =
+#define PRESETSPERBAND              6                   // Allow this many preset frequencies on each band
+#define MAXBANDS                    3                   // Can only process this many frequency bands
+
+const long presetFrequencies[3][6] =
 {
   { 7030000L,  7040000L,  7100000L,  7150000L,  7250000L,  7285000L},   // 40M
   {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
   {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
 };
 
+//Define default Presets.
+//To write to EEProm, uncomment "WriteDefaultEEPROMValues();" in setup and upload. then commentmout and uplad again.
+//extern const long presetFrequencies[MAXBANDS][PRESETSPERBAND] =
+//{
+//  { 7030000L,  7040000L,  7100000L,  7150000L,  7250000L,  7285000L},   // 40M
+//  {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
+//  {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
+//};
 
 // The Splash function from the Mag Loop Arduino .ino file.
 
@@ -119,12 +128,43 @@ volatile uint8_t result;
 volatile uint32_t countEncoder;
 Rotary menuEncoder = Rotary(18, 17);
 Rotary frequencyEncoder = Rotary(22, 21);
+int menuEncoderMovement;
+int frequencyEncoderMovement;
+int digitEncoderMovement;
 
-void encoderCallback(uint gpio, uint32_t events){
-if(gpio == 17) result = menuEncoder.process();
-else if(gpio == 18) result = menuEncoder.process();
-else if(gpio == 21) result = frequencyEncoder.process();
-else if(gpio == 22) result = frequencyEncoder.process();
+void encoderCallback(uint gpio, uint32_t events) {
+if((gpio == 17) || (gpio == 18)) {
+  result = menuEncoder.process();
+  if (result != 0) {
+    switch (result) {
+      case DIR_CW:
+        menuEncoderMovement = 1;
+     //   digitEncoderMovement = 1;
+        break;
+      case DIR_CCW:
+        menuEncoderMovement = -1;
+     //   digitEncoderMovement = -1;
+        break;
+    }
+  }
+}
+//else if(gpio == 18) result = menuEncoder.process();
+else if((gpio == 21) || (gpio == 22)) {
+result = frequencyEncoder.process();
+  if (result != 0) {
+    switch (result) {
+      case DIR_CW:
+        frequencyEncoderMovement = 1;
+     //   digitEncoderMovement = 1;
+        break;
+      case DIR_CCW:
+        frequencyEncoderMovement = -1;
+     //   digitEncoderMovement = -1;
+        break;
+    }
+  }
+}
+//else if(gpio == 22) result = frequencyEncoder.process();
 if(result == DIR_CW ) countEncoder = countEncoder + 1;
 if(result == DIR_CCW ) countEncoder = countEncoder - 1;
 }
@@ -228,16 +268,16 @@ display.Splash(version, releaseDate);
 //tft.fillScreen(ILI9341_BLACK);
 //tft.setTextSize(4);
 //tft.setCursor(80, 40);
-//tft.print("TUNING!");
+//tft.print(presetFrequencies[0][0]);
 //autotune.AutoTuneSWRQuick();
 
-float VSWR, VSWROld, SWR;
-VSWR = swr.ReadSWRValue();
-  tft.fillScreen(ILI9341_BLACK);
-  tft.setCursor(50, 10);
-  tft.print("TUNED SWR:");
-  tft.setCursor(110, 50);
-  tft.print(VSWR, 3);
+float VSWR, VSWROld, SWRcurrent;
+//VSWR = swr.ReadSWRValue();
+//  tft.fillScreen(ILI9341_BLACK);
+//  tft.setCursor(50, 10);
+//  tft.print("TUNED SWR:");
+//  tft.setCursor(110, 50);
+//  tft.print(VSWR, 3);
 //busy_wait_ms(5000);
 /*  Troubleshoot VSWR Bridge
   tft.setTextSize(3);
@@ -262,8 +302,8 @@ VSWR = swr.ReadSWRValue();
 */
 
 // Power down
-dds.SendFrequency(0);
-gpio_put(POWER_SWITCH, 0);
+//dds.SendFrequency(0);
+//gpio_put(POWER_SWITCH, 0);
 
 /* Test the 5 pushbottons:
 tft.fillScreen(ILI9341_BLACK);
@@ -294,12 +334,12 @@ gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(22, events, 1, &encoderCallback);
 
 // Test the rotary encoders:
+/*
+tft.fillScreen(ILI9341_BLACK);
+tft.setTextSize(2);
+tft.setCursor(20, 90);
 
-//tft.fillScreen(ILI9341_BLACK);
-//tft.setTextSize(2);
-//tft.setCursor(20, 90);
-
-/* Test encoders
+// Test encoders
 while(1) {
     if(result) {
       tft.fillScreen(ILI9341_BLACK);
@@ -307,6 +347,7 @@ while(1) {
       tft.print(countEncoder);
 }}
 */
+
 //  Setup
 // This should be read from EEPROM.  Using an initial default value for now.
 currentBand = 40;
@@ -326,18 +367,18 @@ currentBand = 40;
       break;
   }
   dds.SendFrequency(currentFrequency);    // Set the DDS
-  SWR = swr.ReadNewSWRValue();
-  display.UpdateSWR( SWR, "??");
-  VSWROld = SWR;
+  SWRcurrent = swr.ReadSWRValue();
+  display.UpdateSWR( SWRcurrent, "??");
+  VSWROld = SWRcurrent;
   //  This is an important EEPROM function:
   //ReadPositionCounts();
   display.menuIndex = FREQMENU;
-  display.ShowMainDisplay(0, SWR);       // Draws top menu line
-  display.ShowSubmenuData(SWR, currentFrequency);          // Draws SWR and Freq info
+  display.ShowMainDisplay(0, SWRcurrent);       // Draws top menu line
+  display.ShowSubmenuData(SWRcurrent, currentFrequency);          // Draws SWR and Freq info
   busy_wait_ms(100);                      // Let DDS stabilize
   whichBandOption = 0;
 
-SWR = swr.ReadNewSWRValue();
+SWRcurrent = swr.ReadSWRValue();
 
 // Main state machine:
 while(1) {
@@ -345,13 +386,13 @@ while(1) {
     display.DoSingleBandCalibrate(display.whichBandOption);
     display.quickCalFlag = 0;
   }
-  const char * band[] = {"40M", "30M", "20M"};
+  std::string band[] = {"40M", "30M", "20M"};
   int i, submenuIndex;
   long minCount;
   int currPosIndexStart;
   display.menuIndex = display.MakeMenuSelection();           // Select one of the three top menu choices
-  busy_wait_ms(20000);                                // Crude debounce
-  swr.ReadSWRValue();
+  busy_wait_ms(200);                                // Crude debounce
+  //swr.ReadSWRValue();  // Does this do anything???
   switch (display.menuIndex) {
     case FREQMENU:
       display.frequencyMenuOption();
@@ -362,10 +403,10 @@ while(1) {
       submenuIndex = 0;
       display.ProcessPresets(display.whichBandOption, submenuIndex);         // Select a preselected frequency
       display.menuIndex = FREQMENU;                         // When done, start over...
-      display.ShowMainDisplay(display.menuIndex, SWR);
-      display.ShowSubmenuData(SWR, display.currentFrequency);
+      display.ShowMainDisplay(display.menuIndex, SWRcurrent);
+      display.ShowSubmenuData(SWRcurrent, display.currentFrequency);
       dds.SendFrequency(display.currentFrequency);
-      SWR = swr.ReadNewSWRValue();
+      SWRcurrent = swr.ReadSWRValue();
       break;
 
     case CALIBRATEMENU:             //Run first time Calibration routine  Takes longer - use to initialize band edge parameters

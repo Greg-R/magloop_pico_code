@@ -16,14 +16,14 @@ AutoTune::AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppe
 currPosition = 0;  // Initialize current position to 0.
 }
 
-void AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
+float AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   float oldMinSWR;
   oldMinSWR = 100;
   minSWRAuto = 100;
   int i;
   long currPositionTemp;
   SWRMinPosition = 4000;
-  //updateMessage("Auto Tuning"); TEMPORARILY COMMENTED
+  //updateMessage("Auto Tuning"); TEMPORARILY COMMENTED.  Moved to DisplayManagment.
 
   busy_wait_us_32(100);
   steppermanage.setMaxSpeed(FASTMOVESPEED);
@@ -74,10 +74,12 @@ void AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   busy_wait_us_32(200);
   steppermanage.MoveStepperToPositionCorrected(SWRMinPosition);        //Move to final position in CW direction
   iMax = i; //max value in array for plot
- // ShowSubmenuData(minSWRAuto);  //Update SWR value  TEMPORARILY COMMENTED
- // tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
- // tft.fillRect(100, 0, 300, 20, ILI9341_BLACK);
- // tft.drawFastHLine(0, 20, 320, ILI9341_RED);
+  // These lines moved to after each call of AutoTuneSWR in DisplayManagement.
+  //ShowSubmenuData(minSWRAuto);  //Update SWR value  TEMPORARILY COMMENTED
+  //tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
+  //tft.fillRect(100, 0, 300, 20, ILI9341_BLACK);
+  //tft.drawFastHLine(0, 20, 320, ILI9341_RED);
+  return minSWR;
 }
 
 
@@ -92,7 +94,7 @@ void AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
 
   CAUTION:
 *****/
-void AutoTune::AutoTuneSWRQuick() {    //Al Modified 9-14-19
+float AutoTune::AutoTuneSWRQuick() {    //Al Modified 9-14-19
 
   //tft.fillScreen(ILI9341_BLACK);  // TEMPORARY erase screen
   //tft.setTextSize(2);
@@ -173,7 +175,10 @@ void AutoTune::AutoTuneSWRQuick() {    //Al Modified 9-14-19
   busy_wait_us_32(100);
   steppermanage.MoveStepperToPositionCorrected(SWRMinPosition);         //Move to final position in CW direction 
   iMax = i; //max value in array for plot
-//  ShowSubmenuData(minSWRAuto);  //Update SWR value  TEMPORARILY COMMENTED
+  //  Call this line after every call of AutoTuneSWRQuick in DisplayManagment:
+  //ShowSubmenuData(minSWRAuto);  //Update SWR value  TEMPORARILY COMMENTED
+
+  return minSWR;
 }
 
 

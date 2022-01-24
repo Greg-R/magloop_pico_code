@@ -25,7 +25,7 @@
 #define INCREMENTPAD  22  // Used to display increment cursor
 #define MENUBUTTON3  8 // This is probably not correct!
 #define MENUBUTTON1  4 // Also probably not correct!
-#define MAXMENUES  10  // Couldn't find in Magloop.h ?
+#define MAXMENUES  3  // The menu selections are: Freq, Presets, 1st Cal
 
 #define MAXBANDS   3 
 #define MAXSWITCH 10
@@ -69,6 +69,7 @@ int quickCalFlag;
 long currentFrequency;
 //long presetFrequencies[10][PRESETSPERBAND];
 float SWRValue;
+float SWRcurrent;
 float readSWRValue;
 int currPosition;
 long bandLimitPositionCounts[10][2];
@@ -81,7 +82,7 @@ int currentBand;
 //volatile int frequencyEncoderMovement;
 int menuIndex;
 int submenuIndex;
-int minSWRAuto;
+float minSWRAuto;
 int SWRFinalPosition;
 long SWRMinPosition;
 volatile int menuEncoderState;

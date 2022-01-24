@@ -139,11 +139,12 @@ if((gpio == 17) || (gpio == 18)) {
     switch (result) {
       case DIR_CW:
         menuEncoderMovement = 1;
+        digitEncoderMovement = 1;
      //   digitEncoderMovement = 1;
         break;
       case DIR_CCW:
         menuEncoderMovement = -1;
-     //   digitEncoderMovement = -1;
+        digitEncoderMovement = -1;
         break;
     }
   }
@@ -390,7 +391,7 @@ while(1) {
   int i, submenuIndex;
   long minCount;
   int currPosIndexStart;
-  display.menuIndex = display.MakeMenuSelection();           // Select one of the three top menu choices
+  display.menuIndex = display.MakeMenuSelection();  // Select one of the three top menu choices: Freq, Presets, 1st Cal
   busy_wait_ms(200);                                // Crude debounce
   //swr.ReadSWRValue();  // Does this do anything???
   switch (display.menuIndex) {

@@ -8,7 +8,7 @@
 //#include "DisplayManagement.h"
 
 #define FASTMOVESPEED               1000
-#define NORMALMOVESPEED             100
+#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
 #define MAXNUMREADINGS              500
 #define PIXELHEIGHT                 240
 #define ACCURACYBUTTON         6
@@ -38,9 +38,9 @@ long  SWRFinalPosition;
 
 AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage);
 
-void AutoTuneSWR();
+float AutoTuneSWR();
 
-void AutoTuneSWRQuick();
+float AutoTuneSWRQuick();
 
 void MoveStepperToPositionCorrected(long currentPosition);
 

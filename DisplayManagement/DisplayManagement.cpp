@@ -2,9 +2,9 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, 
-                                     AutoTune & autotune, StepperManagement & stepper
+                                     AutoTune & autotune, StepperManagement & stepper, EEPROM & eeprom
                                      ): tft(tft), dds(dds), swr(swr),
-                                     autotune(autotune), stepper(stepper) {}
+                                     autotune(autotune), stepper(stepper), eeprom(eeprom) {}
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
 {
@@ -54,18 +54,19 @@ void DisplayManagement::frequencyMenuOption() {
   }
   currentFrequency = presetFrequencies[whichBandOption][3];    //Set initial frequency for each band from Preset list
   //currentFrequency = 7150000L;
-  ChangeFrequency(whichBandOption);       //Alter the frequency TEMPORARILY COMMENTED
+  ChangeFrequency(whichBandOption);       //Alter the frequency
   dds.SendFrequency(currentFrequency);
   busy_wait_us_32(100L);                  // Let DDS catch up
   SWRValue = swr.ReadSWRValue();
   readSWRValue        = SWRValue;
-  ShowSubmenuData(SWRValue, currentFrequency);      //  TEMPORARILY COMMENTED
+  ShowSubmenuData(SWRValue, currentFrequency);
   tft.fillRect(0, 100, 311, 150, ILI9341_BLACK);
-                          //Backup 20 counts to approach from CW direction
+  //Backup 20 counts to approach from CW direction
   currPosition = -50 +  bandLimitPositionCounts[whichBandOption][0]  + float((currentFrequency - bandEdges[whichBandOption][0])) / float(hertzPerStepperUnitVVC[whichBandOption]);
   stepper.setMaxSpeed(10000);
   stepper.setAcceleration(1100);
-  //MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
+  //  Move the stepper to the approximate location based on the current frequency:
+  stepper.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
   //AutoTuneSWRQuick();
   updateMessage("Auto Tuning");        
   minSWRAuto = autotune.AutoTuneSWR();  //Auto tune here
@@ -488,7 +489,7 @@ int DisplayManagement::ShowMainDisplay(int whichMenuPage, float SWR)
 
 
 /*****
-  Purpose: To display the SWR amd frequency data
+  Purpose: To display the SWR and frequency data
   Argument list:
     float SWR                 the current SWR value
   Return value:
@@ -708,8 +709,8 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
   int i, j, whichLine;
   long localPosition, minCount;
   float currentSWR;
-  // updateMessage("Initial Calibrate");  TEMPORARILY COMMENTED
-  //tft.print("1st Cal ");
+  updateMessage("Initial Calibrate");
+  tft.print("1st Cal ");
   bandBeingCalculated = 0;
   stepper.ResetStepperToZero();
   stepper.setCurrentPosition(0);        //Set Stepper count to zero
@@ -730,36 +731,33 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
 
   for (i = 0; i < MAXBANDS; i++) {            // For the 3 bands...
     for (j = 0; j < 2; j++) {
-#ifdef DEBUG                          // So we can see the EEPROM values
-      Serial.print("i=  "); Serial.println(i);
-      Serial.print("j=  "); Serial.println(j);                   // So we can see the EEPROM values
-#endif
       currentFrequency = bandEdges[i][j];     // Select a band edge to calibrate
-      dds.SendFrequency(currentFrequency);        // Tell the DDS the edge frequency...
+      dds.SendFrequency(currentFrequency);    // Tell the DDS the edge frequency...
       busy_wait_us_32(100L);
-      //UpdateFrequency();                   // Change main display data  TEMPORARILY COMMENTED
-      //updateMessage("Moving to Freq");                                  TEMPORARILY COMMENTED
+      UpdateFrequency(currentFrequency);      // Change main display data
+      updateMessage("Moving to Freq");
       while (true) {
-        if (gpio_get(MAXSWITCH) != HIGH) {           // At the end stop switch?
-          stepper.ResetStepperToZero();                         // Yep, so leave.
+        if (gpio_get(MAXSWITCH) != HIGH) {    // At the end stop switch?
+          stepper.ResetStepperToZero();       // Yep, so leave.
           return;
         }
-        while (swr.ReadSWRValue() > 5) {    //Move stepper in CW direction in larger steps for SWR>5
-          currPosition += 20;
-          //UpdateFrequency();                     TEMPORARILY COMMENTED
-          //ShowSubmenuData(ReadSWRValue());       TEMPORARILY COMMENTED
+        currPosition = stepper.currentPosition();
+        while (swr.ReadSWRValue() > 5) {     //Move stepper in CW direction in larger steps for SWR>5
+          currPosition = currPosition + 40;  // Better to always get this from StepperManagement???
+          UpdateFrequency(currentFrequency);
+          ShowSubmenuData(swr.ReadSWRValue(), currentFrequency);
           stepper.MoveStepperToPositionCorrected(currPosition);
         }
         currentSWR = swr.ReadSWRValue();
         updateMessage("Auto Tuning");
         minSWRAuto = autotune.AutoTuneSWR();
-  ShowSubmenuData(minSWRAuto, currentFrequency);  //Update SWR value  TEMPORARILY COMMENTED
+  ShowSubmenuData(minSWRAuto, currentFrequency);  //Update SWR value
   tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
   tft.fillRect(100, 0, 300, 20, ILI9341_BLACK);
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-        // UpdateFrequency(); TEMPORARILY COMMENTED
+        UpdateFrequency(currentFrequency);
         if (minSWRAuto < TARGETMAXSWR) {                   //Ignore values greater than Target Max
-          bandLimitPositionCounts[i][j] = SWRMinPosition;
+          bandLimitPositionCounts[i][j] = autotune.SWRMinPosition;
           tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
           if (currentFrequency < 10000000) {
             tft.print(" ");
@@ -768,26 +766,29 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
           tft.setCursor(150, 90 + whichLine * TEXTLINESPACING);
           tft.print(minSWRAuto);
           tft.setCursor(230, 90 + whichLine * TEXTLINESPACING);
-          tft.print(SWRMinPosition);
-          whichLine++;                                                      // Ready for next line of output
+          tft.print(autotune.SWRMinPosition);
+          whichLine++;                          // Ready for next line of output
           busy_wait_ms(200);
 
           break;                                // This sends control to next edge
         }
       }
-      currPosition = SWRFinalPosition - 50;
+      currPosition = stepper.currentPosition() - 50;
     }       // end for (j
-    currPosition = SWRFinalPosition - 50;
+    currPosition = stepper.currentPosition() - 50;
   }         // end for (i
 
-  //WritePositionCounts();                      // Write values to EEPROM TEMPORARILY COMMENTED
+  eeprom.WritePositionCounts();           // Write values to EEPROM buffer.  Must also write them to Flash!
+  eeprom.write(eeprom.bufferUnion.buffer8);      // This writes a page to Flash memory.  This includes the position counts
+                                          // and preset frequencies.
+
   busy_wait_us_32(100L);
   tft.fillRect(0, PIXELHEIGHT - 40, 311, 25, ILI9341_BLACK);
   tft.setTextColor(ILI9341_YELLOW, ILI9341_BLACK);
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
   tft.setCursor(40, PIXELHEIGHT - 20);
-  tft.print("Press Exit");
+  tft.print("Press FREQ to Exit");
   while (gpio_get(FREQUENCYENCODERSWITCH) != LOW) {
 
   }

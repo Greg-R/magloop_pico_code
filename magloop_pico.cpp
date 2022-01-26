@@ -24,7 +24,9 @@
 #include "SWR/SWR.h"
 #include "AutoTune/AutoTune.h"
 #include "Rotary/Rotary.h"
-//#include <string>
+#include "EEPROM/EEPROM.h"
+//#include "hardware/flash.h"
+//#include "hardware/sync.h"
 
 //#include "Adafruit-GFX-Library/gfxfont.h"
 //#include "Adafruit-GFX-Library/Fonts/FreeSerif24pt7b.h"
@@ -57,27 +59,41 @@ const std::string releaseDate = "3-15-21";
 #define PRESETSMENU 1
 #define CALIBRATEMENU 2
 
+//#define FLASH_TARGET_OFFSET (256 * 1024)
+
 // +12V and +5V power switch GPIO:
 #define POWER_SWITCH 28
 
 #define PRESETSPERBAND              6                   // Allow this many preset frequencies on each band
 #define MAXBANDS                    3                   // Can only process this many frequency bands
 
-const long presetFrequencies[3][6] =
+// Initial Band edge counts from Calibrate routine.
+// These are initial guesses and will be overwritten by the Calibration algorithm.
+long bandLimitPositionCounts[3][2] = {
+  {  4083L,  5589L},
+  {13693L, 13762L},
+  {18319L, 18691L}
+};
+
+extern const uint32_t presetFrequencies[3][6] =
 {
   { 7030000L,  7040000L,  7100000L,  7150000L,  7250000L,  7285000L},   // 40M
   {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
   {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
 };
 
-//Define default Presets.
-//To write to EEProm, uncomment "WriteDefaultEEPROMValues();" in setup and upload. then commentmout and uplad again.
-//extern const long presetFrequencies[MAXBANDS][PRESETSPERBAND] =
-//{
-//  { 7030000L,  7040000L,  7100000L,  7150000L,  7250000L,  7285000L},   // 40M
-//  {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
-//  {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
-//};
+#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
+#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
+#define LOWEND30M                  10100000L
+#define HIGHEND30M                 10150000L
+#define LOWEND20M                  14000000L
+#define HIGHEND20M                 14350000L
+
+extern const uint32_t bandEdges[3][2] = {   // Band edges in Hz
+  {LOWEND40M, HIGHEND40M},
+  {LOWEND30M, HIGHEND30M},
+  {LOWEND20M, HIGHEND20M}
+};
 
 // The Splash function from the Mag Loop Arduino .ino file.
 
@@ -122,6 +138,8 @@ void SplashTest(Adafruit_ILI9341 tft)
 int currentBand;      // Should be 40, 30, or 20
 int currentFrequency;
 int whichBandOption;
+float countPerHertz[3];
+float hertzPerStepperUnitAir[3];
 
 volatile uint8_t result;
 //volatile uint8_t resultFrequency;
@@ -189,10 +207,10 @@ int main()
   gpio_pull_up(10);
   gpio_pull_up(11);
 
-  // Initialize power switch GPIO, and then set to OFF:
+  // Initialize power switch GPIO, and then set to ON:
   gpio_set_function(POWER_SWITCH, GPIO_FUNC_SIO);
   gpio_set_dir(POWER_SWITCH, GPIO_OUT);
-  gpio_put(POWER_SWITCH, 0);
+  gpio_put(POWER_SWITCH, 1);
 
   // Initialize 7 buttons and pull-ups.  Buttons are normally open.
   gpio_set_function( 4, GPIO_FUNC_SIO);  // FULLCAL
@@ -227,12 +245,46 @@ int main()
   tft.fillScreen(ILI9341_BLACK);
   //  Run the same Splash function as in the Mag Loop Controller project.
   
-
   // Test a GFX graphics primitive by drawing a border:
   //tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
 
-  //  Turn on the power!
-  gpio_put(POWER_SWITCH, 1);
+  uint32_t eeprom_data;
+  EEPROM eeprom = EEPROM();
+  //  Use this method one time only and then comment out!
+  //eeprom.WriteDefaultEEPROMValues();
+  //  Read the position counts and presets into the EEPROM object's buffer.
+  eeprom.ReadEEPROMValuesToBuffer();
+  //  Overwrite the position counts and preset frequencies:
+  eeprom.ReadPositionCounts();
+
+  //eeprom.initialize();  //  Set the buffer to all zeros.
+  
+  //  EEPROM test code.
+  const uint32_t *flash_target_contents = (const uint32_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
+  eeprom_data = flash_target_contents[1];
+  tft.setTextSize(2);
+  tft.setCursor(80, 40);
+  //tft.print(eeprom_data);
+  tft.print(bandLimitPositionCounts[0][0]);
+  eeprom_data = flash_target_contents[2];
+  tft.setCursor(80, 60);
+  //tft.print(eeprom_data);
+  tft.print(bandLimitPositionCounts[0][1]);
+  eeprom_data = flash_target_contents[3];
+  tft.setCursor(80, 80);
+  //tft.print(eeprom_data);
+  tft.print(bandLimitPositionCounts[1][0]);
+  tft.setCursor(80, 100);
+   tft.print(bandLimitPositionCounts[1][1]);
+  eeprom_data = flash_target_contents[2];
+  tft.setCursor(80, 120);
+  //tft.print(eeprom_data);
+  tft.print(bandLimitPositionCounts[2][0]);
+  eeprom_data = flash_target_contents[3];
+  tft.setCursor(80, 140);
+  //tft.print(eeprom_data);
+  tft.print(bandLimitPositionCounts[2][1]);
+  
 
 //  Instantiate the Stepper Manager: 
 StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
@@ -240,7 +292,7 @@ StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::
 //AccelStepper stepper =AccelStepper(1, STEPPERPUL, STEPPERDIR);
 
 //  Examples of Stepper control functions:
-  stepper.ResetStepperToZero();
+//  stepper.ResetStepperToZero();
 //  steppermanage.setCurrentPosition(0);  //  Sets max speed to zero!
 //  steppermanage.setMaxSpeed(500);
 //  steppermanage.setAcceleration(110);
@@ -250,17 +302,17 @@ StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::
 //  Next test the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
   dds.DDSWakeUp();
-  dds.SendFrequency(0);
+  //dds.SendFrequency(0);
   
 // Instantiate SWR object.
   SWR swr = SWR(stepper, tft);
 //  Now measure the ADC offsets before the DDS is active.
 //  swr.ReadADCoffsets();
-  dds.SendFrequency(8045000);
-  dds.SendFrequency(8045000);
+//  dds.SendFrequency(8045000);
+//  dds.SendFrequency(8045000);
   
 AutoTune autotune = AutoTune(swr, tft, stepper);
-DisplayManagement display = DisplayManagement(tft, dds, swr, autotune, stepper);
+DisplayManagement display = DisplayManagement(tft, dds, swr, autotune, stepper, eeprom);
 //Calibrate calibrate = Calibrate(display, stepper, tft, dds, swr, autotune);
 //Presets presets = Presets(tft, stepper, dds, autotune, swr, display);
 //Buttons buttons = Buttons(display, presets, dds, calibrate);
@@ -323,7 +375,7 @@ tft.fillScreen(ILI9341_BLACK);
 tft.setCursor(20, 90);
 }
 */
-
+//  Set up the Menu and Frequency encoders:
 menuEncoder.begin(true, false);
 frequencyEncoder.begin(true, false);
 // Encoder interrupts:
@@ -339,8 +391,6 @@ gpio_set_irq_enabled_with_callback(22, events, 1, &encoderCallback);
 tft.fillScreen(ILI9341_BLACK);
 tft.setTextSize(2);
 tft.setCursor(20, 90);
-
-// Test encoders
 while(1) {
     if(result) {
       tft.fillScreen(ILI9341_BLACK);
@@ -349,9 +399,9 @@ while(1) {
 }}
 */
 
-//  Setup
-// This should be read from EEPROM.  Using an initial default value for now.
-currentBand = 40;
+// Setup follows.
+// The default band is read from Flash.
+currentBand = eeprom.ReadCurrentBand();
 
   switch (currentBand) {              // Set the frequency default as 1st preset frequency
     case 40:
@@ -369,15 +419,20 @@ currentBand = 40;
   }
   dds.SendFrequency(currentFrequency);    // Set the DDS
   SWRcurrent = swr.ReadSWRValue();
-  display.UpdateSWR( SWRcurrent, "??");
+  display.UpdateSWR(SWRcurrent, "??");
   VSWROld = SWRcurrent;
-  //  This is an important EEPROM function:
-  //ReadPositionCounts();
+  //  Read position counts out of flash and overwrite default values:
+  eeprom.ReadPositionCounts();
   display.menuIndex = FREQMENU;
   display.ShowMainDisplay(0, SWRcurrent);       // Draws top menu line
   display.ShowSubmenuData(SWRcurrent, currentFrequency);          // Draws SWR and Freq info
   busy_wait_ms(100);                      // Let DDS stabilize
   whichBandOption = 0;
+
+ // display.EraseBelowMenu();    // Clear work area
+      
+//  display.DoFirstCalibrate();
+  display.EraseBelowMenu();
 
 SWRcurrent = swr.ReadSWRValue();
 

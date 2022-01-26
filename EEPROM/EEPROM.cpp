@@ -38,24 +38,41 @@
 
 *****/
 
-EEPROM::EEPROM() {}
-
-//  Wrap the Pi Pico SDK write function.
-void EEPROM::write(uint32_t flash_offs, const uint8_t *data, size_t count){
-flash_range_program (flash_offs, data, count);
-
+EEPROM::EEPROM() {
+  initialize();
 }
 
-//  Wrap the Pi Pico SDK read function.
-uint8_t EEPROM::read(uint8_t * offset){
+//  Wrap the Pi Pico SDK write function.
+//  Note that this function must write in 256 byte chunks.
+//  The count parameter is the number of 256 byte chunks to be written.
+//  The data should be an array with multiples of 256 elements.
+void EEPROM::write(const uint8_t *data){
+uint32_t ints = save_and_disable_interrupts();
+flash_range_erase (FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+flash_range_program (FLASH_TARGET_OFFSET, data, FLASH_PAGE_SIZE);
+restore_interrupts(ints);
+}
 
-return *offset;  //  Return the value at the address.
+//  Wrap the Pi Pico SDK read function.  This reads a single uint32_t value.
+uint32_t EEPROM::read(uint32_t index){
+
+return flash_target_contents[index];  //  Return the value at the address.
 }
 
 
 /*****
-  Purpose: The STM32 does not actually have any EEPROM, so we have to fake it with flash memory. This code defines where the
-           page in flash memory resides that will be used as EEPROM
+  Purpose: The Pi Pico does not actually have any EEPROM, so we have to fake it with flash memory.
+           This method initializes a 256 element array which is used to temporarily store
+           the default band, preset frequencies, and position counts.
+           A 32 bit elements are used, although 16 bits is used in the original STM32 project.
+           The entire buffer is written to flash when using the write method.
+           This is because you must write a single "page" to Flash.
+           There is a Union which was both 8 and 32 bit buffers which overlap.
+           The 32 bit buffer is manipulated by the methods, but the 8 bit buffer
+           is used to write to flash.
+
+           The default values should be read only once prior to initial calibration.
+           After that, the WriteDefaultEEPROMValues() should be commented out.
 
   Parameter list:
     void
@@ -63,15 +80,23 @@ return *offset;  //  Return the value at the address.
   Return value:
     void
 *****/
-void EEPROM::DefineEEPROMPage()
+void EEPROM::initialize()
 {
-  PageBase0 = 0x801f000;     // EEPROM base address. Everything indexed from this address
-  PageSize  = 0x400;         // 1024 bytes of EEPROM
+   for(int i = 0; i < 64; i = i + 1) bufferUnion.buffer32[i] = 0x00000000;
+   //  These overwrite the first 4 values for testing purposes.
+   //bufferUnion.buffer32[0] = 0x10000000;
+   //bufferUnion.buffer32[1] = 0x00000002;
+   //bufferUnion.buffer32[2] = 0x00000003;
+   //bufferUnion.buffer32[3] = 0x00000004;
 }
 
 /*****
-  Purpose: To write default values for EEPROM
-
+  Purpose: To write default values to Flash memory.
+  This takes the defaults which are hand-typed into magloop_pico.cpp
+  and writes them to Flash memory.
+  The position counts are estimates only; the calibration routine
+  will over-write them with the values found by the algorithm.
+  The method should be run once, and then commented out.
   Parameter list:
     void
 
@@ -81,85 +106,62 @@ void EEPROM::DefineEEPROMPage()
 void EEPROM::WriteDefaultEEPROMValues()
 {
   //int i, j, k, status;
-  int intSize;
-  uint32_t offset;
-  uint32_t position, frequency;
+  int index;
 
-  myUnion.val = 40;  // This occupies the 1st four bytes.
+  //  Write the default band to the 0th element:
+  bufferUnion.buffer32[OFFSETTODEFAULTBAND] = 40;
 
-  offset = (uint32_t)FLASH_TARGET_OFFSET;
-  write(offset,  myUnion.bytes, (size_t) 4);  // Write default band...40M
-  offset = offset + 4;  //  Increment the offset by 4.
-
-  //intSize = sizeof(uint16_t);
-  //offset = OFFSETTOPOSITIONCOUNTS;
-
+  //  Write the band limit positions to the buffer.
+  //  There are 3 bands, and an upper and lower limit for each band.
+  //  So there are a total of 6 limits.
+  index = OFFSETTOPOSITIONCOUNTS;
   for (uint8_t i = 0; i < MAXBANDS; i++) {   // This increments the row.
-    for (uint8_t k = 0; k < 2; k++) {                                       // 2 = writing low and hi values
-      myUnion.val = bandLimitPositionCounts[i][k];                  // Copy low limit into byte array
-   //   for (uint8_t j = 0; j < intSize; j++) {                               // Write int to EEPROM as intSize-d bytes
-        write(offset, myUnion.bytes, (size_t) 4);
-   //   }
-        offset = offset + 4;
+    for (uint8_t k = 0; k < 2; k++) {    //  Upper and lower limits
+      
+      bufferUnion.buffer32[index] = bandLimitPositionCounts[i][k];
+      index = index + 1;
     }
   }
-            
-  offset = OFFSETTOPRESETS;                                   // Starting EEPROM address for Band presets
-
+  index = OFFSETTOPRESETS;
+//  Write the presets to the array:
   for (uint8_t i = 0; i < MAXBANDS; i++) {
     for (uint8_t k = 0; k < PRESETSPERBAND; k++) {
-      myUnion.val = presetFrequencies[i][k];                  // See around line 28 in INO file for values
-  //    for (j = 0; j < sizeof(uint16_t); j++) {
-        write((uint32_t)FLASH_TARGET_OFFSET + 1, myUnion.bytes, (size_t)4);
-        offset = offset + 4;
-      }
+      bufferUnion.buffer32[index] = presetFrequencies[i][k];
+      index = index + 1;
     }
+  }
+  write(bufferUnion.buffer8);  // Writing to Flash must be done with a uint8_t array.
   }
 
 /*****
   Purpose: Show EEPROM values, mainly a debugging tool
-
+  Load the values into a different buffer viewbuffer[] array.
   Parameter list:
     void
 
   Return value:
     void
 *****/
-void EEPROM::ShowEEPROMValues()
+void EEPROM::ReadEEPROMValuesToBuffer()
 {
-//  Serial.print("in ShowEEPROMValues");
-  int i, j, k, offset, status;
-  int intSize;
-  int result;
+  int index;
+  //  First, make sure the buffer is initialized to zeros.
+  initialize();
 
-  intSize = sizeof(uint16_t);
-
-  offset = LASTBANDUSED;                                // Read default band...40M
-  read();
-#ifdef DEBUG
- // Serial.print("Default band  = ");
- // Serial.println(result);
-#endif
-
-  offset = OFFSETTOPOSITIONCOUNTS;                      // Read position counts for endpoints
-
-  for (i = 0; i < MAXBANDS; i++) {
-    for (k = 0; k < 2; k++) {                           // 2 = writing low and hi values
-      for (j = 0; j < intSize; j++) {                   // Write int to EEPROM as intSize-d bytes
-        myUnion.bytes[j] = read();
-      }
-      bandLimitPositionCounts[i][k] = myUnion.val;
+//  Default band does in index 0 of the buffer.
+  bufferUnion.buffer32[0] = read(OFFSETTODEFAULTBAND);
+  index = OFFSETTOPOSITIONCOUNTS;
+  for (int i = 0; i < MAXBANDS; i++) {
+    for (int k = 0; k < 2; k++) {        
+        bufferUnion.buffer32[index] = read(index);
+        index = index + 1;
     }
   }
-
-  uint8_t offset = OFFSETTOPRESETS;                                   // Starting EEPROM address for Band presets
-
-  for (i = 0; i < MAXBANDS; i++) {
-    for (k = 0; k < PRESETSPERBAND; k++) {
-      for (j = 0; j < sizeof(uint16_t); j++) {
-        myUnion.bytes[j] = read((uint8_t) offset + 1, (size_t) 2);
-      }
-      presetFrequencies[i][k] = myUnion.val;
+     index = OFFSETTOPRESETS;
+  for (int i = 0; i < MAXBANDS; i++) {
+    for (int k = 0; k < PRESETSPERBAND; k++) {
+      bufferUnion.buffer32[index] = presetFrequencies[i][k];
+      index = index + 1;
     }
   }
 }
@@ -167,7 +169,8 @@ void EEPROM::ShowEEPROMValues()
 
 /*****
   Purpose: Save band edges position counts
-
+  This writes to the buffer only.
+  To save to flash, use the write function.
   Parameter list:
     void
 
@@ -176,30 +179,21 @@ void EEPROM::ShowEEPROMValues()
 *****/
 void EEPROM::WritePositionCounts()
 {
-  int i, intSize, j, k, offset, status;
+  int index = 0;
 
-  intSize = sizeof(uint16_t);
-  offset = OFFSETTOPOSITIONCOUNTS;
-
-  for (i = 0; i < MAXBANDS; i++) {
-    for (k = 0; k < 2; k++) {
-      myUnion.val = bandLimitPositionCounts[i][k];                  // Copy low limit into byte array
-      for (j = 0; j < intSize; j++) {                               // Write int to EEPROM as intSize-d bytes
-        status = EEPROM.write(offset++, myUnion.myBytes[j]);
-        if (status != EEPROM_OK) {
-#ifdef DEBUG
-  //        Serial.print("PositionCounts[i][0] write sucks, i = ");
-  //        Serial.println(i);
-#endif
-        }
+  for (int i = 0; i < MAXBANDS; i++) {
+    for (int k = 0; k < 2; k++) {
+      index = index + OFFSETTOPOSITIONCOUNTS;
+      bufferUnion.buffer32[index] = bandLimitPositionCounts[i][k];
+      index = index + 1;
       }
     }
   }
-}
 
 /*****
   Purpose: Read configuration data from EEPROM
-
+  Read the position counts and overwrite the default values.
+  Calculate countPerHertz and hertzPerStepperUnitAir arrays.
   Parameter list:
     void
 
@@ -208,39 +202,28 @@ void EEPROM::WritePositionCounts()
 *****/
 void EEPROM::ReadPositionCounts()
 {
-  uint16_t i, j, k, offset, status;
-
-  offset = OFFSETTOPOSITIONCOUNTS;
-
-  for (i = 0; i < MAXBANDS; i++) {
-    for (k = 0; k < 2; k++) {
-      for (j = 0; j < sizeof(uint16_t); j++) {                                     // Write int to EEPROM as bytes
-        myUnion.myBytes[j] = EEPROM.read(offset++);
-      }
-      bandLimitPositionCounts[i][k] = myUnion.val;                  // Copy int into byte array
-  //    Serial.print("bandLimitPositionCounts[");
-  //    Serial.print(i);
-  //    Serial.print("][");
-  //    Serial.print(k);
-  //    Serial.print("] = ");
-  //    Serial.println(bandLimitPositionCounts[i][k]); 
+  uint16_t index;
+  index = OFFSETTOPOSITIONCOUNTS;
+  for (int i = 0; i < MAXBANDS; i++) {
+    for (int k = 0; k < 2; k++) {  
+        bandLimitPositionCounts[i][k] = read(index);
+        index = index + 1;
     }
   }
  
-           // Do slope coefficients
-  countPerHertz[0] = (float) ((float) bandLimitPositionCounts[0][1] - (float) bandLimitPositionCounts[0][0]) / (float) ((float) HIGHEND40M - (float) LOWEND40M);
-  countPerHertz[1] = (float) ((float) bandLimitPositionCounts[1][1] - (float) bandLimitPositionCounts[1][0]) / (float) ((float) HIGHEND30M - (float) LOWEND30M);
-  countPerHertz[2] = (float) ((float) bandLimitPositionCounts[2][1] - (float) bandLimitPositionCounts[2][0]) / (float) ((float) HIGHEND20M - (float) LOWEND20M);
+// Do slope coefficients
+countPerHertz[0] = (float) ((float) bandLimitPositionCounts[0][1] - (float) bandLimitPositionCounts[0][0]) / (float) ((float) HIGHEND40M - (float) LOWEND40M);
+countPerHertz[1] = (float) ((float) bandLimitPositionCounts[1][1] - (float) bandLimitPositionCounts[1][0]) / (float) ((float) HIGHEND30M - (float) LOWEND30M);
+countPerHertz[2] = (float) ((float) bandLimitPositionCounts[2][1] - (float) bandLimitPositionCounts[2][0]) / (float) ((float) HIGHEND20M - (float) LOWEND20M);
 hertzPerStepperUnitAir[0]=(float) ((float) HIGHEND40M - (float) LOWEND40M)/((float) bandLimitPositionCounts[0][1] - (float) bandLimitPositionCounts[0][0]);
 hertzPerStepperUnitAir[1]=(float) ((float) HIGHEND30M - (float) LOWEND30M)/((float) bandLimitPositionCounts[1][1] - (float) bandLimitPositionCounts[1][0]);
 hertzPerStepperUnitAir[2]=(float) ((float) HIGHEND20M - (float) LOWEND20M)/((float) bandLimitPositionCounts[2][1] - (float) bandLimitPositionCounts[2][0]);
-
 
 }
 
 /*****
   Purpose: Show slope coefficients for frequency calcs
-
+  The array is stored in the EEPROM object as countPerHertzArray.
   Parameter list:
     void
 
@@ -249,40 +232,35 @@ hertzPerStepperUnitAir[2]=(float) ((float) HIGHEND20M - (float) LOWEND20M)/((flo
 *****/
 void EEPROM::ShowSlopeCoefficients()
 {
-  int i;
-  for (i = 0; i < 3; i++)
-  //  Serial.println( countPerHertz[i], 6);   
+  
+  for (int i = 0; i < 3; i++) {
+   countPerHertzArray[i] = countPerHertz[i];   
+  }
 }
+
 /*****
   Purpose: Write the presets for each band
-
+  This writes to the buffer only.
+  To save to flash, use the write function.
   Parameter list:
     void
 
   Return value:
     void
 *****/
-int EEPROM::WriteBandPresets()
+
+void EEPROM::WriteBandPresets()
 {
-  uint16_t i, j, k, offset, status;
-
-  offset = OFFSETTOPRESETS;                                       // Starting EEPROM address for Bnd presets
-
-  for (i = 0; i < MAXBANDS; i++) {
-    for (k = 0; k < PRESETSPERBAND; k++) {
-      myUnion.val = presetFrequencies[i][k];                     // Get stored value...
-      for (j = 0; j < sizeof(uint16_t); j++) {                        // Write int to EEPROM as bytes
-        status = EEPROM.write(offset++, myUnion.myBytes[j]);
-        if (status != EEPROM_OK) {                          // Something went wrong...
-  //        Serial.print("Bad EEPROM write of preset, status = ");
-  //        Serial.println(status);
-          return status;
+  uint16_t index;
+index = OFFSETTOPRESETS;
+  for (int i = 0; i < MAXBANDS; i++) {
+    for (int k = 0; k < PRESETSPERBAND; k++) {    
+      bufferUnion.buffer32[index] = presetFrequencies[i][k];
+      index = index + 1;
         }
       }
     }
-  }
-  return status;
-}
+
 /*****
   Purpose: Read the presets for each band from EEPROM
 
@@ -294,27 +272,15 @@ int EEPROM::WriteBandPresets()
 *****/
 void EEPROM::ReadBandPresets()
 {
-  uint16_t i, j, k, offset, size, status;
+  uint16_t index;
 
-  offset = OFFSETTOPRESETS;                                       // Starting EEPROM address for Bnd presets
+  index = OFFSETTOPRESETS;                                       // Starting EEPROM address for Bnd presets
 
-  size = sizeof(uint16_t);
-
-  for (i = 0; i < MAXBANDS; i++) {
-    for (k = 0; k < PRESETSPERBAND; k++) {
-      for (j = 0; j < size; j++) {                                     // Write int to EEPROM as bytes
-        myUnion.myBytes[j] = EEPROM.read(offset++);
+  for (int i = 0; i < MAXBANDS; i++) {
+    for (int k = 0; k < PRESETSPERBAND; k++) {
+        bufferUnion.buffer32[index] = read(index);
+        index = index + 1;
       }
-      presetFrequencies[i][k] = myUnion.val;                  // Copy int into byte array
-#ifdef DEBUG
-  //    Serial.print("presetFrequencies[");
-  //    Serial.print(i);
-  //    Serial.print("][");
-  //    Serial.print(k);
-  //    Serial.print("] = ");
-  //    Serial.println(presetFrequencies[i][k]);
-#endif
-    }
   }
 }
 
@@ -326,51 +292,27 @@ void EEPROM::ReadBandPresets()
   Return value:
   void
 *****/
-void EEPROM::ReadCurrentBand()
+uint32_t EEPROM::ReadCurrentBand()
 {
-  uint16_t i, offset, status;
-
-  offset = LASTBANDUSED;                                                // Starting EEPROM address for Bnd presets
-
-  for (i = 0; i < sizeof(uint16_t); i++) {                                // Write int to EEPROM as bytes
-    myUnion.myBytes[i] = EEPROM.read(offset++);
-  }
-  currentBand = myUnion.val;
-//Serial.print("currentBand = ");
-//Serial.println(currentBand);
-
-  if (currentBand == 40 || currentBand == 30 || currentBand == 20) {    // System not calibrated
-    return;
-  } else {
-                                              
-  }
+  return read(0);
 }
 
 /*****
   Purpose: Write the value for currentBand to EEPROM
+  This writes to the buffer only.
+  To save to flash, use the write function.
   Parameter list:
   void
 
   Return value:
   void
 *****/
+
 void EEPROM::WriteCurrentBand()
 {
-  uint16_t i, offset, status;
 
-  offset = LASTBANDUSED;                                            // Starting EEPROM address for Bnd presets
+  bufferUnion.buffer32[OFFSETTODEFAULTBAND] = read(OFFSETTODEFAULTBAND);
 
-  myUnion.val = currentBand;
-  for (i = 0; i < sizeof(uint16_t); i++) {                               // Write int to EEPROM as bytes
-//    status = EEPROM.write(offset++, myUnion.myBytes[i]);  // Replace with Pi Pico SDK function.
-    if (status != FLASH_COMPLETE) {
-  //    Serial.print("In WriteCurrentBand, write on byte i = ");
-  //    Serial.print(i);
-  //    Serial.print(" failed");
-  //    Serial.print("   status = ");
-  //    Serial.println(status);
-    }
-  }
 }
 
 

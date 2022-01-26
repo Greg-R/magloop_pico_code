@@ -27,7 +27,7 @@ float AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
 
   busy_wait_us_32(100);
   steppermanage.setMaxSpeed(FASTMOVESPEED);
-  steppermanage.MoveStepperToPositionCorrected(currPosition);  //Move to initial position
+  steppermanage.MoveStepperToPositionCorrected(steppermanage.currentPosition());  //Move to initial position.  Redundant???
   steppermanage.setMaxSpeed(NORMALMOVESPEED);
   for (int i = 0; i < MAXNUMREADINGS; i++) {   //reset temp arrays - used to plot SWR vs frequency
     tempSWR[i] = 0.0;

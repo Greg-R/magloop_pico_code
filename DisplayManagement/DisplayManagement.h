@@ -10,14 +10,11 @@
 #include "AutoTune.h"
 #include "StepperManagement.h"
 //#include "Buttons.h"
+#include "EEPROM.h"
 
-//#include <cstring>
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif24pt7b.h"
-//#include <FreeSerif24pt7b.h>
-//#include <FreeSerif9pt7b.h>
-//#include <FreeSerif12pt7b.h>
 
 #define PRESETSPERBAND   6
 #define PIXELWIDTH 320
@@ -29,7 +26,7 @@
 
 #define MAXBANDS   3 
 #define MAXSWITCH 10
-#define TARGETMAXSWR 2.5
+#define TARGETMAXSWR 5.5  // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
 #define MENUENCODERSWITCH 19
 #define FREQUENCYENCODERSWITCH 20
@@ -39,13 +36,9 @@ extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int digitEncoderMovement;
 
-//long presetFrequencies[MAXBANDS][PRESETSPERBAND];
-extern const long presetFrequencies[3][6];
-//{
-//  { 7030000L,  7040000L,  7100000L,  7150000L,  7250000L,  7285000L},   // 40M
-//  {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
-//  {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
-//};
+extern const uint32_t presetFrequencies[3][6];
+extern long bandLimitPositionCounts[3][2];  // This array is written to during calibration; it can't be const.
+extern const uint32_t bandEdges[3][2];
 
 //class Calibrate;
 
@@ -63,6 +56,7 @@ DDS & dds;
 SWR & swr;
 AutoTune & autotune;
 StepperManagement & stepper;
+EEPROM & eeprom;
 //Buttons & buttons;
 int whichBandOption;
 int quickCalFlag;
@@ -72,8 +66,8 @@ float SWRValue;
 float SWRcurrent;
 float readSWRValue;
 int currPosition;
-long bandLimitPositionCounts[10][2];
-long bandEdges[10][2];
+//long bandLimitPositionCounts[10][2];
+//long bandEdges[10][2];
 float hertzPerStepperUnitVVC[10];
 //volatile int menuEncoderMovement;
 //volatile int digitEncoderMovement;
@@ -90,7 +84,7 @@ volatile int menuEncoderState;
 //volatile int frequencyEncoderMovement;
 const std::string menuOptions[3] = {" Freq ", " Presets ", " 1st Cal"};
 
-DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, AutoTune & autotune, StepperManagement & stepper);
+DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, AutoTune & autotune, StepperManagement & stepper, EEPROM & eeprom);
 
 void Splash(std::string version, std::string releaseDate);
 

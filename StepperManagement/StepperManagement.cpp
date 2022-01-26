@@ -10,12 +10,12 @@
 #define YAXISEND                    210
 #define XAXISSTART                  25
 #define XAXISEND                    315
-#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
-#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
-#define LOWEND30M                  10100000L
-#define HIGHEND30M                 10150000L
-#define LOWEND20M                  14000000L
-#define HIGHEND20M                 14350000L
+//#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
+//#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
+//#define LOWEND30M                  10100000L
+//#define HIGHEND30M                 10150000L
+//#define LOWEND20M                  14000000L
+//#define HIGHEND20M                 14350000L
 
 
 //StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): stepper(interface, pin1, pin2, pin3, pin4, enable) {
@@ -24,19 +24,19 @@
 //}
 
 StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable):AccelStepper(interface, pin1, pin2) {
-currPosition = 2500;  // Default to approximately midrange.
+position = 2500;  // Default to approximately midrange.
 setCurrentPosition(5000);  //
 }
 
 //AccelStepper& stepper;
 // This function was in the Encoders file!?
-void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPosition) {
+void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
   int stepperDirection;
   long stepperDistance;
   while (1)
   {
     stepperDistanceOld = stepperDistance;
-    moveTo(currentPosition);
+    moveTo(position);
     run();
     stepperDistance = distanceToGo();
     if (distanceToGo() == 0)
@@ -58,7 +58,7 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t currentPosition)
   if (stepperDirection != stepperDirectionOld)
   {
   //  stepper.setCurrentPosition(currentPosition - 1);
-              setCurrentPosition(currentPosition - 1);
+              setCurrentPosition(position - 1);
   }
   stepperDirectionOld = stepperDirection;
 }
@@ -80,30 +80,30 @@ void StepperManagement::ResetStepperToZero()
   setMaxSpeed(500);
   setAcceleration(110);
   while (gpio_get(ZEROSWITCH) != 0) {      // move to zero position
-    moveTo(currPosition);
+    moveTo(position);
     run();
-    currPosition--;
+    position--;
   }
   setCurrentPosition(0);
   setMaxSpeed(100);
-  currPosition = 0;
+  position = 0;
   //gpio_put(ZEROSWITCH, 1);  // This shouldn't be necessary due to pull-up.
-  currPosition = 50;
+  position = 50;
   //Serial.print("before 200 move = ");
-  MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
+  MoveStepperToPositionCorrected(position); //Al 4-20-20
   while (true) {      // move to zero position
     setMaxSpeed(100);
-    currPosition--;
-    moveTo(currPosition);
+    position--;
+    moveTo(position);
     run();
     if (gpio_get(ZEROSWITCH) == 0)
       break;
   }
   setCurrentPosition(0);
-  currPosition = 380;
+  position = 50;
 // This while loop can be eliminated by using runToPosition() function.
   while (1) {
-    moveTo(currPosition);
+    moveTo(position);
     run();
     if (distanceToGo() == 0) {
       break;
@@ -209,7 +209,7 @@ long StepperManagement::ConvertFrequencyToStepperCount(long presentFrequency)
     default:
       break;
   }
-  currPosition = count;
+  position = count;
   return count;
 }
 

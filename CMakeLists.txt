@@ -57,11 +57,11 @@ add_subdirectory(EEPROM)
 target_link_libraries(magloop_pico
         pico_stdlib
         hardware_spi
- #       hardware_dma
         hardware_timer
         hardware_clocks
         hardware_adc
         hardware_flash
+        hardware_sync
         ili9341
         gfx
         spitft

@@ -3,6 +3,13 @@
 #include "pico/stdlib.h"
 #include "AccelStepper.h"
 
+#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
+#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
+#define LOWEND30M                  10100000L
+#define HIGHEND30M                 10150000L
+#define LOWEND20M                  14000000L
+#define HIGHEND20M                 14350000L
+
 // This class inherits from AccelStepper, which is an Arduino library.
 class StepperManagement : public AccelStepper {
 
@@ -10,10 +17,11 @@ public:
 
 uint32_t currentBand;
 uint32_t stepperDirectionOld;
-float countPerHertz[100];
-uint32_t currPosition;
+float countPerHertz[3];
+float hertzPerStepperUnitAir[3];
+uint32_t position;
 uint32_t stepperDistanceOld;
-uint32_t bandLimitPositionCounts[100][2];
+uint32_t bandLimitPositionCounts[3][2];
 uint32_t moveToStepperIndex;
 //AccelStepper stepper;
 
@@ -24,7 +32,7 @@ uint32_t moveToStepperIndex;
 StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true);
 
 // This function was in the Encoders file!?
-void MoveStepperToPositionCorrected(uint32_t currentPostion); 
+void MoveStepperToPositionCorrected(uint32_t position); 
 
 void ResetStepperToZero();
 

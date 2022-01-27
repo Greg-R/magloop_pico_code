@@ -87,8 +87,8 @@ Adafruit_SPITFT::Adafruit_SPITFT(uint16_t w, uint16_t h, int8_t cs, int8_t dc,
 void Adafruit_SPITFT::initSPI(void) {
 
 
-    // SPI initialisation.
-    spi_init(SPI_PORT, 10000*1000);  //
+    // SPI initialisation.  2nd parameter is SPI clock frequency in Hz.
+    spi_init(SPI_PORT, 62500*1000);  //  Set to 20 MHz.
     //gpio_set_function(PIN_MISO, GPIO_FUNC_SPI); MISO not used
     gpio_set_function(PIN_CS,   GPIO_FUNC_SIO);
     gpio_set_function(PIN_SCK,  GPIO_FUNC_SPI);

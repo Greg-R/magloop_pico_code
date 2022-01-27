@@ -22,9 +22,11 @@
 #include "StepperManagement/StepperManagement.h"
 #include "DDS/DDS.h"
 #include "SWR/SWR.h"
-#include "AutoTune/AutoTune.h"
+//#include "AutoTune/AutoTune.h"
 #include "Rotary/Rotary.h"
 #include "EEPROM/EEPROM.h"
+#include "Data/Data.h"
+//#include "GraphPlot/GraphPlot.h"
 //#include "hardware/flash.h"
 //#include "hardware/sync.h"
 
@@ -69,6 +71,7 @@ const std::string releaseDate = "3-15-21";
 
 // Initial Band edge counts from Calibrate routine.
 // These are initial guesses and will be overwritten by the Calibration algorithm.
+/*  Moved to Data class.
 long bandLimitPositionCounts[3][2] = {
   {  4083L,  5589L},
   {13693L, 13762L},
@@ -81,6 +84,7 @@ extern const uint32_t presetFrequencies[3][6] =
   {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
   {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
 };
+*/
 
 #define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
 #define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
@@ -88,13 +92,13 @@ extern const uint32_t presetFrequencies[3][6] =
 #define HIGHEND30M                 10150000L
 #define LOWEND20M                  14000000L
 #define HIGHEND20M                 14350000L
-
+/*
 extern const uint32_t bandEdges[3][2] = {   // Band edges in Hz
   {LOWEND40M, HIGHEND40M},
   {LOWEND30M, HIGHEND30M},
   {LOWEND20M, HIGHEND20M}
 };
-
+*/
 // The Splash function from the Mag Loop Arduino .ino file.
 
 void SplashTest(Adafruit_ILI9341 tft)
@@ -235,6 +239,7 @@ int main()
   gpio_pull_up(19);
   gpio_pull_up(20);
 
+  
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -248,15 +253,21 @@ int main()
   // Test a GFX graphics primitive by drawing a border:
   //tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
 
+  //  The data object manages constants and variables involved with frequencies and stepper motor positions.
+  Data data = Data();
+  // Compute slopes:
+  
+
   uint32_t eeprom_data;
-  EEPROM eeprom = EEPROM();
+  EEPROM eeprom = EEPROM(data);
   //  Use this method one time only and then comment out!
   //eeprom.WriteDefaultEEPROMValues();
   //  Read the position counts and presets into the EEPROM object's buffer.
   eeprom.ReadEEPROMValuesToBuffer();
   //  Overwrite the position counts and preset frequencies:
   eeprom.ReadPositionCounts();
-
+  // Slopes can't be computed until the actual values are loaded from flash:
+  data.computeSlopes();
   //eeprom.initialize();  //  Set the buffer to all zeros.
   
   //  EEPROM test code.
@@ -265,27 +276,30 @@ int main()
   tft.setTextSize(2);
   tft.setCursor(80, 40);
   //tft.print(eeprom_data);
-  tft.print(bandLimitPositionCounts[0][0]);
+  tft.print(data.bandLimitPositionCounts[0][0]);
   eeprom_data = flash_target_contents[2];
   tft.setCursor(80, 60);
   //tft.print(eeprom_data);
-  tft.print(bandLimitPositionCounts[0][1]);
+  tft.print(data.bandLimitPositionCounts[0][1]);
   eeprom_data = flash_target_contents[3];
   tft.setCursor(80, 80);
   //tft.print(eeprom_data);
-  tft.print(bandLimitPositionCounts[1][0]);
+  tft.print(data.bandLimitPositionCounts[1][0]);
   tft.setCursor(80, 100);
-   tft.print(bandLimitPositionCounts[1][1]);
+   tft.print(data.bandLimitPositionCounts[1][1]);
   eeprom_data = flash_target_contents[2];
   tft.setCursor(80, 120);
   //tft.print(eeprom_data);
-  tft.print(bandLimitPositionCounts[2][0]);
+  tft.print(data.bandLimitPositionCounts[2][0]);
   eeprom_data = flash_target_contents[3];
   tft.setCursor(80, 140);
   //tft.print(eeprom_data);
-  tft.print(bandLimitPositionCounts[2][1]);
+  tft.print(data.bandLimitPositionCounts[2][1]);
   
 
+  // Print out a slope:
+  tft.setCursor(80, 160);
+  tft.print(data.hertzPerStepperUnitVVC[3], 1);
 //  Instantiate the Stepper Manager: 
 StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
 
@@ -310,9 +324,11 @@ StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::
 //  swr.ReadADCoffsets();
 //  dds.SendFrequency(8045000);
 //  dds.SendFrequency(8045000);
-  
-AutoTune autotune = AutoTune(swr, tft, stepper);
-DisplayManagement display = DisplayManagement(tft, dds, swr, autotune, stepper, eeprom);
+//AutoTune autotune = AutoTune(swr, tft, stepper, display);
+//class DisplayManagement;
+//GraphPlot graphplot = GraphPlot(tft, dds, DisplayManagement & display);
+DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
+
 //Calibrate calibrate = Calibrate(display, stepper, tft, dds, swr, autotune);
 //Presets presets = Presets(tft, stepper, dds, autotune, swr, display);
 //Buttons buttons = Buttons(display, presets, dds, calibrate);
@@ -405,14 +421,14 @@ currentBand = eeprom.ReadCurrentBand();
 
   switch (currentBand) {              // Set the frequency default as 1st preset frequency
     case 40:
-      currentFrequency = presetFrequencies[0][2];
+      currentFrequency = data.presetFrequencies[0][2];
       //currentFrequency = 7150000L;
       break;
     case 30:
-      currentFrequency = presetFrequencies[1][0];
+      currentFrequency = data.presetFrequencies[1][0];
       break;
     case 20:
-      currentFrequency = presetFrequencies[2][0];
+      currentFrequency = data.presetFrequencies[2][0];
       break;
     default:
       break;
@@ -435,7 +451,8 @@ currentBand = eeprom.ReadCurrentBand();
   display.EraseBelowMenu();
 
 SWRcurrent = swr.ReadSWRValue();
-
+//  Set to zero and calibrate stepper:
+stepper.ResetStepperToZero();
 // Main state machine:
 while(1) {
   if (display.quickCalFlag == 1) {

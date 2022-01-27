@@ -12,22 +12,23 @@
 *****/
 
 
-AutoTune::AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage): swr(swr), tft(tft), steppermanage(steppermanage) {
+AutoTune::AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage, DisplayManagement & display): swr(swr), tft(tft), 
+steppermanage(steppermanage), display(display) {
 currPosition = 0;  // Initialize current position to 0.
 }
 
-float AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
+float AutoTune::AutoTuneSWR() {
   float oldMinSWR;
   oldMinSWR = 100;
   minSWRAuto = 100;
   int i;
   long currPositionTemp;
   SWRMinPosition = 4000;
-  //updateMessage("Auto Tuning"); TEMPORARILY COMMENTED.  Moved to DisplayManagment.
+  //updateMessage("Auto Tuning");  Moved to DisplayManagment.
 
   busy_wait_us_32(100);
   steppermanage.setMaxSpeed(FASTMOVESPEED);
-  steppermanage.MoveStepperToPositionCorrected(steppermanage.currentPosition());  //Move to initial position.  Redundant???
+  //steppermanage.MoveStepperToPositionCorrected(steppermanage.currentPosition());  //Move to initial position.  Redundant???
   steppermanage.setMaxSpeed(NORMALMOVESPEED);
   for (int i = 0; i < MAXNUMREADINGS; i++) {   //reset temp arrays - used to plot SWR vs frequency
     tempSWR[i] = 0.0;
@@ -35,14 +36,9 @@ float AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   }
   for (i = 0; i < MAXNUMREADINGS; i++) {       // loop to increment and find min SWR and save values to plot
     minSWR = swr.ReadSWRValue();                   //Save minimum SWR value
-  //  ShowSubmenuData(minSWR); TEMPORARILY COMMENTED
+    display.ShowSubmenuData(minSWR);
     tempSWR[i] = minSWR;                       //Array of SWR values
     tempCurrentPosition[i] = currPosition;     //Array of Count position values
-//#ifdef DEBUG                          // So we can see the EEPROM values
-//    Serial.print("i = "); Serial.print(i); Serial.print("  currPosition = "); Serial.print(currPosition);
-//    Serial.print("  stepper.currentPosition() = "); Serial.print(stepper.currentPosition());
-//    Serial.print("   minSWR = "); Serial.println(minSWR);
-//#endif
     if ( minSWR < minSWRAuto) {             // Test to find minimum SWR value
       minSWRAuto = minSWR;
       SWRMinPosition = currPosition;
@@ -74,11 +70,11 @@ float AutoTune::AutoTuneSWR() {    //Al Modified 9-14-19
   busy_wait_us_32(200);
   steppermanage.MoveStepperToPositionCorrected(SWRMinPosition);        //Move to final position in CW direction
   iMax = i; //max value in array for plot
-  // These lines moved to after each call of AutoTuneSWR in DisplayManagement.
-  //ShowSubmenuData(minSWRAuto);  //Update SWR value  TEMPORARILY COMMENTED
-  //tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
-  //tft.fillRect(100, 0, 300, 20, ILI9341_BLACK);
-  //tft.drawFastHLine(0, 20, 320, ILI9341_RED);
+  // These lines moved to after each call of AutoTuneSWR in DisplayManagement.  PUT BACK!!!
+  ShowSubmenuData(minSWRAuto);  //Update SWR value
+  tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
+  tft.fillRect(100, 0, 300, 20, ILI9341_BLACK);
+  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   return minSWR;
 }
 
@@ -181,7 +177,7 @@ float AutoTune::AutoTuneSWRQuick() {    //Al Modified 9-14-19
   return minSWR;
 }
 
-
+/*
 void AutoTune::MoveStepperToPositionCorrected(long currentPosition) {
   int stepperDirection;
   long stepperDistance;
@@ -213,3 +209,4 @@ void AutoTune::MoveStepperToPositionCorrected(long currentPosition) {
   }
   stepperDirectionOld = stepperDirection;
 }
+*/

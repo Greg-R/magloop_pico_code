@@ -39,7 +39,7 @@ add_subdirectory(Adafruit_SPITFT)
 add_subdirectory(AccelStepper)
 add_subdirectory(StepperManagement)
 add_subdirectory(DDS)
-add_subdirectory(AutoTune)
+#add_subdirectory(AutoTune)
 add_subdirectory(SWR)
 add_subdirectory(DisplayManagement)
 #add_subdirectory(Calibrate)
@@ -47,6 +47,8 @@ add_subdirectory(DisplayManagement)
 #add_subdirectory(Presets)
 add_subdirectory(Rotary)
 add_subdirectory(EEPROM)
+add_subdirectory(GraphPlot)
+add_subdirectory(Data)
 
 #target_include_directories(magloop_pico INTERFACE  ./arduino_includes ./Adafruit_ILI9341 ./AccelStepper ./StepperManagement ./DDS ./AutoTune ./SWR ./DisplayManagement ./Calibrate ./Buttons ./Presets)
 #target_include_directories(magloop_pico INTERFACE  ./arduino_includes ./Adafruit_ILI9341 ./AccelStepper ./StepperManagement ./DisplayManagement)
@@ -69,7 +71,7 @@ target_link_libraries(magloop_pico
         stepper
         steppermanagement
         dds
-        AutoTune
+  #      AutoTune
         SWR
         DisplayManagement
   #      Calibrate
@@ -77,6 +79,8 @@ target_link_libraries(magloop_pico
   #      Presets
         Rotary
         EEPROM
+        GraphPlot
+        Data
         )
 
 pico_add_extra_outputs(magloop_pico)

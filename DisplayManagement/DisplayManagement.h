@@ -11,6 +11,8 @@
 #include "StepperManagement.h"
 //#include "Buttons.h"
 #include "EEPROM.h"
+#include "GraphPlot.h"
+#include "Data.h"
 
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
@@ -32,21 +34,27 @@
 #define FREQUENCYENCODERSWITCH 20
 #define FREQMENU  0  // Menuing indexes
 
+#define FASTMOVESPEED               1000
+#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
+#define MAXNUMREADINGS              500
+#define PIXELHEIGHT                 240
+#define ACCURACYBUTTON         6
+
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int digitEncoderMovement;
 
-extern const uint32_t presetFrequencies[3][6];
-extern long bandLimitPositionCounts[3][2];  // This array is written to during calibration; it can't be const.
-extern const uint32_t bandEdges[3][2];
+//extern const uint32_t presetFrequencies[3][6];
+//extern long bandLimitPositionCounts[3][2];  // This array is written to during calibration; it can't be const.
+//extern const uint32_t bandEdges[3][2];
 
 //class Calibrate;
 
 //class Buttons;
 
-class AutoTune;
+//class GraphPlot;
 
-class DisplayManagement {
+class DisplayManagement : public GraphPlot {
 
 public:
 
@@ -54,9 +62,11 @@ Adafruit_ILI9341 & tft;
 //Calibrate & calibrate;
 DDS & dds;
 SWR & swr;
-AutoTune & autotune;
+//AutoTune & autotune;
 StepperManagement & stepper;
 EEPROM & eeprom;
+//GraphPlot & graphplot;
+Data & data;
 //Buttons & buttons;
 int whichBandOption;
 int quickCalFlag;
@@ -65,10 +75,11 @@ long currentFrequency;
 float SWRValue;
 float SWRcurrent;
 float readSWRValue;
-int currPosition;
+int position;
+int positionTemp;
 //long bandLimitPositionCounts[10][2];
 //long bandEdges[10][2];
-float hertzPerStepperUnitVVC[10];
+//float hertzPerStepperUnitVVC[10];
 //volatile int menuEncoderMovement;
 //volatile int digitEncoderMovement;
 int currentBand;
@@ -76,15 +87,25 @@ int currentBand;
 //volatile int frequencyEncoderMovement;
 int menuIndex;
 int submenuIndex;
-float minSWRAuto;
+
 int SWRFinalPosition;
-long SWRMinPosition;
 volatile int menuEncoderState;
 //volatile int menuEncoderMovement;
 //volatile int frequencyEncoderMovement;
 const std::string menuOptions[3] = {" Freq ", " Presets ", " 1st Cal"};
 
-DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, AutoTune & autotune, StepperManagement & stepper, EEPROM & eeprom);
+int stepperDirectionOld;
+uint32_t stepperDistanceOld;
+int iMax;
+float tempSWR[500];
+long tempCurrentPosition[500];
+long  SWRMinPosition;
+float minSWRAuto;
+float minSWR;
+//int whichBandOption;
+//long  SWRFinalPosition;
+
+DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, StepperManagement & stepper, EEPROM & eeprom, Data & data);
 
 void Splash(std::string version, std::string releaseDate);
 
@@ -133,5 +154,9 @@ void ProcessPresets(int whichBandOption, int submenuIndex);
 void RestorePreviousPresetChoice(int submenuIndex, int whichBandOption);
 
 void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
+
+float AutoTuneSWR();
+
+float AutoTuneSWRQuick();
 
 };

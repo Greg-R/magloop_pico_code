@@ -22,7 +22,7 @@ public:
 SWR & swr;
 Adafruit_ILI9341 & tft;
 StepperManagement & steppermanage;
-//DisplayManagement & display;
+DisplayManagement & display;
 int stepperDirectionOld;
 uint32_t currPosition;
 uint32_t stepperDistanceOld;
@@ -36,12 +36,12 @@ int whichBandOption;
 long  SWRFinalPosition;
 
 
-AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage);
+AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage, DisplayManagement & display);
 
 float AutoTuneSWR();
 
 float AutoTuneSWRQuick();
 
-void MoveStepperToPositionCorrected(long currentPosition);
+//void MoveStepperToPositionCorrected(long currentPosition);
 
 };

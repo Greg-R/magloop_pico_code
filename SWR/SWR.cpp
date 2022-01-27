@@ -1,6 +1,6 @@
 #include "SWR.h"
 #include <Arduino.h>
-
+extern long bandLimitPositionCounts[3][2];  // extern, defined in magloop_pico.cpp
 
 SWR::SWR(StepperManagement & steppermanage, Adafruit_ILI9341 & tft): steppermanage(steppermanage), tft(tft) {
 adc_init();
@@ -118,70 +118,7 @@ void SWR::ManualStepperControl() {
   menuEncoderMovement = 0;
 }
 
-/*****
-  Purpose: Displays the Point for measured SWR
 
-  Paramter list:
-    int whichBandOption     // The band being used
-    float swr
-
-  Return value:
-    void
-*****/
-void SWR::PlotSWRValueNew(int whichBandOption)
-{
-  float stepsPerPix;
-  int pixPerSWRUnit;
-  float HzPerStep;
-  float HzPerPix;
-  float currentFrequencyDiff;
-  float plotFreq;
-  long freqStart;
-  long freqEnd;
-  // ShowSubmenuData(minSWRAuto);  TEMPORARILY COMMENTED
-  switch (whichBandOption) {
-    case 0:
-      freqStart = 7000000;
-      freqEnd = 7300000;
-      break;
-
-    case 1:
-      freqStart = 10100000;
-      freqEnd = 10150000;
-
-    case 2:
-      freqStart = 14000000;
-      freqEnd = 14350000;
-      break;
-
-  }
-  for (int i = 0; i < iMax; i++) {
-    if (tempCurrentPosition[i] > 0  and tempSWR[i] < 3) {
-      HzPerStep = (freqEnd - freqStart) / (float(bandLimitPositionCounts[whichBandOption][1] - bandLimitPositionCounts[whichBandOption][0]));
-      currentFrequencyDiff = float(tempCurrentPosition[i] - SWRMinPosition) * HzPerStep;
-      plotFreq = (currentFrequency + currentFrequencyDiff);
-      HzPerPix = float(freqEnd - freqStart) / float(XAXISEND - XAXISSTART);
-      stepsPerPix = float(bandLimitPositionCounts[whichBandOption][1] - bandLimitPositionCounts[whichBandOption][0]) / (XAXISEND - XAXISSTART);
-      pixPerSWRUnit = float(YAXISEND - YAXISSTART) / 3;
-      int xposition = 27 + float(plotFreq - freqStart) / HzPerPix;
-      int yposition = YAXISSTART + (3 - tempSWR[i]) * pixPerSWRUnit;
-      tft.fillCircle(xposition, yposition, 1, ILI9341_YELLOW);
-#ifdef DEBUG
-      Serial.print("bandLimitPositionCounts[whichBandOption][1]=  "); Serial.println(bandLimitPositionCounts[whichBandOption][1]);
-      Serial.print("bandLimitPositionCounts[whichBandOption][0]=  "); Serial.println(bandLimitPositionCounts[whichBandOption][0]);
-      Serial.print("currentFrequencyDiff=  "); Serial.println(currentFrequencyDiff);
-      Serial.print("HzPerStep=  "); Serial.println(HzPerStep);
-      Serial.print("stepsPerPix=  "); Serial.println(stepsPerPix);
-      Serial.print("plotFreq=  "); Serial.println(plotFreq);
-      Serial.print("pixPerHz=  "); Serial.println(HzPerPix);
-      Serial.print("tempCurrentPosition[i]=  "); Serial.println(tempCurrentPosition[i]);
-      Serial.print("xposition=  "); Serial.println(xposition);
-      Serial.print("yposition=  "); Serial.println(yposition);
-#endif
-    }
-  }
-//  PlotNewStartingFrequency(whichBandOption);  TEMPORARILY COMMENTED
-}
 
 /*****
   Purpose: To read one bridge measurement

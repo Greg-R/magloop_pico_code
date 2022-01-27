@@ -1,7 +1,7 @@
 
 #include "EEPROM.h"
 
-
+//extern long bandLimitPositionCounts[3][2];  // 3 bands, 2 limits, upper and lower.
 /*****
 
   The EEPROM memory map for the remote unit is as follows:
@@ -38,7 +38,7 @@
 
 *****/
 
-EEPROM::EEPROM() {
+EEPROM::EEPROM(Data & data): data(data) {
   initialize();
 }
 
@@ -116,9 +116,8 @@ void EEPROM::WriteDefaultEEPROMValues()
   //  So there are a total of 6 limits.
   index = OFFSETTOPOSITIONCOUNTS;
   for (uint8_t i = 0; i < MAXBANDS; i++) {   // This increments the row.
-    for (uint8_t k = 0; k < 2; k++) {    //  Upper and lower limits
-      
-      bufferUnion.buffer32[index] = bandLimitPositionCounts[i][k];
+    for (uint8_t k = 0; k < 2; k++) {    //  Upper and lower limits    
+      bufferUnion.buffer32[index] = data.bandLimitPositionCounts[i][k];
       index = index + 1;
     }
   }
@@ -126,7 +125,7 @@ void EEPROM::WriteDefaultEEPROMValues()
 //  Write the presets to the array:
   for (uint8_t i = 0; i < MAXBANDS; i++) {
     for (uint8_t k = 0; k < PRESETSPERBAND; k++) {
-      bufferUnion.buffer32[index] = presetFrequencies[i][k];
+      bufferUnion.buffer32[index] = data.presetFrequencies[i][k];
       index = index + 1;
     }
   }
@@ -160,7 +159,7 @@ void EEPROM::ReadEEPROMValuesToBuffer()
      index = OFFSETTOPRESETS;
   for (int i = 0; i < MAXBANDS; i++) {
     for (int k = 0; k < PRESETSPERBAND; k++) {
-      bufferUnion.buffer32[index] = presetFrequencies[i][k];
+      bufferUnion.buffer32[index] = data.presetFrequencies[i][k];
       index = index + 1;
     }
   }
@@ -179,12 +178,11 @@ void EEPROM::ReadEEPROMValuesToBuffer()
 *****/
 void EEPROM::WritePositionCounts()
 {
-  int index = 0;
+  uint32_t index = OFFSETTOPOSITIONCOUNTS;
 
   for (int i = 0; i < MAXBANDS; i++) {
-    for (int k = 0; k < 2; k++) {
-      index = index + OFFSETTOPOSITIONCOUNTS;
-      bufferUnion.buffer32[index] = bandLimitPositionCounts[i][k];
+    for (int k = 0; k < 2; k++) {    
+      bufferUnion.buffer32[index] = data.bandLimitPositionCounts[i][k];
       index = index + 1;
       }
     }
@@ -206,19 +204,10 @@ void EEPROM::ReadPositionCounts()
   index = OFFSETTOPOSITIONCOUNTS;
   for (int i = 0; i < MAXBANDS; i++) {
     for (int k = 0; k < 2; k++) {  
-        bandLimitPositionCounts[i][k] = read(index);
+        data.bandLimitPositionCounts[i][k] = read(index);
         index = index + 1;
     }
   }
- 
-// Do slope coefficients
-countPerHertz[0] = (float) ((float) bandLimitPositionCounts[0][1] - (float) bandLimitPositionCounts[0][0]) / (float) ((float) HIGHEND40M - (float) LOWEND40M);
-countPerHertz[1] = (float) ((float) bandLimitPositionCounts[1][1] - (float) bandLimitPositionCounts[1][0]) / (float) ((float) HIGHEND30M - (float) LOWEND30M);
-countPerHertz[2] = (float) ((float) bandLimitPositionCounts[2][1] - (float) bandLimitPositionCounts[2][0]) / (float) ((float) HIGHEND20M - (float) LOWEND20M);
-hertzPerStepperUnitAir[0]=(float) ((float) HIGHEND40M - (float) LOWEND40M)/((float) bandLimitPositionCounts[0][1] - (float) bandLimitPositionCounts[0][0]);
-hertzPerStepperUnitAir[1]=(float) ((float) HIGHEND30M - (float) LOWEND30M)/((float) bandLimitPositionCounts[1][1] - (float) bandLimitPositionCounts[1][0]);
-hertzPerStepperUnitAir[2]=(float) ((float) HIGHEND20M - (float) LOWEND20M)/((float) bandLimitPositionCounts[2][1] - (float) bandLimitPositionCounts[2][0]);
-
 }
 
 /*****
@@ -234,7 +223,7 @@ void EEPROM::ShowSlopeCoefficients()
 {
   
   for (int i = 0; i < 3; i++) {
-   countPerHertzArray[i] = countPerHertz[i];   
+   countPerHertzArray[i] = data.countPerHertz[i];   
   }
 }
 
@@ -255,7 +244,7 @@ void EEPROM::WriteBandPresets()
 index = OFFSETTOPRESETS;
   for (int i = 0; i < MAXBANDS; i++) {
     for (int k = 0; k < PRESETSPERBAND; k++) {    
-      bufferUnion.buffer32[index] = presetFrequencies[i][k];
+      bufferUnion.buffer32[index] = data.presetFrequencies[i][k];
       index = index + 1;
         }
       }

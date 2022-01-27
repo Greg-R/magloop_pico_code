@@ -23,7 +23,7 @@
 //volatile int menuEncoderMovement;
 //int iMax;
 //float tempSWR[10];
-//long bandLimitPositionCounts[10][2];
+//long bandLimitPositionCounts[3][2];  // extern, defined in magloop_pico.cpp
 //int tempCurrentPosition[10];
 //long  SWRMinPosition;
 //int tempCurrentPosition[10];
@@ -35,14 +35,14 @@ public:
 StepperManagement steppermanage;
 Adafruit_ILI9341 tft;
 uint32_t currPosition;
-uint32_t bandLimitPositionCounts[100][2];
+//uint32_t bandLimitPositionCounts[100][2];
 volatile long frequencyEncoderMovement2;
 volatile long frequencyEncoderMovement;
 long currentFrequency;
 float hertzPerStepperUnitVVC[10];
 float readSWRValue;
 volatile int menuEncoderMovement;
-int iMax;
+//int iMax;
 float tempSWR[10];
 int tempCurrentPosition[10];
 long  SWRMinPosition;
@@ -56,8 +56,6 @@ void ReadADCoffsets();
 void ManualFrequencyControl(int whichBandOption);
 
 void ManualStepperControl();
-
-void PlotSWRValueNew(int whichBandOption);
 
 float ReadSWRValue();
 

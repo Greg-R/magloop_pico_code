@@ -3,6 +3,7 @@
 #include "pico/stdlib.h"
 #include "hardware/flash.h"
 #include "hardware/sync.h"
+#include "Data.h"
 
 #define OFFSETTODEFAULTBAND         0
 #define OFFSETTOPOSITIONCOUNTS      1     // The start of the stepper positions for the band edges.
@@ -21,17 +22,17 @@
 #define LOWEND20M                  14000000L
 #define HIGHEND20M                 14350000L
 
-extern int currentBand;
-extern long bandLimitPositionCounts[3][2];  // 3 bands, 2 limits, upper and lower.
-extern const uint32_t presetFrequencies[3][PRESETSPERBAND];  // 3 bands, 6 presets per band.
-extern float countPerHertz[3];
-extern float hertzPerStepperUnitAir[3];
+//extern int currentBand;
+//extern long bandLimitPositionCounts[3][2];  // 3 bands, 2 limits, upper and lower.
+//extern const uint32_t presetFrequencies[3][PRESETSPERBAND];  // 3 bands, 6 presets per band.
+//extern float countPerHertz[3];
+//extern float hertzPerStepperUnitAir[3];
 
 class EEPROM {
 
     public:
 
-    //Adafruit_ILI9341 tft;  // Used to test EEPROM functions.
+    Data & data;  // Used to test EEPROM functions.
     union {
     uint8_t buffer8[256];
     uint32_t buffer32[64];;
@@ -42,7 +43,7 @@ class EEPROM {
 
     const uint32_t *flash_target_contents = (const uint32_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
 
-EEPROM();
+EEPROM(Data & data);
 
 void initialize();
 

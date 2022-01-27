@@ -72,4 +72,6 @@ void DDS::SendFrequency(long frequency) {   //Set DDS frequency
     byte_out (freq & 0xFF);
   byte_out (0x00);   // Final control byte, all 0 for 9850 chip
   gpio_put (FQ_UD, 1);  // Done!  Should see output
+  // Store the frequency in the DDS object:
+  currentFrequency = frequency;
 }

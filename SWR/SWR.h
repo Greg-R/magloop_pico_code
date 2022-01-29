@@ -28,6 +28,8 @@
 //long  SWRMinPosition;
 //int tempCurrentPosition[10];
 
+
+
 class SWR {
 
 public:
@@ -36,12 +38,12 @@ StepperManagement steppermanage;
 Adafruit_ILI9341 tft;
 uint32_t currPosition;
 //uint32_t bandLimitPositionCounts[100][2];
-volatile long frequencyEncoderMovement2;
-volatile long frequencyEncoderMovement;
+//volatile long frequencyEncoderMovement2;
+//volatile long frequencyEncoderMovement;
 long currentFrequency;
 float hertzPerStepperUnitVVC[10];
 float readSWRValue;
-volatile int menuEncoderMovement;
+//volatile int menuEncoderMovement;
 //int iMax;
 float tempSWR[10];
 int tempCurrentPosition[10];

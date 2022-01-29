@@ -1,6 +1,10 @@
 #include "SWR.h"
 #include <Arduino.h>
 extern long bandLimitPositionCounts[3][2];  // extern, defined in magloop_pico.cpp
+extern int menuEncoderMovement;
+extern int frequencyEncoderMovement;
+extern int frequencyEncoderMovement2;
+extern int digitEncoderMovement;
 
 SWR::SWR(StepperManagement & steppermanage, Adafruit_ILI9341 & tft): steppermanage(steppermanage), tft(tft) {
 adc_init();
@@ -28,96 +32,6 @@ void SWR::ReadADCoffsets(){
   
   forward_offset = adc_read();
 }
-
-/*****
-  Purpose: Manual Setting the Frequency
-
-  Parameter list:
-
-  Return value:
-    void
-*****/
-void SWR::ManualFrequencyControl(int whichBandOption) {
-  //Serial.print("ManualFrequencyControl  "); 
- //   updateMessage("Press Freq: Move to Freq"); TEMPORARILY COMMENTED
-  int i, k, yIncrement, xIncrement;
-  int stepIncr;
-  long currentFrequencyOld;
-  long tempTime;
-  xIncrement = (XAXISEND - XAXISSTART ) / 3;
-  yIncrement = (YAXISEND - YAXISSTART) / 3;
-  int xDotIncrement = 10;
-  int yTick = YAXISSTART + 5;
-  frequencyEncoderMovement = 0;
-   //Serial.print("ManualFrequencyControl2  ");
-  //  GraphAxis(whichBandOption);  TEMPORARILY COMMENTED
-  //Serial.print("ManualFrequencyControl3  ");
-  //tempTime = millis();
-  //Serial.print("frequencyEncoderMovement2=  "); Serial.println(frequencyEncoderMovement2);
-     // Serial.print("frequencyEncoderMovement=  "); Serial.println(frequencyEncoderMovement);
-  if (frequencyEncoderMovement2 != 0) {
-    currentFrequencyOld = currentFrequency;
-
-
-    while (gpio_get(FREQUENCYENCODERSWITCH) != LOW) {
-      
-      if (frequencyEncoderMovement2 != 0) {
-        //Serial.print("if (frequencyEncoderMovement2  ");
-        currentFrequency = currentFrequency + frequencyEncoderMovement2 * 1000;
-        //Serial.print("if (currentFrequency  "); Serial.println(currentFrequency);
-  //      UpdateFrequency(); TEMPORARILY COMMENTED
-        frequencyEncoderMovement2 = 0;
-        
-        //delay(100);
-      }
-   
-    }
-    // updateMessage("Freq: Adjust - ATune: Refine");  TEMPORARILY COMMENTED
-    tempTime = 0;
-   // Serial.print("currentFrequency=  "); Serial.println(currentFrequency);
-   // SendFrequency(currentFrequency);  TEMPORARILY COMMENTED
-    currPosition = currPosition + ((currentFrequency - currentFrequencyOld) / (hertzPerStepperUnitVVC[whichBandOption]));
-    steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-    currPosition -= 20;
-    steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-    currPosition += 20;
-    steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-    readSWRValue = ReadSWRValue();
-   // Serial.print("readSWRValue=  "); Serial.println(readSWRValue);
-//    delay(100);
-    int k = 0;
-    frequencyEncoderMovement = 0;
-    frequencyEncoderMovement2 = 0;
-  }
-  //updateMessage("Freq: Adjust - ATune: Refine");  TEMPORARILY COMMENTED
-  //ShowSubmenuData(readSWRValue);    TEMPORARILY COMMENTED
-  readSWRValue = ReadSWRValue();
-  //PlotNewStartingFrequency(whichBandOption);   TEMPORARILY COMMENTED
-  //ShowSubmenuData(ReadSWRValue());    TEMPORARILY COMMENTED
-}
-
-/*****
-  Purpose: Manual Setting the Stepper
-
-  Parameter list:
-
-  Return value:
-    void
-*****/
-void SWR::ManualStepperControl() {
-
-  currPosition = currPosition + menuEncoderMovement;
-  steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-  currPosition -= 20;
-  steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-  currPosition += 20;
-  steppermanage.MoveStepperToPositionCorrected(currPosition); //Al 4-20-20
-  readSWRValue = ReadSWRValue();
-  // ShowSubmenuData(ReadSWRValue()); TEMPORARILY COMMENTED
-  //  UpdateFrequency();  TEMPORARILY COMMENTED
-  menuEncoderMovement = 0;
-}
-
 
 
 /*****

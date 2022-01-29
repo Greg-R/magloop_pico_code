@@ -1,5 +1,6 @@
 #include "AutoTune.h"
 
+#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
 
 /*****
   Purpose: Main AutoTune routine

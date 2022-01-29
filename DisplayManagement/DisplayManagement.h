@@ -35,14 +35,11 @@
 #define FREQMENU  0  // Menuing indexes
 
 #define FASTMOVESPEED               1000
-#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
+//#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
 #define MAXNUMREADINGS              500
 #define PIXELHEIGHT                 240
 #define ACCURACYBUTTON         6
 
-extern int menuEncoderMovement;
-extern int frequencyEncoderMovement;
-extern int digitEncoderMovement;
 
 //extern const uint32_t presetFrequencies[3][6];
 //extern long bandLimitPositionCounts[3][2];  // This array is written to during calibration; it can't be const.
@@ -70,7 +67,7 @@ Data & data;
 //Buttons & buttons;
 int whichBandOption;
 int quickCalFlag;
-long currentFrequency;
+//long frequency;
 //long presetFrequencies[10][PRESETSPERBAND];
 float SWRValue;
 float SWRcurrent;
@@ -111,7 +108,7 @@ void Splash(std::string version, std::string releaseDate);
 
 void frequencyMenuOption();
 
-void ChangeFrequency(int bandIndex);
+long ChangeFrequency(int bandIndex, long frequency);
 
 int MakeMenuSelection();
 
@@ -121,7 +118,7 @@ void EraseBelowMenu();
 
 void ErasePage();
 
-int ShowMainDisplay(int whichMenuPage, float SWR);
+void ShowMainDisplay();
 
 void ShowSubmenuData(float SWR, int currentFrequency);
 
@@ -158,5 +155,9 @@ void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
 float AutoTuneSWR();
 
 float AutoTuneSWRQuick();
+
+void ManualFrequencyControl(int whichBandOption);
+
+void ManualStepperControl();
 
 };

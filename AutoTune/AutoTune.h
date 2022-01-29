@@ -5,10 +5,9 @@
 #include "SWR.h"
 #include "Adafruit_ILI9341.h"
 #include "StepperManagement.h"
-//#include "DisplayManagement.h"
 
 #define FASTMOVESPEED               1000
-#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
+//#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
 #define MAXNUMREADINGS              500
 #define PIXELHEIGHT                 240
 #define ACCURACYBUTTON         6

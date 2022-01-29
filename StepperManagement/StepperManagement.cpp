@@ -1,22 +1,6 @@
 
 #include "StepperManagement.h"
 
-#define FASTMOVESPEED               1000
-#define NORMALMOVESPEED             100
-#define MAXBUMPCOUNT                2                   // Detent pulses to get "real" bump
-#define ZEROSWITCH                  10
-#define MAXSWITCH                   11
-#define YAXISSTART                  55                  // For graphing purposes
-#define YAXISEND                    210
-#define XAXISSTART                  25
-#define XAXISEND                    315
-//#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
-//#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
-//#define LOWEND30M                  10100000L
-//#define HIGHEND30M                 10150000L
-//#define LOWEND20M                  14000000L
-//#define HIGHEND20M                 14350000L
-
 
 //StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): stepper(interface, pin1, pin2, pin3, pin4, enable) {
 //currPosition = 2500;  // Default to approximately midrange.
@@ -28,8 +12,16 @@ position = 2500;  // Default to approximately midrange.
 setCurrentPosition(5000);  //
 }
 
-//AccelStepper& stepper;
-// This function was in the Encoders file!?
+
+// Revised version which is simplified to use function from AccelStepper.
+// This uses a blocking function.  However, I can't think of a reason it won't work here.
+void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
+moveTo(position);
+runToPosition();
+}
+
+/*  Original function.  Did not understand why this function was required.???
+// This function was in the Encoders file???
 void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
   int stepperDirection;
   long stepperDistance;
@@ -77,39 +69,32 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
 void StepperManagement::ResetStepperToZero()
 {
   //updateMessage("Resetting to Zero");
+  setCurrentPosition(0);
   setMaxSpeed(500);
   setAcceleration(110);
-  while (gpio_get(ZEROSWITCH) != 0) {      // move to zero position
+  position = 0;  // Assume the default position is zero.
+  // This loop moves the stepper in a negative direction until
+  // the zero switch closes.
+  while (gpio_get(ZEROSWITCH) != 0) {      // move to zero position 
     moveTo(position);
     run();
-    position--;
+    position--;  // Rotate towards zero stop switch.
   }
+  // Reset to zero:
   setCurrentPosition(0);
-  setMaxSpeed(100);
+  setMaxSpeed(500);  // Note: setCurrentPosition sets max speed to 0.
+  // Now bump the stepper off the zero limit switch enough to open the switch.
   position = 0;
-  //gpio_put(ZEROSWITCH, 1);  // This shouldn't be necessary due to pull-up.
-  position = 50;
-  //Serial.print("before 200 move = ");
-  MoveStepperToPositionCorrected(position); //Al 4-20-20
-  while (true) {      // move to zero position
-    setMaxSpeed(100);
-    position--;
-    moveTo(position);
-    run();
-    if (gpio_get(ZEROSWITCH) == 0)
+  //MoveStepperToPositionCorrected(position); //Al 4-20-20
+  while (true) {
+    position++;    // Rotate away from zero stop switch.
+    move(position);
+    run();  
+    if (gpio_get(ZEROSWITCH) == 1)  // When the zero stop switch opens, break from loop.
       break;
   }
-  setCurrentPosition(0);
-  position = 50;
-// This while loop can be eliminated by using runToPosition() function.
-  while (1) {
-    moveTo(position);
-    run();
-    if (distanceToGo() == 0) {
-      break;
-    }
-  }
-  setMaxSpeed(100);
+  // Bump it up just a little more for margin.
+  runToNewPosition(position + 20);
 }
 
 

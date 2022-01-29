@@ -10,6 +10,16 @@
 #define LOWEND20M                  14000000L
 #define HIGHEND20M                 14350000L
 
+#define FASTMOVESPEED               1000
+#define NORMALMOVESPEED             100
+#define MAXBUMPCOUNT                2                   // Detent pulses to get "real" bump
+#define ZEROSWITCH                  11
+#define MAXSWITCH                   10
+#define YAXISSTART                  55                  // For graphing purposes
+#define YAXISEND                    210
+#define XAXISSTART                  25
+#define XAXISEND                    315
+
 // This class inherits from AccelStepper, which is an Arduino library.
 class StepperManagement : public AccelStepper {
 

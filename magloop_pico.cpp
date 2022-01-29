@@ -46,8 +46,8 @@ const std::string releaseDate = "3-15-21";
 //  Instantiate the Stepper object:
 #define STEPPERDIR 9
 #define STEPPERPUL 12
-#define ZEROSWITCH 11
-#define MAXSWITCH 10
+//#define ZEROSWITCH 11
+//#define MAXSWITCH 10
 //AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
 //  Instantiate the Stepper Manager:
 //StepperManagement steppermanage = StepperManagement(stepper);
@@ -150,9 +150,10 @@ volatile uint8_t result;
 volatile uint32_t countEncoder;
 Rotary menuEncoder = Rotary(18, 17);
 Rotary frequencyEncoder = Rotary(22, 21);
-int menuEncoderMovement;
-int frequencyEncoderMovement;
-int digitEncoderMovement;
+extern int menuEncoderMovement;
+extern int frequencyEncoderMovement;
+extern int frequencyEncoderMovement2;
+extern int digitEncoderMovement;
 
 void encoderCallback(uint gpio, uint32_t events) {
 if((gpio == 17) || (gpio == 18)) {
@@ -162,7 +163,6 @@ if((gpio == 17) || (gpio == 18)) {
       case DIR_CW:
         menuEncoderMovement = 1;
         digitEncoderMovement = 1;
-     //   digitEncoderMovement = 1;
         break;
       case DIR_CCW:
         menuEncoderMovement = -1;
@@ -171,23 +171,21 @@ if((gpio == 17) || (gpio == 18)) {
     }
   }
 }
-//else if(gpio == 18) result = menuEncoder.process();
 else if((gpio == 21) || (gpio == 22)) {
 result = frequencyEncoder.process();
   if (result != 0) {
     switch (result) {
       case DIR_CW:
-        frequencyEncoderMovement = 1;
-     //   digitEncoderMovement = 1;
+        frequencyEncoderMovement++;
+        frequencyEncoderMovement2 = 1;
         break;
       case DIR_CCW:
-        frequencyEncoderMovement = -1;
-     //   digitEncoderMovement = -1;
+        frequencyEncoderMovement--;
+        frequencyEncoderMovement2 = -1;
         break;
     }
   }
 }
-//else if(gpio == 22) result = frequencyEncoder.process();
 if(result == DIR_CW ) countEncoder = countEncoder + 1;
 if(result == DIR_CCW ) countEncoder = countEncoder - 1;
 }
@@ -255,9 +253,6 @@ int main()
 
   //  The data object manages constants and variables involved with frequencies and stepper motor positions.
   Data data = Data();
-  // Compute slopes:
-  
-
   uint32_t eeprom_data;
   EEPROM eeprom = EEPROM(data);
   //  Use this method one time only and then comment out!
@@ -319,7 +314,7 @@ StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::
   //dds.SendFrequency(0);
   
 // Instantiate SWR object.
-  SWR swr = SWR(stepper, tft);
+SWR swr = SWR(stepper, tft);
 //  Now measure the ADC offsets before the DDS is active.
 //  swr.ReadADCoffsets();
 //  dds.SendFrequency(8045000);
@@ -391,7 +386,7 @@ tft.fillScreen(ILI9341_BLACK);
 tft.setCursor(20, 90);
 }
 */
-//  Set up the Menu and Frequency encoders:
+// Set up the Menu and Frequency encoders:
 menuEncoder.begin(true, false);
 frequencyEncoder.begin(true, false);
 // Encoder interrupts:
@@ -434,25 +429,61 @@ currentBand = eeprom.ReadCurrentBand();
       break;
   }
   dds.SendFrequency(currentFrequency);    // Set the DDS
-  SWRcurrent = swr.ReadSWRValue();
-  display.UpdateSWR(SWRcurrent, "??");
-  VSWROld = SWRcurrent;
-  //  Read position counts out of flash and overwrite default values:
-  eeprom.ReadPositionCounts();
-  display.menuIndex = FREQMENU;
-  display.ShowMainDisplay(0, SWRcurrent);       // Draws top menu line
-  display.ShowSubmenuData(SWRcurrent, currentFrequency);          // Draws SWR and Freq info
+  dds.SendFrequency(currentFrequency);
+  
   busy_wait_ms(100);                      // Let DDS stabilize
+  SWRcurrent = swr.ReadSWRValue();
+ // display.UpdateSWR(SWRcurrent, "??");
+  VSWROld = SWRcurrent;
+  
+  display.menuIndex = FREQMENU;
+  display.ShowMainDisplay();       // Draws top menu line.  Why has parameters???  Doesn't need them!
+  display.ShowSubmenuData(SWRcurrent, currentFrequency);          // Draws SWR and Freq info
+
   whichBandOption = 0;
 
  // display.EraseBelowMenu();    // Clear work area
       
 //  display.DoFirstCalibrate();
-  display.EraseBelowMenu();
+//  display.EraseBelowMenu();
 
-SWRcurrent = swr.ReadSWRValue();
+//SWRcurrent = swr.ReadSWRValue();
 //  Set to zero and calibrate stepper:
+display.updateMessage("Resetting to Zero");
+
+//stepper.setCurrentPosition(0);
+//stepper.setMaxSpeed(100);
+//stepper.setAcceleration(110);
+//stepper.move(500);
+//stepper.runToPosition();
+//stepper.move(-250);
+//stepper.runToPosition();
+
 stepper.ResetStepperToZero();
+//  tft.fillScreen(ILI9341_BLACK);
+//  tft.setCursor(80, 140);
+//  tft.print(stepper.currentPosition());
+//stepper.moveTo(1000);
+//stepper.runToPosition();
+//for(int i = 0; i < 500; i = i + 1){
+//stepper.moveTo(2275);
+//while(stepper.distanceToGo()){
+//stepper.run();
+//}
+//stepper.moveTo(2150);
+//while(stepper.distanceToGo()){
+//stepper.runToPosition();
+//}
+//tft.fillScreen(ILI9341_BLACK);
+//tft.setCursor(80, 140);
+//tft.print(stepper.currentPosition());
+//}
+
+display.UpdateFrequency(dds.currentFrequency);  //  Updates position after calibrating stepper.
+//  ShowMainDisplay() and ShowSubmentData() always used together after this???
+display.ShowMainDisplay();
+display.ShowSubmenuData(SWRcurrent, currentFrequency); 
+
 // Main state machine:
 while(1) {
   if (display.quickCalFlag == 1) {
@@ -474,11 +505,11 @@ while(1) {
     case PRESETSMENU:                        //Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
       display.whichBandOption = display.SelectBand();            // Select the band to be used
       submenuIndex = 0;
-      display.ProcessPresets(display.whichBandOption, submenuIndex);         // Select a preselected frequency
+      display.ProcessPresets(display.whichBandOption, submenuIndex);         // Select a preselected frequency.  This should return a frequency???
       display.menuIndex = FREQMENU;                         // When done, start over...
-      display.ShowMainDisplay(display.menuIndex, SWRcurrent);
-      display.ShowSubmenuData(SWRcurrent, display.currentFrequency);
-      dds.SendFrequency(display.currentFrequency);
+      display.ShowMainDisplay();
+      display.ShowSubmenuData(SWRcurrent, dds.currentFrequency);
+      dds.SendFrequency(dds.currentFrequency);
       SWRcurrent = swr.ReadSWRValue();
       break;
 
@@ -488,17 +519,15 @@ while(1) {
       display.DoFirstCalibrate();
       display.EraseBelowMenu();
       //MyDelay(200L);
-      display.ShowMainDisplay(0, 0.0);
-      display.ShowSubmenuData(0.0, display.currentFrequency);
+      display.ShowMainDisplay();
+      display.ShowSubmenuData(0.0, dds.currentFrequency);
       break;
 
     default:
       break;
   } //switch (menuIndex)
 
-
-}
-
+}  // while(1)  (end of loop)
 
   return 0;
 }

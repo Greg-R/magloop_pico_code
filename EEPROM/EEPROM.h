@@ -15,12 +15,12 @@
 // Once done, we can access this at XIP_BASE + 256k.
 #define FLASH_TARGET_OFFSET (256 * 1024)
 
-#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
-#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
-#define LOWEND30M                  10100000L
-#define HIGHEND30M                 10150000L
-#define LOWEND20M                  14000000L
-#define HIGHEND20M                 14350000L
+//#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
+//#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
+//#define LOWEND30M                  10100000L
+//#define HIGHEND30M                 10150000L
+//#define LOWEND20M                  14000000L
+//#define HIGHEND20M                 14350000L
 
 //extern int currentBand;
 //extern long bandLimitPositionCounts[3][2];  // 3 bands, 2 limits, upper and lower.

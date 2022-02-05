@@ -374,7 +374,7 @@ void AccelStepper::step1(long step)
     setOutputPins(_direction ? 0b11 : 0b01); // step HIGH
     // Caution 200ns setup time
     // Delay the minimum allowed pulse width
-    busy_wait_ms(_minPulseWidth);
+    busy_wait_us_32(_minPulseWidth);
     setOutputPins(_direction ? 0b10 : 0b00); // step LOW
 }
 

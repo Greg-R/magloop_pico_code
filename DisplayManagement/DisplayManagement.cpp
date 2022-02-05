@@ -692,19 +692,21 @@ void DisplayManagement::DoNewCalibrate2()  //Al modified 9-14-19
   Return value:
     void
 *****/
+
 void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
 {
   int bandBeingCalculated;
   int i, j, whichLine;
+  int autotune;
   long localPosition, minCount, frequency;
   float currentSWR;
   updateMessage("Initial Calibrate");
   tft.print("1st Cal ");
   bandBeingCalculated = 0;
   stepper.ResetStepperToZero();
-  stepper.setCurrentPosition(0);        //Set Stepper count to zero
-  position = 100L;
-  stepper.MoveStepperToPositionCorrected(position);
+  //stepper.setCurrentPosition(0);        //Set Stepper count to zero
+  position = 0;
+  //stepper.MoveStepperToPositionCorrected(position);
   tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   tft.drawFastHLine(0, 45, 320, ILI9341_RED);
@@ -726,20 +728,27 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
       UpdateFrequency(frequency);      // Change main display data
       updateMessage("Moving to Freq");
       while (true) {
-        if (gpio_get(MAXSWITCH) != HIGH) {    // At the end stop switch?
-          stepper.ResetStepperToZero();       // Yep, so leave.
-          return;
-        }
+    //    if (gpio_get(MAXSWITCH) != HIGH) {    // At the end stop switch?
+    //      stepper.ResetStepperToZero();       // Yep, so leave.
+    //      return;
+    //  }
+    if(DetectMaxSwitch()) return;
+
         position = stepper.currentPosition();
         while (swr.ReadSWRValue() > 5) {     //Move stepper in CW direction in larger steps for SWR>5
           position = position + 40;  // Better to always get this from StepperManagement???
           UpdateFrequency(frequency);
           ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
           stepper.MoveStepperToPositionCorrected(position);
+          if(DetectMaxSwitch()) return;
         }
+        
         currentSWR = swr.ReadSWRValue();
         updateMessage("Auto Tuning");
-        minSWRAuto = AutoTuneSWR();
+
+        autotune = AutoTuneSWR();  // AutoTuneSWR() returns 0 if failure.
+        if(autotune == 0) return;
+        minSWRAuto = autotune;              // Minimum SWR is returned if success.
   
         UpdateFrequency(dds.currentFrequency);
         if (minSWRAuto < TARGETMAXSWR) {                   //Ignore values greater than Target Max
@@ -1151,17 +1160,20 @@ float DisplayManagement::AutoTuneSWR() {
   int i;
   long currPositionTemp;
   SWRMinPosition = 4000;
-  //updateMessage("Auto Tuning");  Moved to DisplayManagment.  Can move it back here???
+  updateMessage("Auto Tuning");  // Moved to DisplayManagment.  Can move it back here??? Yes, for now.
 
   busy_wait_us_32(100);
   stepper.setMaxSpeed(FASTMOVESPEED);
   //steppermanage.MoveStepperToPositionCorrected(steppermanage.currentPosition());  //Move to initial position.  Redundant???
   stepper.setMaxSpeed(NORMALMOVESPEED);
   for (int i = 0; i < MAXNUMREADINGS; i++) {   //reset temp arrays - used to plot SWR vs frequency
-    tempSWR[i] = 0.0;
-    tempCurrentPosition[i] = 0;
+    tempSWR[i] = 0.0;           // Class member
+    tempCurrentPosition[i] = 0; // Class member
   }
   for (i = 0; i < MAXNUMREADINGS; i++) {       // loop to increment and find min SWR and save values to plot
+
+    if (gpio_get(MAXSWITCH) == LOW) break;  // Break from this for loop due to limit switch closure.
+    
     minSWR = swr.ReadSWRValue();                   //Save minimum SWR value
     ShowSubmenuData(minSWR, dds.currentFrequency);
     tempSWR[i] = minSWR;                       //Array of SWR values
@@ -1169,7 +1181,7 @@ float DisplayManagement::AutoTuneSWR() {
     if ( minSWR < minSWRAuto) {             // Test to find minimum SWR value
       minSWRAuto = minSWR;
       SWRMinPosition = stepper.currentPosition();
-      stepper.MoveStepperToPositionCorrected(SWRMinPosition);
+      stepper.MoveStepperToPositionCorrected(SWRMinPosition);  // Redundant???
     }
     if (minSWR > 3 and whichBandOption == 0) {   //Fast step for 40M band above SWR = 3
       stepper.setMaxSpeed(FASTMOVESPEED);
@@ -1185,13 +1197,42 @@ float DisplayManagement::AutoTuneSWR() {
     if (stepper.currentPosition() > SWRMinPosition + 10 and minSWR > minSWRAuto + 1.5 and minSWRAuto < 3.5) {   //Test to find if position is after minimum
       break;                                                                                      //if after minimum break out of for loop
     }
-    SWRFinalPosition = stepper.currentPosition();              // Save final value for calibrate to continue to find band end positions
+    SWRFinalPosition = stepper.currentPosition(); // Save final value for calibrate to continue to find band end positions
     if (i > 498) {                                //Repeat loop if minimum is not found
       i = 1;
       position = stepper.currentPosition() - 50;
     }
-  } // for (true)
+    }  // end of min SWR search loop.
+      
+
+  /*
+  if (gpio_get(MAXSWITCH) == LOW) {  // Execute this code only if the limit switch has closed.
+      // Bump the stepper off the limit switch.
+      stepper.move(-400);
+      stepper.runToPosition();
+      tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
+      for(int i = 0; i < 5; i++) {
+      updateMessage("Upper Limit Hit!");
+      busy_wait_ms(1000);
+      tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);  // Clear text
+      busy_wait_ms(1000);
+      }
+      tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);  // Clear text
+      // Need to fill the array with zeros to keep it from crashing the plot.
+      for (int i = 0; i < MAXNUMREADINGS; i++) {
+         tempCurrentPosition[i] = 0;
+      }
+      iMax = MAXNUMREADINGS;
+      updateMessage("Reset Stepper to Zero");
+      stepper.ResetStepperToZero();
+      }
+    */
+
+  // Break to here if MAXSWITCH state change detected.
+  if(DetectMaxSwitch())  return 0;  // 0 indicates failed AutoTune.
   
+  // To this else if AutoTune is successful.
+      else {
   position = SWRMinPosition;
   stepper.MoveStepperToPositionCorrected(SWRMinPosition - 50);   // back up position to take out backlash
   busy_wait_us_32(200);
@@ -1203,7 +1244,8 @@ float DisplayManagement::AutoTuneSWR() {
   tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
   tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);  // Clear text "Auto Tuning"
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-  return minSWR;
+      }
+      return minSWR;
 }
 
 
@@ -1377,4 +1419,34 @@ void DisplayManagement::ManualStepperControl() {
   ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
   UpdateFrequency(dds.currentFrequency);
   menuEncoderMovement = 0;
+}
+
+
+/*****
+  Purpose: Detect state change of MAXSWITCH.  Warn the user.
+           Back the stepper off the switch so that it goes back to normal state.
+
+  Parameter list:
+    
+
+  Return value:
+    int
+
+  CAUTION:
+
+*****/
+int DisplayManagement::DetectMaxSwitch()
+{
+  if(gpio_get(MAXSWITCH) == LOW) {
+stepper.move(-300);
+stepper.runToPosition();
+for(int i = 0; i < 10; i++) {
+updateMessage("Upper Limit Hit!");
+busy_wait_ms(1000);
+tft.fillRect(90,0,300,20,ILI9341_BLACK);
+busy_wait_ms(1000);
+}
+return 1;
+  }
+  return 0;
 }

@@ -511,6 +511,9 @@ public:
     /// \return true if the speed is not zero or not at the target position
     bool    isRunning();
 
+    unsigned long  _stepInterval;
+    void           computeNewSpeed();
+
 protected:
 
     /// \brief Direction indicator
@@ -529,7 +532,7 @@ protected:
     /// \li  after change to acceleration through setAcceleration()
     /// \li  after change to target position (relative or absolute) through
     /// move() or moveTo()
-    void           computeNewSpeed();
+    //void           computeNewSpeed();
 
     /// Low level function to set the motor output pins
     /// bit 0 of the mask corresponds to _pin[0]
@@ -596,6 +599,8 @@ protected:
     /// Protected because some peoples subclasses need it to be so
     boolean _direction; // 1 == CW
     
+    
+
 private:
     /// Number of pins on the stepper motor. Permits 2 or 4. 2 pins is a
     /// bipolar, and 4 pins is a unipolar.
@@ -630,7 +635,7 @@ private:
 
     /// The current interval between steps in microseconds.
     /// 0 means the motor is currently stopped with _speed == 0
-    unsigned long  _stepInterval;
+    //unsigned long  _stepInterval;
 
     /// The last step time in microseconds
     unsigned long  _lastStepTime;

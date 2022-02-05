@@ -84,10 +84,10 @@ void GraphPlot::GraphAxis(int whichBandOption) //al modified 9-8-19
         if (freqCount > 14.35) {
           freqCount = 14.35;
         //  dtostrf(freqCount, 5, 2, buff);
-        std::sprintf(buff, "%f", freqCount);
+        std::sprintf(buff, "%3.1f", freqCount);
         } else {
         //  dtostrf(freqCount, 4, 1, buff);
-        std::sprintf(buff, "%f", freqCount);
+        std::sprintf(buff, "%3.1f", freqCount);
         }
         tft.print(buff);  //Print 20M Frequency Labels OK 9-8-19
       }

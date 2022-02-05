@@ -1,6 +1,13 @@
 
 #include "StepperManagement.h"
 
+#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
+#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
+#define LOWEND30M                  10100000L
+#define HIGHEND30M                 10150000L
+#define LOWEND20M                  14000000L
+#define HIGHEND20M                 14350000L
+
 
 //StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): stepper(interface, pin1, pin2, pin3, pin4, enable) {
 //currPosition = 2500;  // Default to approximately midrange.
@@ -13,11 +20,23 @@ setCurrentPosition(5000);  //
 }
 
 
-// Revised version which is simplified to use function from AccelStepper.
-// This uses a blocking function.  However, I can't think of a reason it won't work here.
+// Revised version which includes MAXSWITCH detection.
+// 
 void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
+// Acceleration needs to be set high, with maximum speed limit.
+setAcceleration(2000);
+setSpeed(500);
+setMaxSpeed(500);
 moveTo(position);
-runToPosition();
+
+while(distanceToGo() != 0) {
+    run();
+  if(gpio_get(MAXSWITCH) == 0) {
+  stop();  // Properly decelerate and stop the stepper.
+  runToPosition();
+  break;
+  }
+}
 }
 
 /*  Original function.  Did not understand why this function was required.???
@@ -25,11 +44,19 @@ runToPosition();
 void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
   int stepperDirection;
   long stepperDistance;
+  setMaxSpeed(500);
+  setAcceleration(200);
+  setSpeed(500);
   while (1)
   {
     stepperDistanceOld = stepperDistance;
     moveTo(position);
-    run();
+    runSpeed();
+    //  Check for maximum limit switch.  Bail out if switch goes low!
+    if (gpio_get(MAXSWITCH) == 0) {
+      
+      break;
+    }
     stepperDistance = distanceToGo();
     if (distanceToGo() == 0)
     {
@@ -54,9 +81,9 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
   }
   stepperDirectionOld = stepperDirection;
 }
+*/
 
-
-/*****
+/*
   Purpose: Resets stepper motor to 0 position
 
   Parameter list:
@@ -65,20 +92,22 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
     void
 
   CAUTION:
-*****/
+
 void StepperManagement::ResetStepperToZero()
 {
   //updateMessage("Resetting to Zero");
   setCurrentPosition(0);
   setMaxSpeed(500);
-  setAcceleration(110);
-  position = 0;  // Assume the default position is zero.
+  setAcceleration(2000);
+  setSpeed(500);  // Move towards the low limit switch using constant-speed.
+  position = -10000;  // Assume the default position is zero.
   // This loop moves the stepper in a negative direction until
   // the zero switch closes.
   while (gpio_get(ZEROSWITCH) != 0) {      // move to zero position 
-    moveTo(position);
-    run();
-    position--;  // Rotate towards zero stop switch.
+  //  moveTo(position);
+  //  run();  // This uses acceleration-deceleration.
+    runSpeed();  // This uses constant-speed.
+  //  position--;  // Rotate towards zero stop switch.
   }
   // Reset to zero:
   setCurrentPosition(0);
@@ -96,6 +125,36 @@ void StepperManagement::ResetStepperToZero()
   // Bump it up just a little more for margin.
   runToNewPosition(position + 20);
 }
+*/
+
+void StepperManagement::ResetStepperToZero() {
+// Acceleration needs to be set high, with maximum speed limit.
+setCurrentPosition(0);
+setAcceleration(2000);
+setSpeed(500);
+setMaxSpeed(500);
+// If ZEROSWITCH already low, move stepper forward a bit?
+if(gpio_get(ZEROSWITCH) == 0) {
+moveTo(500);
+runToPosition();
+}
+// Move in negative direction until ZEROSWITCH state changes.
+moveTo(-50000);
+while(distanceToGo() != 0) {
+    run();
+  if(gpio_get(ZEROSWITCH) == 0) {
+  stop();  // Properly decelerate and stop the stepper.
+  runToPosition();
+  break;
+  }
+}
+// Bump off the switch:
+setCurrentPosition(0);
+moveTo(100);
+runToPosition();
+setCurrentPosition(0);
+}
+
 
 
 /*****

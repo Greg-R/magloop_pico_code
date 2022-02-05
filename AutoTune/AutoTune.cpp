@@ -1,6 +1,7 @@
 #include "AutoTune.h"
 
 #define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
+#define MAXSWITCH 10
 
 /*****
   Purpose: Main AutoTune routine
@@ -22,7 +23,7 @@ float AutoTune::AutoTuneSWR() {
   float oldMinSWR;
   oldMinSWR = 100;
   minSWRAuto = 100;
-  int i;
+  int i, MAXSWITCH;
   long currPositionTemp;
   SWRMinPosition = 4000;
   //updateMessage("Auto Tuning");  Moved to DisplayManagment.
@@ -36,6 +37,9 @@ float AutoTune::AutoTuneSWR() {
     tempCurrentPosition[i] = 0;
   }
   for (i = 0; i < MAXNUMREADINGS; i++) {       // loop to increment and find min SWR and save values to plot
+
+    if (get_gpio(MAXSWITCH) == 0) break;  // Break if MAXSWITCH changes state (limit hit).
+
     minSWR = swr.ReadSWRValue();                   //Save minimum SWR value
     display.ShowSubmenuData(minSWR);
     tempSWR[i] = minSWR;                       //Array of SWR values
@@ -65,6 +69,12 @@ float AutoTune::AutoTuneSWR() {
       currPosition = currPosition - 50;
     }
   } // for (true)
+
+  // Break to here if MAXSWITCH state change detected.
+  if(DetectMaxSwitch())  return 0;  // 0 indicates failed AutoTune.
+  
+  // To this else if AutoTune is successful.
+  else {
   minSWR = swr.ReadSWRValue();
   currPosition = SWRMinPosition;
   steppermanage.MoveStepperToPositionCorrected(SWRMinPosition - 50);   // back up position to take out backlash
@@ -76,7 +86,7 @@ float AutoTune::AutoTuneSWR() {
   tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
   tft.fillRect(100, 0, 300, 20, ILI9341_BLACK);
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-  return minSWR;
+  return minSWR;  //  Note: a value which is > 0 is a successful AutoTune.
 }
 
 

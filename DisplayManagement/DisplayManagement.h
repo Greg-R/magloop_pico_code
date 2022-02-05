@@ -160,4 +160,6 @@ void ManualFrequencyControl(int whichBandOption);
 
 void ManualStepperControl();
 
+int DetectMaxSwitch();
+
 };

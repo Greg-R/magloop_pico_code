@@ -86,19 +86,6 @@ extern const uint32_t presetFrequencies[3][6] =
 };
 */
 
-#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
-#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
-#define LOWEND30M                  10100000L
-#define HIGHEND30M                 10150000L
-#define LOWEND20M                  14000000L
-#define HIGHEND20M                 14350000L
-/*
-extern const uint32_t bandEdges[3][2] = {   // Band edges in Hz
-  {LOWEND40M, HIGHEND40M},
-  {LOWEND30M, HIGHEND30M},
-  {LOWEND20M, HIGHEND20M}
-};
-*/
 // The Splash function from the Mag Loop Arduino .ino file.
 
 void SplashTest(Adafruit_ILI9341 tft)
@@ -310,9 +297,11 @@ StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::
 
 //  Next test the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
+//  dds.DDSWakeUp();
   dds.DDSWakeUp();
-  //dds.SendFrequency(0);
-  
+  dds.SendFrequency(10100000);
+  busy_wait_ms(5000);
+  dds.SendFrequency(0);
 // Instantiate SWR object.
 SWR swr = SWR(stepper, tft);
 //  Now measure the ADC offsets before the DDS is active.
@@ -458,13 +447,30 @@ display.updateMessage("Resetting to Zero");
 //stepper.runToPosition();
 //stepper.move(-250);
 //stepper.runToPosition();
-
+//for(int i = 0; i < 20; i++) {
+//stepper.ResetStepperToZero();
+//busy_wait_ms(5000);
 stepper.ResetStepperToZero();
+//busy_wait_ms(5000);
+//stepper.MoveStepperToPositionCorrected(10000);
+//stepper.move(-500);
+//stepper.runToPosition();
+//while(stepper.distanceToGo() != 0) {
+//    stepper.run();
+//  if(gpio_get(MAXSWITCH) == 0) break;
+//}
+//busy_wait_ms(5000);
+
+
 //  tft.fillScreen(ILI9341_BLACK);
 //  tft.setCursor(80, 140);
 //  tft.print(stepper.currentPosition());
+//stepper.MoveStepperToPositionCorrected(7000);
+
+//for(int i = 0; i < 1000; i++) {
 //stepper.moveTo(1000);
 //stepper.runToPosition();
+//}
 //for(int i = 0; i < 500; i = i + 1){
 //stepper.moveTo(2275);
 //while(stepper.distanceToGo()){

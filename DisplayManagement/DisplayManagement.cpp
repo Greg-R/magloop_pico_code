@@ -998,8 +998,8 @@ void DisplayManagement::ProcessPresets(int whichBandOption, int submenuIndex)
   long frequency;
   tft.setFont();
   tft.setTextSize(2);
-  updateMessage("Select Preset Frequency"); // TEMPORARILY COMMENTED
-  EraseBelowMenu();                         // TEMPORARILY COMMENTED
+  updateMessage("Select Preset Frequency");
+  EraseBelowMenu();
   tft.setTextSize(1);
   tft.setFont(&FreeSerif12pt7b);
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);       // Show presets for selected band
@@ -1020,10 +1020,6 @@ void DisplayManagement::ProcessPresets(int whichBandOption, int submenuIndex)
   busy_wait_us_32(100L);
   while (gpio_get(AUTOTUNE) != LOW and gpio_get(MENUENCODERSWITCH) != LOW) {
     if (menuEncoderMovement == 1) {                                  // Turning clockwise
-#ifdef DEBUG
-      Serial.print("in enc = 1, submenuIndex = ");
-      Serial.println(submenuIndex);
-#endif
       RestorePreviousPresetChoice(submenuIndex, whichBandOption);
       busy_wait_us_32(200L);
       submenuIndex++;
@@ -1042,14 +1038,14 @@ void DisplayManagement::ProcessPresets(int whichBandOption, int submenuIndex)
     }
   }
   frequency = data.presetFrequencies[whichBandOption][submenuIndex];
-  ShowSubmenuData(swr.ReadSWRValue(), frequency);          // Draws SWR and Freq info  TEMPORARILY COMMENTED
+  ShowSubmenuData(swr.ReadSWRValue(), frequency);          // Draws SWR and Freq info
   dds.SendFrequency(frequency);
-  UpdateFrequency(frequency);   //TEMPORARILY COMMENTED
+  UpdateFrequency(frequency);
 
 
   position = -25 +  data.bandLimitPositionCounts[whichBandOption][0]  + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
-  stepper.setMaxSpeed(10000);
-  stepper.setAcceleration(1100);
+  //stepper.setMaxSpeed(500);
+  //stepper.setAcceleration(1100);
   stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20
  // AutoTuneSWRQuick();   //Auto tune here
  updateMessage("Auto Tuning");
@@ -1072,9 +1068,9 @@ minSWRAuto = AutoTuneSWR();
   //AutoTuneSWR();
   
   UpdateFrequency(dds.currentFrequency);
-  //ShowSubmenuData(readSWRValueAuto);   TEMPORARILY COMMENTED
-  //GraphAxis(whichBandOption);          TEMPORARILY COMMENTED
-  //PlotSWRValueNew(whichBandOption);    TEMPORARILY COMMENTED
+  ShowSubmenuData(minSWRAuto, dds.currentFrequency);
+  GraphAxis(whichBandOption);
+  PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition); 
 
   while (gpio_get(FREQUENCYENCODERSWITCH) != LOW) {
     if (menuEncoderMovement != 0) {

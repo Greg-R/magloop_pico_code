@@ -305,41 +305,7 @@ void EEPROM::WriteCurrentBand()
 }
 
 
-/*****
-  Purpose: Debugging read of EEPROM and print to Serial monitor
 
-  Parameter list:
-    void
-
-  Return value:
-    void
-*****/
-void EEPROM::ShowPositionCounts()
-{
-//  Serial.print("in ShowPositionCounts");
-  int i, offset, status;
-
-  offset = 0;
-  for (i = 0; i < MAXBANDS; i++, offset += sizeof(int)) {
-#ifdef DEBUG
-/*
-    Serial.print("bandLimitPositionCounts[");
-    Serial.print(i);
-    Serial.print("][0] = ");
-    Serial.println(bandLimitPositionCounts[i][0]);
-
-    Serial.print("bandLimitPositionCounts[");
-    Serial.print(i);
-    Serial.print("][1] = ");
-    Serial.println(bandLimitPositionCounts[i][1]);
-    Serial.print("bandLimitPositionCounts[");
-    Serial.print(i);
-    Serial.print("][1] = ");
-    Serial.println(bandLimitPositionCounts[i][2]);
-    */
-#endif
-  }
-}
 
 /*****
   Purpose: Reads all of the values stored in EEPROM

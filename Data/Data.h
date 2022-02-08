@@ -1,15 +1,7 @@
 #pragma once
 #include <stdint.h>
-#include <string>
-#include "pico/stdlib.h"
 
-// Replace these with constant integers.
-#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
-#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
-#define LOWEND30M                  10100000L
-#define HIGHEND30M                 10150000L
-#define LOWEND20M                  14000000L
-#define HIGHEND20M                 14350000L
+
 
 //  This class is intended to manage various frequency and position related constants and variables.
 //  The single object will be referenced by most or maybe all of the other class objects.
@@ -17,6 +9,15 @@
 class Data {
 
 public:
+// Define these frequencies for your licensing authority
+const uint32_t LOWEND40M =   7000000;
+const uint32_t HIGHEND40M =  7300000; 
+const uint32_t LOWEND30M =  10100000;
+const uint32_t HIGHEND30M = 10150000;
+const uint32_t LOWEND20M =  14000000;
+const uint32_t HIGHEND20M = 14350000;
+
+
 // Initial Band edge counts from Calibrate routine.
 // These are initial guesses and will be overwritten by the Calibration algorithm.
 

@@ -2,13 +2,7 @@
 #include <stdint.h>
 #include "pico/stdlib.h"
 #include "AccelStepper.h"
-
-//#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
-//#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
-//#define LOWEND30M                  10100000L
-//#define HIGHEND30M                 10150000L
-//#define LOWEND20M                  14000000L
-//#define HIGHEND20M                 14350000L
+#include "Data.h"
 
 #define FASTMOVESPEED               1000
 #define NORMALMOVESPEED             100
@@ -33,13 +27,13 @@ uint32_t position;
 uint32_t stepperDistanceOld;
 uint32_t bandLimitPositionCounts[3][2];
 uint32_t moveToStepperIndex;
-//AccelStepper stepper;
+Data & data;
 
 //StepperManagement(AccelStepper & stepper);
 //  This duplicates the parameters of the AccelStepper constructor.
 //  The actual parameters when instantiating:  DRIVER, STEPPERPUL, STEPPERDIR
 //StepperManagement(uint8_t interface = AccelStepper::DRIVER, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true);
-StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true);
+StepperManagement(Data & data, AccelStepper::MotorInterfaceType interface, uint8_t pin1 = 2, uint8_t pin2 = 3, uint8_t pin3 = 4, uint8_t pin4 = 5, bool enable = true);
 
 // This function was in the Encoders file!?
 void MoveStepperToPositionCorrected(uint32_t position); 

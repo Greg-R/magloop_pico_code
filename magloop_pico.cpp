@@ -15,42 +15,23 @@
 #include "hardware/clocks.h"
 #include "Adafruit_ILI9341/Adafruit_ILI9341.h"
 #include "DisplayManagement/DisplayManagement.h"
-#include "arduino_includes/Arduino.h"
+//#include "arduino_includes/Arduino.h"
 #include "AccelStepper/AccelStepper.h"
-//#include "Calibrate/Calibrate.h"
-//#include "Presets/Presets.h"
 #include "StepperManagement/StepperManagement.h"
 #include "DDS/DDS.h"
 #include "SWR/SWR.h"
-//#include "AutoTune/AutoTune.h"
 #include "Rotary/Rotary.h"
 #include "EEPROM/EEPROM.h"
 #include "Data/Data.h"
-//#include "GraphPlot/GraphPlot.h"
-//#include "hardware/flash.h"
-//#include "hardware/sync.h"
-
-//#include "Adafruit-GFX-Library/gfxfont.h"
-//#include "Adafruit-GFX-Library/Fonts/FreeSerif24pt7b.h"
-//#include "Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
-//#include "Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 const std::string version = "1.01";
 const std::string releaseDate = "3-15-21";
 
-//  Instantiate the display object.  Note that the SPI is handled in the display object.
-// Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
-
 //  Instantiate the Stepper object:
 #define STEPPERDIR 9
 #define STEPPERPUL 12
-//#define ZEROSWITCH 11
-//#define MAXSWITCH 10
-//AccelStepper stepper = AccelStepper(1, STEPPERPUL, STEPPERDIR);
-//  Instantiate the Stepper Manager:
-//StepperManagement steppermanage = StepperManagement(stepper);
 
 //  Interface for the DDS object.
 #define DDS_RST   3
@@ -61,79 +42,19 @@ const std::string releaseDate = "3-15-21";
 #define PRESETSMENU 1
 #define CALIBRATEMENU 2
 
-//#define FLASH_TARGET_OFFSET (256 * 1024)
-
 // +12V and +5V power switch GPIO:
 #define POWER_SWITCH 28
 
 #define PRESETSPERBAND              6                   // Allow this many preset frequencies on each band
 #define MAXBANDS                    3                   // Can only process this many frequency bands
 
-// Initial Band edge counts from Calibrate routine.
-// These are initial guesses and will be overwritten by the Calibration algorithm.
-/*  Moved to Data class.
-long bandLimitPositionCounts[3][2] = {
-  {  4083L,  5589L},
-  {13693L, 13762L},
-  {18319L, 18691L}
-};
-
-extern const uint32_t presetFrequencies[3][6] =
-{
-  { 7030000L,  7040000L,  7100000L,  7150000L,  7250000L,  7285000L},   // 40M
-  {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L},   // 30M
-  {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}    // 20M
-};
-*/
-
-// The Splash function from the Mag Loop Arduino .ino file.
-
-void SplashTest(Adafruit_ILI9341 tft)
-{
-  tft.fillScreen(ILI9341_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ILI9341_MAGENTA, ILI9341_BLACK);
-  tft.setCursor(10, 20);
-  tft.print("Microcontroller Projects");
-  tft.setCursor(40, 45);
-  tft.print("for Amateur Radio");
-  tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
-  tft.setCursor(PIXELWIDTH / 2 - 30, PIXELHEIGHT / 4 + 20);
-  tft.print("by");
-  tft.setCursor(65, PIXELHEIGHT - 100);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.println("Al Peter  AC8GY");
-  tft.setCursor(45, PIXELHEIGHT - 70);
-  tft.print("Jack Purdum  W8TEE");
-  tft.setCursor(65, PIXELHEIGHT - 40);
-  tft.print("Version ");
-  tft.print(version.c_str());
-  tft.setCursor(65, PIXELHEIGHT - 20);
-  tft.print("Release Date ");
-  tft.print(releaseDate.c_str());
-  tft.setTextSize(2);
-}
-/*
-    enum class MotorInterfaceType: uint8_t
-    {
-	FUNCTION  = 0, ///< Use the functional interface, implementing your own driver functions (internal use only)
-	DRIVER    = 1, ///< Stepper Driver, 2 driver pins required
-	FULL2WIRE = 2, ///< 2 wire stepper, 2 motor pins required
-	FULL3WIRE = 3, ///< 3 wire stepper, such as HDD spindle, 3 motor pins required
-    FULL4WIRE = 4, ///< 4 wire full stepper, 4 motor pins required
-	HALF3WIRE = 6, ///< 3 wire half stepper, such as HDD spindle, 3 motor pins required
-	HALF4WIRE = 8  ///< 4 wire half stepper, 4 motor pins required
-    };
-*/
-
 int currentBand;      // Should be 40, 30, or 20
 int currentFrequency;
 int whichBandOption;
-float countPerHertz[3];
-float hertzPerStepperUnitAir[3];
+//float countPerHertz[3];
+//float hertzPerStepperUnitAir[3];
 
 volatile uint8_t result;
-//volatile uint8_t resultFrequency;
 volatile uint32_t countEncoder;
 Rotary menuEncoder = Rotary(18, 17);
 Rotary frequencyEncoder = Rotary(22, 21);
@@ -224,8 +145,6 @@ int main()
   gpio_pull_up(19);
   gpio_pull_up(20);
 
-  
-
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
   //  Configure the display object.
@@ -233,10 +152,7 @@ int main()
   tft.begin();
   tft.setRotation(3);
   tft.fillScreen(ILI9341_BLACK);
-  //  Run the same Splash function as in the Mag Loop Controller project.
   
-  // Test a GFX graphics primitive by drawing a border:
-  //tft.drawRect(1, 1, 318, 238, ILI9341_WHITE);
 
   //  The data object manages constants and variables involved with frequencies and stepper motor positions.
   Data data = Data();
@@ -250,131 +166,25 @@ int main()
   eeprom.ReadPositionCounts();
   // Slopes can't be computed until the actual values are loaded from flash:
   data.computeSlopes();
-  //eeprom.initialize();  //  Set the buffer to all zeros.
   
-  //  EEPROM test code.
-  const uint32_t *flash_target_contents = (const uint32_t *) (XIP_BASE + FLASH_TARGET_OFFSET);
-  eeprom_data = flash_target_contents[1];
-  tft.setTextSize(2);
-  tft.setCursor(80, 40);
-  //tft.print(eeprom_data);
-  tft.print(data.bandLimitPositionCounts[0][0]);
-  eeprom_data = flash_target_contents[2];
-  tft.setCursor(80, 60);
-  //tft.print(eeprom_data);
-  tft.print(data.bandLimitPositionCounts[0][1]);
-  eeprom_data = flash_target_contents[3];
-  tft.setCursor(80, 80);
-  //tft.print(eeprom_data);
-  tft.print(data.bandLimitPositionCounts[1][0]);
-  tft.setCursor(80, 100);
-   tft.print(data.bandLimitPositionCounts[1][1]);
-  eeprom_data = flash_target_contents[2];
-  tft.setCursor(80, 120);
-  //tft.print(eeprom_data);
-  tft.print(data.bandLimitPositionCounts[2][0]);
-  eeprom_data = flash_target_contents[3];
-  tft.setCursor(80, 140);
-  //tft.print(eeprom_data);
-  tft.print(data.bandLimitPositionCounts[2][1]);
-  
-
-  // Print out a slope:
-  tft.setCursor(80, 160);
-  tft.print(data.hertzPerStepperUnitVVC[3], 1);
 //  Instantiate the Stepper Manager: 
-StepperManagement stepper = StepperManagement(AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
+StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
 
-//AccelStepper stepper =AccelStepper(1, STEPPERPUL, STEPPERDIR);
-
-//  Examples of Stepper control functions:
-//  stepper.ResetStepperToZero();
-//  steppermanage.setCurrentPosition(0);  //  Sets max speed to zero!
-//  steppermanage.setMaxSpeed(500);
-//  steppermanage.setAcceleration(110);
-//  steppermanage.runToNewPosition(2675);
-//  steppermanage.disableOutputs();
-
-//  Next test the DDS.
+//  Next instantiate the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
-//  dds.DDSWakeUp();
-  dds.DDSWakeUp();
-  dds.SendFrequency(10100000);
-  busy_wait_ms(5000);
-  dds.SendFrequency(0);
+  dds.DDSWakeUp();  // This resets the DDS and it will have no output.
+
 // Instantiate SWR object.
-SWR swr = SWR(stepper, tft);
+SWR swr = SWR();
 //  Now measure the ADC offsets before the DDS is active.
-//  swr.ReadADCoffsets();
-//  dds.SendFrequency(8045000);
-//  dds.SendFrequency(8045000);
-//AutoTune autotune = AutoTune(swr, tft, stepper, display);
-//class DisplayManagement;
-//GraphPlot graphplot = GraphPlot(tft, dds, DisplayManagement & display);
+swr.ReadADCoffsets();
+
 DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
-
-//Calibrate calibrate = Calibrate(display, stepper, tft, dds, swr, autotune);
-//Presets presets = Presets(tft, stepper, dds, autotune, swr, display);
-//Buttons buttons = Buttons(display, presets, dds, calibrate);
+// Show "Splash" screen for 5 seconds.
 display.Splash(version, releaseDate);
-
-//tft.fillScreen(ILI9341_BLACK);
-//tft.setTextSize(4);
-//tft.setCursor(80, 40);
-//tft.print(presetFrequencies[0][0]);
-//autotune.AutoTuneSWRQuick();
-
-float VSWR, VSWROld, SWRcurrent;
-//VSWR = swr.ReadSWRValue();
-//  tft.fillScreen(ILI9341_BLACK);
-//  tft.setCursor(50, 10);
-//  tft.print("TUNED SWR:");
-//  tft.setCursor(110, 50);
-//  tft.print(VSWR, 3);
-//busy_wait_ms(5000);
-/*  Troubleshoot VSWR Bridge
-  tft.setTextSize(3);
-  tft.setCursor(20, 90);
-  tft.print(swr.forward_offset);
-  tft.setCursor(110, 90);
-  tft.print(swr.forward_voltage);
-  tft.setCursor(20, 120);
-  tft.print(swr.reverse_offset);
-  tft.setCursor(110, 120);
-  tft.print(swr.reverse_voltage);
-  int forward, reverse;
-  adc_select_input(0);
-  reverse = adc_read();
-  busy_wait_ms(1000);
-  adc_select_input(0);
-  forward = adc_read();
-  tft.setCursor(20, 150);
-  tft.print(reverse);
-  tft.setCursor(160, 150);
-  tft.print(forward);
-*/
-
-// Power down
-//dds.SendFrequency(0);
-//gpio_put(POWER_SWITCH, 0);
-
-/* Test the 5 pushbottons:
+busy_wait_ms(2000);
 tft.fillScreen(ILI9341_BLACK);
-tft.setTextSize(2);
-while(1) {
-if(!gpio_get(4)) tft.print("Button 4");
-else if(!gpio_get(5)) tft.print("Button 5");
-else if(!gpio_get(6)) tft.print("Button 6");
-else if(!gpio_get(7)) tft.print("Button 7");
-else if(!gpio_get(8)) tft.print("Button 8");
-else if(!gpio_get(19)) tft.print("Encoder 1");
-else if(!gpio_get(20)) tft.print("Encoder 2");
-else tft.print("No button pressed");
-busy_wait_ms(200);
-tft.fillScreen(ILI9341_BLACK);
-tft.setCursor(20, 90);
-}
-*/
+
 // Set up the Menu and Frequency encoders:
 menuEncoder.begin(true, false);
 frequencyEncoder.begin(true, false);
@@ -386,20 +196,6 @@ gpio_set_irq_enabled_with_callback(17, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(22, events, 1, &encoderCallback);
 
-// Test the rotary encoders:
-/*
-tft.fillScreen(ILI9341_BLACK);
-tft.setTextSize(2);
-tft.setCursor(20, 90);
-while(1) {
-    if(result) {
-      tft.fillScreen(ILI9341_BLACK);
-      tft.setCursor(20, 90);
-      tft.print(countEncoder);
-}}
-*/
-
-// Setup follows.
 // The default band is read from Flash.
 currentBand = eeprom.ReadCurrentBand();
 
@@ -418,77 +214,18 @@ currentBand = eeprom.ReadCurrentBand();
       break;
   }
   dds.SendFrequency(currentFrequency);    // Set the DDS
-  dds.SendFrequency(currentFrequency);
-  
   busy_wait_ms(100);                      // Let DDS stabilize
-  SWRcurrent = swr.ReadSWRValue();
- // display.UpdateSWR(SWRcurrent, "??");
-  VSWROld = SWRcurrent;
-  
-  display.menuIndex = FREQMENU;
-  display.ShowMainDisplay();       // Draws top menu line.  Why has parameters???  Doesn't need them!
-  display.ShowSubmenuData(SWRcurrent, currentFrequency);          // Draws SWR and Freq info
 
+//  Set to zero and calibrate stepper:
+  display.updateMessage("Resetting to Zero");
+  stepper.ResetStepperToZero();
+
+  display.menuIndex = FREQMENU;
   whichBandOption = 0;
 
- // display.EraseBelowMenu();    // Clear work area
-      
-//  display.DoFirstCalibrate();
-//  display.EraseBelowMenu();
-
-//SWRcurrent = swr.ReadSWRValue();
-//  Set to zero and calibrate stepper:
-display.updateMessage("Resetting to Zero");
-
-//stepper.setCurrentPosition(0);
-//stepper.setMaxSpeed(100);
-//stepper.setAcceleration(110);
-//stepper.move(500);
-//stepper.runToPosition();
-//stepper.move(-250);
-//stepper.runToPosition();
-//for(int i = 0; i < 20; i++) {
-//stepper.ResetStepperToZero();
-//busy_wait_ms(5000);
-stepper.ResetStepperToZero();
-//busy_wait_ms(5000);
-//stepper.MoveStepperToPositionCorrected(10000);
-//stepper.move(-500);
-//stepper.runToPosition();
-//while(stepper.distanceToGo() != 0) {
-//    stepper.run();
-//  if(gpio_get(MAXSWITCH) == 0) break;
-//}
-//busy_wait_ms(5000);
-
-
-//  tft.fillScreen(ILI9341_BLACK);
-//  tft.setCursor(80, 140);
-//  tft.print(stepper.currentPosition());
-//stepper.MoveStepperToPositionCorrected(7000);
-
-//for(int i = 0; i < 1000; i++) {
-//stepper.moveTo(1000);
-//stepper.runToPosition();
-//}
-//for(int i = 0; i < 500; i = i + 1){
-//stepper.moveTo(2275);
-//while(stepper.distanceToGo()){
-//stepper.run();
-//}
-//stepper.moveTo(2150);
-//while(stepper.distanceToGo()){
-//stepper.runToPosition();
-//}
-//tft.fillScreen(ILI9341_BLACK);
-//tft.setCursor(80, 140);
-//tft.print(stepper.currentPosition());
-//}
-
 display.UpdateFrequency(dds.currentFrequency);  //  Updates position after calibrating stepper.
-//  ShowMainDisplay() and ShowSubmentData() always used together after this???
 display.ShowMainDisplay();
-display.ShowSubmenuData(SWRcurrent, currentFrequency); 
+display.ShowSubmenuData(swr.ReadSWRValue(), currentFrequency); 
 
 // Main state machine:
 while(1) {
@@ -502,7 +239,6 @@ while(1) {
   int currPosIndexStart;
   display.menuIndex = display.MakeMenuSelection();  // Select one of the three top menu choices: Freq, Presets, 1st Cal
   busy_wait_ms(200);                                // Crude debounce
-  //swr.ReadSWRValue();  // Does this do anything???
   switch (display.menuIndex) {
     case FREQMENU:
       display.frequencyMenuOption();
@@ -514,19 +250,18 @@ while(1) {
       display.ProcessPresets(display.whichBandOption, submenuIndex);         // Select a preselected frequency.  This should return a frequency???
       display.menuIndex = FREQMENU;                         // When done, start over...
       display.ShowMainDisplay();
-      display.ShowSubmenuData(SWRcurrent, dds.currentFrequency);
+      display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
       dds.SendFrequency(dds.currentFrequency);
-      SWRcurrent = swr.ReadSWRValue();
       break;
 
     case CALIBRATEMENU:             //Run first time Calibration routine  Takes longer - use to initialize band edge parameters
       display.EraseBelowMenu();                             // Clear work area
       //DoNewCalibrate2();
       display.DoFirstCalibrate();
-      display.EraseBelowMenu();
+      //display.EraseBelowMenu();
       //MyDelay(200L);
-      display.ShowMainDisplay();
-      display.ShowSubmenuData(0.0, dds.currentFrequency);
+      //display.ShowMainDisplay();
+      //display.ShowSubmenuData(0.0, dds.currentFrequency);
       break;
 
     default:

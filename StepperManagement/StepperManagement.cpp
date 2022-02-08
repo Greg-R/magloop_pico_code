@@ -1,20 +1,13 @@
 
 #include "StepperManagement.h"
 
-#define LOWEND40M                   7000000L            // Define these frequencies for your licensing authority
-#define HIGHEND40M                  7300000L            // The 'L' helps document that these are long data types
-#define LOWEND30M                  10100000L
-#define HIGHEND30M                 10150000L
-#define LOWEND20M                  14000000L
-#define HIGHEND20M                 14350000L
-
 
 //StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): stepper(interface, pin1, pin2, pin3, pin4, enable) {
 //currPosition = 2500;  // Default to approximately midrange.
 //setCurrentPosition(5000);  //
 //}
 
-StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable):AccelStepper(interface, pin1, pin2) {
+StepperManagement::StepperManagement(Data & data, AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): data(data), AccelStepper(interface, pin1, pin2) {
 position = 2500;  // Default to approximately midrange.
 setCurrentPosition(5000);  //
 }
@@ -139,7 +132,7 @@ moveTo(500);
 runToPosition();
 }
 // Move in negative direction until ZEROSWITCH state changes.
-moveTo(-50000);
+moveTo(-100000);
 while(distanceToGo() != 0) {
     run();
   if(gpio_get(ZEROSWITCH) == 0) {
@@ -150,7 +143,7 @@ while(distanceToGo() != 0) {
 }
 // Bump off the switch:
 setCurrentPosition(0);
-moveTo(100);
+moveTo(150);
 runToPosition();
 setCurrentPosition(0);
 }
@@ -237,17 +230,15 @@ long StepperManagement::ConvertFrequencyToStepperCount(long presentFrequency)
   long count;
   switch (currentBand) {
     case 40:       //   intercept                  + slopeCoefficient * newFrequency
-      count = bandLimitPositionCounts[0][0] + (long) (countPerHertz[0] * ((float) (presentFrequency - LOWEND40M)));
+      count = bandLimitPositionCounts[0][0] + (long) (countPerHertz[0] * ((float) (presentFrequency - data.LOWEND40M)));
       break;
 
     case 30:
-      count = bandLimitPositionCounts[1][0] + (long) (countPerHertz[1] * ((float) (presentFrequency - LOWEND30M)));
+      count = bandLimitPositionCounts[1][0] + (long) (countPerHertz[1] * ((float) (presentFrequency - data.LOWEND30M)));
       break;
 
     case 20:
-      count = bandLimitPositionCounts[2][0] + (long) (countPerHertz[2] * ((float) (presentFrequency - LOWEND20M)));
-      //Serial.print("       count = ");
-      //Serial.println(count);
+      count = bandLimitPositionCounts[2][0] + (long) (countPerHertz[2] * ((float) (presentFrequency - data.LOWEND20M)));
       break;
 
     default:

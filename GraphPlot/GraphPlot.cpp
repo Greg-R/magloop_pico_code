@@ -182,6 +182,7 @@ void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, long tempCurrentP
     case 1:
       freqStart = 10100000;
       freqEnd = 10150000;
+      break;
 
     case 2:
       freqStart = 14000000;
@@ -201,18 +202,6 @@ void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, long tempCurrentP
       int xposition = 27 + float(plotFreq - freqStart) / HzPerPix;
       int yposition = YAXISSTART + (3 - tempSWR[i]) * pixPerSWRUnit;
       tft.fillCircle(xposition, yposition, 1, ILI9341_YELLOW);
-#ifdef DEBUG
-      Serial.print("bandLimitPositionCounts[whichBandOption][1]=  "); Serial.println(bandLimitPositionCounts[whichBandOption][1]);
-      Serial.print("bandLimitPositionCounts[whichBandOption][0]=  "); Serial.println(bandLimitPositionCounts[whichBandOption][0]);
-      Serial.print("currentFrequencyDiff=  "); Serial.println(currentFrequencyDiff);
-      Serial.print("HzPerStep=  "); Serial.println(HzPerStep);
-      Serial.print("stepsPerPix=  "); Serial.println(stepsPerPix);
-      Serial.print("plotFreq=  "); Serial.println(plotFreq);
-      Serial.print("pixPerHz=  "); Serial.println(HzPerPix);
-      Serial.print("tempCurrentPosition[i]=  "); Serial.println(tempCurrentPosition[i]);
-      Serial.print("xposition=  "); Serial.println(xposition);
-      Serial.print("yposition=  "); Serial.println(yposition);
-#endif
     }
   }
 //  PlotNewStartingFrequency(whichBandOption);  TEMPORARILY COMMENTED

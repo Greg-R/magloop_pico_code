@@ -1,18 +1,18 @@
 #include "SWR.h"
 #include <Arduino.h>
-extern long bandLimitPositionCounts[3][2];  // extern, defined in magloop_pico.cpp
+
+//extern long bandLimitPositionCounts[3][2];  // extern, defined in magloop_pico.cpp
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
 extern int digitEncoderMovement;
 
-SWR::SWR(StepperManagement & steppermanage, Adafruit_ILI9341 & tft): steppermanage(steppermanage), tft(tft) {
+SWR::SWR() {
 adc_init();
 adc_gpio_init(26);
 adc_gpio_init(27);
 forward_offset = 0;
 reverse_offset = 0;
-//  steppermanage = steppermanage;
 }
 
 /*
@@ -29,7 +29,6 @@ void SWR::ReadADCoffsets(){
   reverse_offset = adc_read();
   busy_wait_ms(1000);
   adc_select_input(1);
-  
   forward_offset = adc_read();
 }
 
@@ -84,7 +83,7 @@ return VSWR;
 }
 
 /*****
-  Purpose: To ReadNewSWRValue
+  Purpose: To ReadNewSWRValue.  What is different???
   Parameter list:
   void
   return (VSWR)

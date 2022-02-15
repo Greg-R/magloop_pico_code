@@ -22,19 +22,21 @@
 #define PIXELWIDTH 320
 #define AUTOTUNE   7    // Auto-tune Button
 #define INCREMENTPAD  22  // Used to display increment cursor
-#define MENUBUTTON3  8 // This is probably not correct!
-#define MENUBUTTON1  4 // Also probably not correct!
+#define MENUBUTTON3  4 //  Full Calibrate using band edges for faster calibration.
+#define MENUBUTTON1  8 // Band cal
 #define MAXMENUES  3  // The menu selections are: Freq, Presets, 1st Cal
 
 #define MAXBANDS   3 
 #define MAXSWITCH 10
 #define TARGETMAXSWR 5.5  // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
-#define MENUENCODERSWITCH 19
-#define FREQUENCYENCODERSWITCH 20
+//#define MENUENCODERSWITCH 19
+extern const int enterbutton;
+//#define FREQUENCYENCODERSWITCH 20
+extern const int exitbutton;
 #define FREQMENU  0  // Menuing indexes
 
-#define FASTMOVESPEED               1000
+//#define FASTMOVESPEED               1000
 //#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
 #define MAXNUMREADINGS              500
 #define PIXELHEIGHT                 240
@@ -66,7 +68,7 @@ EEPROM & eeprom;
 Data & data;
 //Buttons & buttons;
 int whichBandOption;
-int quickCalFlag;
+//int quickCalFlag;
 //long frequency;
 //long presetFrequencies[10][PRESETSPERBAND];
 float SWRValue;
@@ -143,7 +145,7 @@ void executeButton1();
 
 void executeButton3();
 
-void quickCalISR();
+//void quickCalISR();
 
 // The following 3 methods were consolidated from "Presets":
 void ProcessPresets(int whichBandOption, int submenuIndex);

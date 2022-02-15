@@ -29,6 +29,11 @@
 const std::string version = "1.01";
 const std::string releaseDate = "3-15-21";
 
+//  GPIOs for switches and other IO.
+extern const int autotunebutton = 8;
+extern const int enterbutton =    6;
+extern const int exitbutton  =    7;
+
 //  Instantiate the Stepper object:
 #define STEPPERDIR 9
 #define STEPPERPUL 12
@@ -51,17 +56,16 @@ const std::string releaseDate = "3-15-21";
 int currentBand;      // Should be 40, 30, or 20
 int currentFrequency;
 int whichBandOption;
-//float countPerHertz[3];
-//float hertzPerStepperUnitAir[3];
 
 volatile uint8_t result;
 volatile uint32_t countEncoder;
-Rotary menuEncoder = Rotary(18, 17);
+Rotary menuEncoder = Rotary(17, 18);   // Swap if encoder works in wrong direction.
 Rotary frequencyEncoder = Rotary(22, 21);
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
 extern int digitEncoderMovement;
+extern int quickCalFlag;
 
 void encoderCallback(uint gpio, uint32_t events) {
 if((gpio == 17) || (gpio == 18)) {
@@ -94,6 +98,7 @@ result = frequencyEncoder.process();
     }
   }
 }
+else if(gpio == 6) quickCalFlag = 1;  // Also called Accuracy.  Not sure exactly how this is used.
 if(result == DIR_CW ) countEncoder = countEncoder + 1;
 if(result == DIR_CCW ) countEncoder = countEncoder - 1;
 }
@@ -125,9 +130,9 @@ int main()
   // Initialize 7 buttons and pull-ups.  Buttons are normally open.
   gpio_set_function( 4, GPIO_FUNC_SIO);  // FULLCAL
   gpio_set_function( 5, GPIO_FUNC_SIO);  // PRESETS
-  gpio_set_function( 6, GPIO_FUNC_SIO);  // ACCURACY
-  gpio_set_function( 7, GPIO_FUNC_SIO);  // AUTOTUNE
-  gpio_set_function( 8, GPIO_FUNC_SIO);  // BANDCAL
+  gpio_set_function( enterbutton, GPIO_FUNC_SIO);  // Quick-Cal, also called ACCURACY
+  gpio_set_function( exitbutton, GPIO_FUNC_SIO);  // 
+  gpio_set_function( autotunebutton, GPIO_FUNC_SIO);  // AutoTune button
   gpio_set_function(19, GPIO_FUNC_SIO);  // Encoder 1 pushbutton
   gpio_set_function(20, GPIO_FUNC_SIO);  // Encoder 2 pushbutton
   gpio_set_dir( 4, GPIO_IN);
@@ -142,8 +147,12 @@ int main()
   gpio_pull_up( 6);
   gpio_pull_up( 7);
   gpio_pull_up( 8);
+  gpio_pull_up(17);  // Encoder
+  gpio_pull_up(18);  // Encoder
   gpio_pull_up(19);
   gpio_pull_up(20);
+  gpio_pull_up(21);  // Encoder
+  gpio_pull_up(22);  // Encoder
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -182,7 +191,7 @@ swr.ReadADCoffsets();
 DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
 // Show "Splash" screen for 5 seconds.
 display.Splash(version, releaseDate);
-busy_wait_ms(2000);
+busy_wait_ms(5000);
 tft.fillScreen(ILI9341_BLACK);
 
 // Set up the Menu and Frequency encoders:
@@ -195,6 +204,7 @@ gpio_set_irq_enabled_with_callback(18, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(17, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(22, events, 1, &encoderCallback);
+gpio_set_irq_enabled_with_callback( 6, events, 1, &encoderCallback);
 
 // The default band is read from Flash.
 currentBand = eeprom.ReadCurrentBand();
@@ -213,14 +223,20 @@ currentBand = eeprom.ReadCurrentBand();
     default:
       break;
   }
-  dds.SendFrequency(currentFrequency);    // Set the DDS
-  busy_wait_ms(100);                      // Let DDS stabilize
+
 
 //  Set to zero and calibrate stepper:
   display.updateMessage("Resetting to Zero");
   stepper.ResetStepperToZero();
 
-  display.menuIndex = FREQMENU;
+  //  Now measure the ADC offsets before the DDS is active.
+  //  Note that this should be done as late as possible for circuits to stabilize.
+  swr.ReadADCoffsets();
+
+  dds.SendFrequency(currentFrequency);    // Set the DDS
+  busy_wait_ms(100);                      // Let DDS stabilize
+
+  display.menuIndex = FREQMENU;  // Begin in Frequency menu.
   whichBandOption = 0;
 
 display.UpdateFrequency(dds.currentFrequency);  //  Updates position after calibrating stepper.
@@ -229,9 +245,8 @@ display.ShowSubmenuData(swr.ReadSWRValue(), currentFrequency);
 
 // Main state machine:
 while(1) {
-  if (display.quickCalFlag == 1) {
+  if (quickCalFlag == 1) {
     display.DoSingleBandCalibrate(display.whichBandOption);
-    display.quickCalFlag = 0;
   }
   std::string band[] = {"40M", "30M", "20M"};
   int i, submenuIndex;

@@ -60,7 +60,7 @@ int whichBandOption;
 volatile uint8_t result;
 volatile uint32_t countEncoder;
 Rotary menuEncoder = Rotary(17, 18);   // Swap if encoder works in wrong direction.
-Rotary frequencyEncoder = Rotary(22, 21);
+Rotary frequencyEncoder = Rotary(21, 22);
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
@@ -98,7 +98,7 @@ result = frequencyEncoder.process();
     }
   }
 }
-else if(gpio == 6) quickCalFlag = 1;  // Also called Accuracy.  Not sure exactly how this is used.
+//else if(gpio == 6) quickCalFlag = 1;  // Also called Accuracy.  Not sure exactly how this is used.
 if(result == DIR_CW ) countEncoder = countEncoder + 1;
 if(result == DIR_CCW ) countEncoder = countEncoder - 1;
 }
@@ -239,20 +239,22 @@ currentBand = eeprom.ReadCurrentBand();
   display.menuIndex = FREQMENU;  // Begin in Frequency menu.
   whichBandOption = 0;
 
-display.UpdateFrequency(dds.currentFrequency);  //  Updates position after calibrating stepper.
-display.ShowMainDisplay();
-display.ShowSubmenuData(swr.ReadSWRValue(), currentFrequency); 
+//display.UpdateFrequency(dds.currentFrequency);  //  Updates position after calibrating stepper.
+//display.ShowMainDisplay();
+//display.ShowSubmenuData(swr.ReadSWRValue(), currentFrequency); 
 
 // Main state machine:
 while(1) {
-  if (quickCalFlag == 1) {
-    display.DoSingleBandCalibrate(display.whichBandOption);
-  }
   std::string band[] = {"40M", "30M", "20M"};
+  std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
   int i, submenuIndex;
   long minCount;
   int currPosIndexStart;
-  display.menuIndex = display.MakeMenuSelection();  // Select one of the three top menu choices: Freq, Presets, 1st Cal
+  //  Refresh display:
+  display.ShowMainDisplay(display.menuIndex);
+  display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
+  dds.SendFrequency(dds.currentFrequency);
+  display.menuIndex = display.MakeMenuSelection(display.menuIndex);  // Select one of the three top menu choices: Freq, Presets, 1st Cal
   busy_wait_ms(200);                                // Crude debounce
   switch (display.menuIndex) {
     case FREQMENU:
@@ -260,23 +262,30 @@ while(1) {
       break;
 
     case PRESETSMENU:                        //Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.whichBandOption = display.SelectBand();            // Select the band to be used
+      display.whichBandOption = display.SelectBand(band);            // Select the band to be used
       submenuIndex = 0;
-      display.ProcessPresets(display.whichBandOption, submenuIndex);         // Select a preselected frequency.  This should return a frequency???
-      display.menuIndex = FREQMENU;                         // When done, start over...
-      display.ShowMainDisplay();
-      display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-      dds.SendFrequency(dds.currentFrequency);
+      display.ProcessPresets(display.whichBandOption, submenuIndex); // Select a preselected frequency.  This should return a frequency???
+      //display.menuIndex = FREQMENU;                                  // When done, start over...
+      //display.ShowMainDisplay();
+      //display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
+      //dds.SendFrequency(dds.currentFrequency);
+      //display.menuIndex = FREQMENU;  // Return to main loop.
       break;
 
-    case CALIBRATEMENU:             //Run first time Calibration routine  Takes longer - use to initialize band edge parameters
-      display.EraseBelowMenu();                             // Clear work area
+    case CALIBRATEMENU:       //  Run calibration routines.
+      //display.EraseBelowMenu();                             // Clear work area
       //DoNewCalibrate2();
-      display.DoFirstCalibrate();
+      //display.DoFirstCalibrate();
       //display.EraseBelowMenu();
       //MyDelay(200L);
       //display.ShowMainDisplay();
       //display.ShowSubmenuData(0.0, dds.currentFrequency);
+      i = display.SelectBand(cals);
+      display.EraseBelowMenu();
+      if(i == 0) display.DoNewCalibrate2();
+      if(i == 1) display.DoSingleBandCalibrate(display.SelectBand(band));
+      if(i == 2) display.DoFirstCalibrate();
+      //display.menuIndex = FREQMENU;  // Return to main loop.
       break;
 
     default:

@@ -20,7 +20,8 @@
 
 #define PRESETSPERBAND   6
 #define PIXELWIDTH 320
-#define AUTOTUNE   7    // Auto-tune Button
+//#define AUTOTUNE   7    // Auto-tune Button
+extern const int autotunebutton;
 #define INCREMENTPAD  22  // Used to display increment cursor
 #define MENUBUTTON3  4 //  Full Calibrate using band edges for faster calibration.
 #define MENUBUTTON1  8 // Band cal
@@ -91,7 +92,7 @@ int SWRFinalPosition;
 volatile int menuEncoderState;
 //volatile int menuEncoderMovement;
 //volatile int frequencyEncoderMovement;
-const std::string menuOptions[3] = {" Freq ", " Presets ", " 1st Cal"};
+const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
 
 int stepperDirectionOld;
 uint32_t stepperDistanceOld;
@@ -112,15 +113,15 @@ void frequencyMenuOption();
 
 long ChangeFrequency(int bandIndex, long frequency);
 
-int MakeMenuSelection();
+int MakeMenuSelection(int index);
 
-int SelectBand();
+int SelectBand(const std::string bands[3]);
 
 void EraseBelowMenu();
 
 void ErasePage();
 
-void ShowMainDisplay();
+void ShowMainDisplay(int whichMenuPage);
 
 void ShowSubmenuData(float SWR, int currentFrequency);
 
@@ -141,7 +142,7 @@ void CalSWR();
 void DoSingleBandCalibrate(int whichBandOption);
 
 // The following 3 methods were consolidated from "Buttons":
-void executeButton1();
+//void executeButton1();
 
 void executeButton3();
 

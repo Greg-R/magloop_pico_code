@@ -82,7 +82,7 @@ int positionTemp;
 //float hertzPerStepperUnitVVC[10];
 //volatile int menuEncoderMovement;
 //volatile int digitEncoderMovement;
-int currentBand;
+int currentBand;  // Is this used???
 //char *menuOptions[100];
 //volatile int frequencyEncoderMovement;
 int menuIndex;
@@ -93,6 +93,7 @@ volatile int menuEncoderState;
 //volatile int menuEncoderMovement;
 //volatile int frequencyEncoderMovement;
 const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
+std::string band[3] = {"40M", "30M", "20M"};  // Make this a global???
 
 int stepperDirectionOld;
 uint32_t stepperDistanceOld;
@@ -104,12 +105,15 @@ float minSWRAuto;
 float minSWR;
 //int whichBandOption;
 //long  SWRFinalPosition;
+enum class State {state0, state1, state2, state3};  // Used to move between states in state machines.
 
 DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, StepperManagement & stepper, EEPROM & eeprom, Data & data);
 
 void Splash(std::string version, std::string releaseDate);
 
 void frequencyMenuOption();
+
+int manualTune();
 
 long ChangeFrequency(int bandIndex, long frequency);
 
@@ -130,7 +134,9 @@ void UpdateFrequency(int frequency);
 //void UpdateSWR(float SWR, char msg[]);
 void UpdateSWR(float SWR, std::string msg);
 
-void updateMessage(std::string messageToPrint);
+void updateMessageTop(std::string messageToPrint);
+
+void updateMessageBottom(std::string messageToPrint);
 
 // The following 4 methods were consolidated from "Calibrate".
 void DoNewCalibrate2();
@@ -144,12 +150,14 @@ void DoSingleBandCalibrate(int whichBandOption);
 // The following 3 methods were consolidated from "Buttons":
 //void executeButton1();
 
-void executeButton3();
+//void executeButton3();
 
 //void quickCalISR();
 
 // The following 3 methods were consolidated from "Presets":
-void ProcessPresets(int whichBandOption, int submenuIndex);
+void ProcessPresets();
+
+int SelectPreset();
 
 void RestorePreviousPresetChoice(int submenuIndex, int whichBandOption);
 

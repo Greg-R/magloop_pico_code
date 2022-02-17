@@ -224,9 +224,8 @@ currentBand = eeprom.ReadCurrentBand();
       break;
   }
 
-
 //  Set to zero and calibrate stepper:
-  display.updateMessage("Resetting to Zero");
+  display.updateMessageTop("Resetting to Zero");
   stepper.ResetStepperToZero();
 
   //  Now measure the ADC offsets before the DDS is active.
@@ -234,17 +233,12 @@ currentBand = eeprom.ReadCurrentBand();
   swr.ReadADCoffsets();
 
   dds.SendFrequency(currentFrequency);    // Set the DDS
-  busy_wait_ms(100);                      // Let DDS stabilize
 
   display.menuIndex = FREQMENU;  // Begin in Frequency menu.
   whichBandOption = 0;
 
-//display.UpdateFrequency(dds.currentFrequency);  //  Updates position after calibrating stepper.
-//display.ShowMainDisplay();
-//display.ShowSubmenuData(swr.ReadSWRValue(), currentFrequency); 
-
 // Main state machine:
-while(1) {
+while(true) {
   std::string band[] = {"40M", "30M", "20M"};
   std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
   int i, submenuIndex;
@@ -253,23 +247,22 @@ while(1) {
   //  Refresh display:
   display.ShowMainDisplay(display.menuIndex);
   display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-  dds.SendFrequency(dds.currentFrequency);
+  //dds.SendFrequency(dds.currentFrequency);
   display.menuIndex = display.MakeMenuSelection(display.menuIndex);  // Select one of the three top menu choices: Freq, Presets, 1st Cal
-  busy_wait_ms(200);                                // Crude debounce
+  busy_wait_ms(200);       // Crude debounce
   switch (display.menuIndex) {
-    case FREQMENU:
+    case FREQMENU:             //  Manual frequency selection selection and AutoTune.
       display.frequencyMenuOption();
       break;
 
-    case PRESETSMENU:                        //Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.whichBandOption = display.SelectBand(band);            // Select the band to be used
-      submenuIndex = 0;
-      display.ProcessPresets(display.whichBandOption, submenuIndex); // Select a preselected frequency.  This should return a frequency???
+    case PRESETSMENU:          //Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
+      //display.whichBandOption = display.SelectBand(band);  // Select the band to be used
+      //submenuIndex = 0;
+      display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
       //display.menuIndex = FREQMENU;                                  // When done, start over...
       //display.ShowMainDisplay();
       //display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
       //dds.SendFrequency(dds.currentFrequency);
-      //display.menuIndex = FREQMENU;  // Return to main loop.
       break;
 
     case CALIBRATEMENU:       //  Run calibration routines.
@@ -285,13 +278,12 @@ while(1) {
       if(i == 0) display.DoNewCalibrate2();
       if(i == 1) display.DoSingleBandCalibrate(display.SelectBand(band));
       if(i == 2) display.DoFirstCalibrate();
-      //display.menuIndex = FREQMENU;  // Return to main loop.
+      display.menuIndex = CALIBRATEMENU;
       break;
 
     default:
       break;
   } //switch (menuIndex)
-
 }  // while(1)  (end of loop)
 
   return 0;

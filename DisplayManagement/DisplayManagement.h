@@ -59,42 +59,24 @@ class DisplayManagement : public GraphPlot {
 public:
 
 Adafruit_ILI9341 & tft;
-//Calibrate & calibrate;
 DDS & dds;
 SWR & swr;
-//AutoTune & autotune;
 StepperManagement & stepper;
 EEPROM & eeprom;
-//GraphPlot & graphplot;
 Data & data;
-//Buttons & buttons;
 int whichBandOption;
-//int quickCalFlag;
-//long frequency;
-//long presetFrequencies[10][PRESETSPERBAND];
 float SWRValue;
 float SWRcurrent;
 float readSWRValue;
 int position;
 int positionTemp;
-//long bandLimitPositionCounts[10][2];
-//long bandEdges[10][2];
-//float hertzPerStepperUnitVVC[10];
-//volatile int menuEncoderMovement;
-//volatile int digitEncoderMovement;
 int currentBand;  // Is this used???
-//char *menuOptions[100];
-//volatile int frequencyEncoderMovement;
 int menuIndex;
 int submenuIndex;
-
 int SWRFinalPosition;
 volatile int menuEncoderState;
-//volatile int menuEncoderMovement;
-//volatile int frequencyEncoderMovement;
 const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
 std::string band[3] = {"40M", "30M", "20M"};  // Make this a global???
-
 int stepperDirectionOld;
 uint32_t stepperDistanceOld;
 int iMax;
@@ -103,8 +85,6 @@ long tempCurrentPosition[500];
 long  SWRMinPosition;
 float minSWRAuto;
 float minSWR;
-//int whichBandOption;
-//long  SWRFinalPosition;
 enum class State {state0, state1, state2, state3};  // Used to move between states in state machines.
 
 DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, StepperManagement & stepper, EEPROM & eeprom, Data & data);

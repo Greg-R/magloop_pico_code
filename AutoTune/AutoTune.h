@@ -9,7 +9,7 @@
 #define FASTMOVESPEED               1000
 //#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
 #define MAXNUMREADINGS              500
-#define PIXELHEIGHT                 240
+const int PIXELHEIGHT        =         240;
 #define ACCURACYBUTTON         6
 
 class DisplayManagement;

@@ -1,8 +1,7 @@
 
-
 #include "GraphPlot.h"
 
-extern long bandLimitPositionCounts[3][2];
+extern long bandLimitPositionCounts[3][2];  // Is this in the Data object?
 
 GraphPlot::GraphPlot(Adafruit_ILI9341 & tft, DDS & dds, Data & data): tft(tft), dds(dds), data(data) {}
 
@@ -23,6 +22,7 @@ void GraphPlot::GraphAxis(int whichBandOption) //al modified 9-8-19
   int tcolor, bcolor;
   int i, k;
   float freqCount, freqEnd, pip;
+  //  This needs update to use band limit variables, not hard coded???
   switch (whichBandOption) {
     case 0:
       freqCount = 7.0;
@@ -52,13 +52,13 @@ void GraphPlot::GraphAxis(int whichBandOption) //al modified 9-8-19
   }
   tcolor = ILI9341_YELLOW;
   bcolor = ILI9341_BLACK;
-  tickCount = 3;
+  tickCount = 4;
   tft.fillRect(0, 47, PIXELWIDTH, PIXELHEIGHT, ILI9341_BLACK);
   tft.drawLine(XAXISSTART, YAXISSTART, XAXISSTART, YAXISEND, ILI9341_DARKGREY);    // Solid Y axis Left side  OK 9-8-19
   tft.drawLine(XAXISSTART, YAXISEND + 3,   XAXISEND,   YAXISEND + 3, ILI9341_DARKGREY); // X axis  OK 9-8-19
   tft.setTextColor(ILI9341_YELLOW, ILI9341_BLACK);              // Lable X axis   OK 9-8-19
   tft.setCursor((XAXISEND - XAXISSTART) / 2 - 12, YAXISEND + 20 );
-  tft.print(" Mhz");
+  tft.print(" MHz");
   yIncrement = (YAXISEND - YAXISSTART) / 3;                     // Spacing for graph tick marks
   yTick = YAXISSTART + 5;                                       // on Y axis
   tft.setTextColor(ILI9341_YELLOW, ILI9341_BLACK);
@@ -83,10 +83,8 @@ void GraphPlot::GraphAxis(int whichBandOption) //al modified 9-8-19
       if (freqCount < 14.15 || freqCount < 14.25 || freqCount < 14.31 || freqCount < 14.4) {
         if (freqCount > 14.35) {
           freqCount = 14.35;
-        //  dtostrf(freqCount, 5, 2, buff);
         std::sprintf(buff, "%3.1f", freqCount);
         } else {
-        //  dtostrf(freqCount, 4, 1, buff);
         std::sprintf(buff, "%3.1f", freqCount);
         }
         tft.print(buff);  //Print 20M Frequency Labels OK 9-8-19
@@ -147,17 +145,17 @@ void GraphPlot::PlotNewStartingFrequency(int whichBandOption)
 
   tft.drawLine(xOld, YAXISSTART, xOld, YAXISEND, ILI9341_BLACK);
   tft.drawLine(x, YAXISSTART, x, YAXISEND, ILI9341_YELLOW);   // Y axis
-//  display.UpdateFrequency(dds.currentFrequency);  Move to main???  Or is this redundant???
   xOld = x;
 }
 
 
 /*****
-  Purpose: Displays the Point for measured SWR
-  This method should be moved to the GraphPlot class.
+  Purpose: Displays the measured SWR from the AutoTuneSWR() method in DisplayManagement.
+  
   Parameter list:
-    int whichBandOption     // The band being used
-    float swr
+    int whichBandOption     // The band being used.
+    float swr    Array of SWR data.
+    long tempCurrentPosition  Array of positions (frequency axis data).
 
   Return value:
     void
@@ -172,8 +170,7 @@ void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, long tempCurrentP
   float plotFreq;
   long freqStart;
   long freqEnd;
-  // ShowSubmenuData(minSWRAuto);  TEMPORARILY COMMENTED.  This is a DisplayManagement method???
-  switch (whichBandOption) {
+  switch (whichBandOption) {   // This should use Data object to get band limits???
     case 0:
       freqStart = 7000000;
       freqEnd = 7300000;
@@ -200,7 +197,7 @@ void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, long tempCurrentP
       stepsPerPix = float(data.bandLimitPositionCounts[whichBandOption][1] - data.bandLimitPositionCounts[whichBandOption][0]) / (XAXISEND - XAXISSTART);
       pixPerSWRUnit = float(YAXISEND - YAXISSTART) / 3;
       int xposition = 27 + float(plotFreq - freqStart) / HzPerPix;
-      int yposition = YAXISSTART + (3 - tempSWR[i]) * pixPerSWRUnit;
+      int yposition = YAXISSTART + (4 - tempSWR[i]) * pixPerSWRUnit;
       tft.fillCircle(xposition, yposition, 1, ILI9341_YELLOW);
     }
   }

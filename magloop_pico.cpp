@@ -162,7 +162,6 @@ int main()
   tft.setRotation(3);
   tft.fillScreen(ILI9341_BLACK);
   
-
   //  The data object manages constants and variables involved with frequencies and stepper motor positions.
   Data data = Data();
   uint32_t eeprom_data;
@@ -176,17 +175,15 @@ int main()
   // Slopes can't be computed until the actual values are loaded from flash:
   data.computeSlopes();
   
-//  Instantiate the Stepper Manager: 
-StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
+  //  Instantiate the Stepper Manager: 
+  StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
 
-//  Next instantiate the DDS.
+  //  Next instantiate the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
   dds.DDSWakeUp();  // This resets the DDS and it will have no output.
 
-// Instantiate SWR object.
+// Instantiate SWR object.  Read bridge offsets later.
 SWR swr = SWR();
-//  Now measure the ADC offsets before the DDS is active.
-swr.ReadADCoffsets();
 
 DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
 // Show "Splash" screen for 5 seconds.
@@ -209,10 +206,9 @@ gpio_set_irq_enabled_with_callback( 6, events, 1, &encoderCallback);
 // The default band is read from Flash.
 currentBand = eeprom.ReadCurrentBand();
 
-  switch (currentBand) {              // Set the frequency default as 1st preset frequency
+  switch (currentBand) {     // Set the frequency default as 1st preset frequency
     case 40:
       currentFrequency = data.presetFrequencies[0][2];
-      //currentFrequency = 7150000L;
       break;
     case 30:
       currentFrequency = data.presetFrequencies[1][0];
@@ -225,29 +221,27 @@ currentBand = eeprom.ReadCurrentBand();
   }
 
 //  Set to zero and calibrate stepper:
-  display.updateMessageTop("Resetting to Zero");
+  display.updateMessageTop("                Resetting to Zero");
   stepper.ResetStepperToZero();
 
-  //  Now measure the ADC offsets before the DDS is active.
+  //  Now measure the ADC (SWR bridge) offsets before the DDS is active.
   //  Note that this should be done as late as possible for circuits to stabilize.
   swr.ReadADCoffsets();
-
   dds.SendFrequency(currentFrequency);    // Set the DDS
 
   display.menuIndex = FREQMENU;  // Begin in Frequency menu.
   whichBandOption = 0;
 
-// Main state machine:
+// Main loop/state machine:
 while(true) {
   std::string band[] = {"40M", "30M", "20M"};
   std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
   int i, submenuIndex;
-  long minCount;
-  int currPosIndexStart;
+  //long minCount;
+  //int currPosIndexStart;
   //  Refresh display:
   display.ShowMainDisplay(display.menuIndex);
   display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-  //dds.SendFrequency(dds.currentFrequency);
   display.menuIndex = display.MakeMenuSelection(display.menuIndex);  // Select one of the three top menu choices: Freq, Presets, 1st Cal
   busy_wait_ms(200);       // Crude debounce
   switch (display.menuIndex) {
@@ -256,23 +250,10 @@ while(true) {
       break;
 
     case PRESETSMENU:          //Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      //display.whichBandOption = display.SelectBand(band);  // Select the band to be used
-      //submenuIndex = 0;
       display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
-      //display.menuIndex = FREQMENU;                                  // When done, start over...
-      //display.ShowMainDisplay();
-      //display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-      //dds.SendFrequency(dds.currentFrequency);
       break;
 
     case CALIBRATEMENU:       //  Run calibration routines.
-      //display.EraseBelowMenu();                             // Clear work area
-      //DoNewCalibrate2();
-      //display.DoFirstCalibrate();
-      //display.EraseBelowMenu();
-      //MyDelay(200L);
-      //display.ShowMainDisplay();
-      //display.ShowSubmenuData(0.0, dds.currentFrequency);
       i = display.SelectBand(cals);
       display.EraseBelowMenu();
       if(i == 0) display.DoNewCalibrate2();

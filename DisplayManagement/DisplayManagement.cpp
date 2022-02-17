@@ -84,7 +84,8 @@ void DisplayManagement::frequencyMenuOption() {
             // After AutoTune, do full update of display with SWR vs. frequency plot:
             ShowSubmenuData(minSWRAuto, dds.currentFrequency);
             GraphAxis(whichBandOption);
-            PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition); 
+            PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
+            updateMessageBottom("     Encoders to Adjust, Exit to Return");
             // Manual frequency and position tune:
             frequency = manualTune();
           break;  //  state is not changed; should go back to state2.
@@ -118,7 +119,8 @@ while(true) {
       SWRMinPosition = stepper.currentPosition();  // Get the autotuned stepper position.
       GraphAxis(whichBandOption);
       PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
-      updateMessageTop("Freq: Adjust - AutoTune: Refine");
+      updateMessageTop("    Freq: Adjust - AutoTune: Refine");
+      updateMessageBottom("              Exit to Return");
     }
 }  // end while
 }
@@ -147,7 +149,7 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency)  //Al Mod
   insetMargin      = 20;
   defaultIncrement = 1000L;
   halfScreen   = PIXELHEIGHT / 2 - 25;
-  updateMessageTop("Enter Frequency");
+  updateMessageTop("                 Enter Frequency");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0) {                 // 40M
     insetPad = 32;           // smaller number, so less spacing to a given digit
@@ -187,7 +189,7 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency)  //Al Mod
   tft.setFont(&FreeSerif24pt7b);
 
   // State Machine for frequency input with encoders.
-  while (gpio_get(autotunebutton) != LOW and gpio_get(enterbutton) != LOW) {
+  while (gpio_get(autotunebutton) != false) {   // Update frequency until user pushes AutoTune button.
     //  Exit this menu:
     if(gpio_get(exitbutton) == false) {
       frequency = 0;
@@ -323,21 +325,23 @@ int DisplayManagement::MakeMenuSelection(int index) //Al Mod 9-8-19
 *****/
 int DisplayManagement::SelectBand(const std::string bands[3])
 {
-  updateMessageTop("Select Band");
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif12pt7b);
+  updateMessageTop("   Choose Band using Menu Encoder");
+  EraseBelowMenu();  // Redundant???
   int currBand[] = {40, 30, 20};  // Used???
   int i, index, where = 0;
-  tft.fillRect(0, 52, PIXELWIDTH, PIXELHEIGHT, ILI9341_BLACK);
+  //tft.fillRect(0, 52, PIXELWIDTH, PIXELHEIGHT, ILI9341_BLACK);  // Same as EraseBelow function?
+  updateMessageBottom("           Press Enter to Select");
+  tft.setTextSize(1);
+  tft.setFont(&FreeSerif12pt7b);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   for (int i = 0; i < 3; i++) {
-    tft.setCursor(100, 110 + i * 30);
+    tft.setCursor(130, 110 + i * 30);
     tft.print(bands[i].c_str());
   }
-  tft.setCursor(100, 110);
+  tft.setCursor(130, 110);
   tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
   tft.print(bands[0].c_str());
-  busy_wait_us_32(100L);
+  //busy_wait_us_32(100L);
   index = 0;
 
   // State Machine.  Calling this function enters this loop and stays until Exit is pressed.
@@ -358,18 +362,18 @@ int DisplayManagement::SelectBand(const std::string bands[3])
       menuEncoderMovement = 0;
       tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
       for (int i = 0; i < 3; i++) {
-        tft.setCursor(100, 110 + i * 30);
+        tft.setCursor(130, 110 + i * 30);
         tft.print(bands[i].c_str());
       }
       tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-      tft.setCursor(100, 110 + index * 30);
+      tft.setCursor(130, 110 + index * 30);
       tft.print(bands[index].c_str());
     }
     if (gpio_get(enterbutton) == LOW)  // Exit the state machine.
       break;
   }
 
-  currentBand = currBand[index];
+  currentBand = currBand[index];  // Used???
   return index;
 }
 
@@ -529,12 +533,12 @@ void DisplayManagement::UpdateSWR(float SWR, std::string msg)
     void
 *****/
 void DisplayManagement::updateMessageTop(std::string messageToPrint) {
-  tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);
-  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
+  tft.fillRect(0, 0, 319, 20, ILI9341_BLACK);  // Erase top line.
+  tft.drawFastHLine(0, 20, 319, ILI9341_RED);
   tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(91, 12);
+  tft.setCursor(10, 12);
   tft.print(messageToPrint.c_str());
 }
 
@@ -549,12 +553,12 @@ void DisplayManagement::updateMessageTop(std::string messageToPrint) {
     void
 *****/
 void DisplayManagement::updateMessageBottom(std::string messageToPrint) {
-  tft.fillRect(90, 200, 320, 240, ILI9341_BLACK);  // Erase previous message.
+  tft.fillRect(0, 200, 319, 240, ILI9341_BLACK);  // Erase previous message.
   //tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(91, 220);
+  tft.setCursor(10, 220);
   tft.print(messageToPrint.c_str());
 }
 
@@ -984,7 +988,7 @@ void DisplayManagement::ProcessPresets()
 
 int DisplayManagement::SelectPreset() {
   int frequency;
-  updateMessageTop("Select Preset Frequency");
+  updateMessageTop("Menu Encoder to select, push AutoTune");
   EraseBelowMenu();
   tft.setTextSize(1);
   tft.setFont(&FreeSerif12pt7b);
@@ -1071,7 +1075,7 @@ float DisplayManagement::AutoTuneSWR() {
   int i;
   long currPositionTemp;
   SWRMinPosition = 4000;
-  updateMessageTop("Auto Tuning");
+  updateMessageTop("                 Auto Tuning");
   for (int i = 0; i < MAXNUMREADINGS; i++) {   //reset temp arrays - used to plot SWR vs frequency
     tempSWR[i] = 0.0;           // Class member
     tempCurrentPosition[i] = 0; // Class member
@@ -1115,15 +1119,16 @@ float DisplayManagement::AutoTuneSWR() {
       else {
   position = SWRMinPosition;
   stepper.MoveStepperToPositionCorrected(SWRMinPosition - 50);   // back up position to take out backlash
-  busy_wait_us_32(200);
+  //busy_wait_us_32(200);
   stepper.MoveStepperToPositionCorrected(SWRMinPosition);        //Move to final position in CW direction
   minSWR = swr.ReadSWRValue();  //  Measure VSWR in the final position.
   iMax = i; //max value in array for plot
   // These lines moved to after each call of AutoTuneSWR in DisplayManagement.  PUT BACK
   ShowSubmenuData(minSWR, dds.currentFrequency);  //Update SWR value
   //tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
-  tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);  // Clear text "Auto Tuning"
-  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
+  updateMessageTop("               AutoTune Success");
+  //tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);  // Clear text "Auto Tuning"
+  //tft.drawFastHLine(0, 20, 320, ILI9341_RED);
       }
   return minSWR;
 }
@@ -1138,25 +1143,12 @@ float DisplayManagement::AutoTuneSWR() {
     void
 
   CAUTION:
-*****/
+
 float DisplayManagement::AutoTuneSWRQuick() {    //Al Modified 9-14-19
-
-  //tft.fillScreen(ILI9341_BLACK);  // TEMPORARY erase screen
-  //tft.setTextSize(2);
-  //tft.setCursor(10, 20);
-
   float oldMinSWR = minSWRAuto = 100;
   int i;
   long currPositionTemp;
   SWRMinPosition = 0;
-  /*
-  if (gpio_get(ACCURACYBUTTON) == LOW) {
-    currPositionTemp = currPosition;
-    steppermanage.ResetStepperToZero();
-    setCurrentPosition(0);
-    currPosition = currPositionTemp;
-  }
-  */
  stepper.ResetStepperToZero();
  //stepper.setCurrentPosition(0);
  positionTemp = 0;
@@ -1220,6 +1212,7 @@ float DisplayManagement::AutoTuneSWRQuick() {    //Al Modified 9-14-19
 
   return minSWR;
 }
+*/
 
 // Manual control functions were moved from SWR.
 /*****
@@ -1231,8 +1224,7 @@ float DisplayManagement::AutoTuneSWRQuick() {    //Al Modified 9-14-19
     void
 *****/
 void DisplayManagement::ManualFrequencyControl(int whichBandOption) {
-  //Serial.print("ManualFrequencyControl  "); 
-  updateMessageTop("Press Freq: Move to Freq");
+  updateMessageTop("     Press Enter: Move to Freq");
   int i, k, yIncrement, xIncrement;
   int stepIncr;
   long frequency, frequencyOld;
@@ -1245,18 +1237,17 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption) {
   GraphAxis(whichBandOption);
   if (frequencyEncoderMovement2 != 0) {
     frequencyOld = dds.currentFrequency;
-    while (gpio_get(exitbutton) != LOW) {
-      
+    while (gpio_get(enterbutton) != LOW) { 
       if (frequencyEncoderMovement2 != 0) {
         frequency = dds.currentFrequency + frequencyEncoderMovement2 * 1000;
-        UpdateFrequency(frequency);  // Updates display only.
         dds.SendFrequency(frequency);
+        ShowSubmenuData(swr.ReadSWRValue(), frequency);  // Updates display only.        
         frequencyEncoderMovement2 = 0;
       }
-   
     }
-    updateMessageTop("Freq: Adjust - ATune: Refine");
-    dds.SendFrequency(frequency);
+    updateMessageTop("             Exit to Return");
+    updateMessageBottom("   Freq: Adjust - AutoTune: Refine");
+    dds.SendFrequency(frequency);  // Redundant???
     position = stepper.currentPosition() + ((frequency - frequencyOld) / (data.hertzPerStepperUnitVVC[whichBandOption]));
     stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20
     // Backlash code removed.
@@ -1265,15 +1256,11 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption) {
     //position += 20;
     //stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20
     //readSWRValue = swr.ReadSWRValue();
-   // Serial.print("readSWRValue=  "); Serial.println(readSWRValue);
-//    delay(100);
     int k = 0;
     frequencyEncoderMovement = 0;
     frequencyEncoderMovement2 = 0;
   }
-  updateMessageTop("Freq: Adjust - ATune: Refine");
-  ShowSubmenuData(readSWRValue, frequency);
-  //readSWRValue = swr.ReadSWRValue();
+  //updateMessageTop("Freq: Adjust - ATune: Refine");
   PlotNewStartingFrequency(whichBandOption);
   ShowSubmenuData(swr.ReadSWRValue(), frequency);
 }

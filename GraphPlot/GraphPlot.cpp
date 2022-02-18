@@ -125,7 +125,6 @@ void GraphPlot::PlotNewStartingFrequency(int whichBandOption)
       HzPerPix = float(highEnd - lowEnd) / float(XAXISEND - XAXISSTART);
       x = 25 + float(dds.currentFrequency - lowEnd) / HzPerPix;
       
-      //Serial.print("x=  "); Serial.println(x);
       break;
     case 1:
       freqCount = 10.1;

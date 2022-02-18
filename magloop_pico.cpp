@@ -235,10 +235,8 @@ currentBand = eeprom.ReadCurrentBand();
 // Main loop/state machine:
 while(true) {
   std::string band[] = {"40M", "30M", "20M"};
-  std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
+  
   int i, submenuIndex;
-  //long minCount;
-  //int currPosIndexStart;
   //  Refresh display:
   display.ShowMainDisplay(display.menuIndex);
   display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
@@ -254,18 +252,13 @@ while(true) {
       break;
 
     case CALIBRATEMENU:       //  Run calibration routines.
-      i = display.SelectBand(cals);
-      display.EraseBelowMenu();
-      if(i == 0) display.DoNewCalibrate2();
-      if(i == 1) display.DoSingleBandCalibrate(display.SelectBand(band));
-      if(i == 2) display.DoFirstCalibrate();
-      display.menuIndex = CALIBRATEMENU;
+      display.CalibrationMachine();
       break;
 
     default:
       break;
-  } //switch (menuIndex)
-}  // while(1)  (end of loop)
+  } // switch (menuIndex)
+}  // while(1)  (end of main loop)
 
   return 0;
 }

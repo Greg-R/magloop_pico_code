@@ -13,13 +13,13 @@
 class GraphPlot {
 
 public:
-const int YAXISSTART       =           55;             // For graphing purposes
-const int YAXISEND           =         170;
+const int YAXISSTART       =           55;     // For graphing purposes
+const int YAXISEND           =         170;    // Changed from original to adjust x-axis upward.
 const int XAXISSTART         =         25;
 const int XAXISEND           =         315;
-const int PIXELWIDTH         =         320;                 // Display limits
+const int PIXELWIDTH         =         320;    // Display limits
 const int PIXELHEIGHT        =         240;
-const int TEXTLINESPACING    =         20;                  // Pixel spacing per line with text size = 2
+const int TEXTLINESPACING    =         20;     // Pixel spacing per line with text size = 2
    
     int xIncrement, yIncrement;
     int xOld;

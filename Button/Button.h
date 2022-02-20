@@ -14,8 +14,8 @@ class Button {
     enum class State {state0, state1, state2, state3};
     State state;
     bool pushed, lastPushed;  // This member indicates if the (de-bounced) button was pushed.
-    uint64_t startTime;        // Record the start time of the de-bounce execute (appromiate).
-    uint64_t debounceInterval = 50;
+    uint64_t startTime, time;        // Record the start time of the de-bounce execute (appromiate).
+    uint64_t debounceInterval = 50000;  // 50 milliseconds
 
     Button(uint gpio);
 

@@ -112,6 +112,7 @@ void DisplayManagement::frequencyMenuOption() {
     int frequency
 *****/
 int DisplayManagement::manualTune() {
+  bool lastautotunebutton = true;
 while(true) {
   exitbutton.buttonPushed();  // Poll exitbutton.
 
@@ -126,7 +127,7 @@ while(true) {
     }
     autotunebutton.buttonPushed();  // Poll autotunebutton.
                                              // Is this MAXSWITCH protection needed here???
-    if (autotunebutton.pushed == true && gpio_get(MAXSWITCH) != false) {   //Redo the Autotune at new frequency/position
+    if (autotunebutton.pushed == true and not lastautotunebutton and gpio_get(MAXSWITCH) != false) {   //Redo the Autotune at new frequency/position
       position = -80 +  data.bandLimitPositionCounts[whichBandOption][0]  + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20
       minSWRAuto = AutoTuneSWR();   //Auto tune here
@@ -136,6 +137,7 @@ while(true) {
       updateMessageTop("    Freq: Adjust - AutoTune: Refine");
       updateMessageBottom("                  Exit to Return");
     }
+    lastautotunebutton = autotunebutton.pushed;
 }  // end while
 }
 
@@ -602,7 +604,7 @@ void DisplayManagement::DoNewCalibrate2()  //Al modified 9-14-19
   int i, j, whichLine;
   long localPosition, minCount, frequency;
   float currentSWR;
-  updateMessageTop("Full Calibrate");
+  updateMessageTop("            Full Calibrate");
   bandBeingCalculated = 0;
   stepper.ResetStepperToZero();     //Start off at zero
   tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
@@ -644,7 +646,6 @@ void DisplayManagement::DoNewCalibrate2()  //Al modified 9-14-19
           tft.setCursor(230, 90 + whichLine * TEXTLINESPACING);
           tft.print(SWRMinPosition);
           whichLine++;                          // Ready for next line of output
-          //busy_wait_ms(200);
           break;                                // This sends control to next edge
         }
       }
@@ -656,9 +657,10 @@ void DisplayManagement::DoNewCalibrate2()  //Al modified 9-14-19
   eeprom.WritePositionCounts();                 // Write values to EEPROM
   updateMessageTop("                    Press Exit");
   updateMessageBottom("         Full Calibration Complete");
-  while (exitbutton.pushed == false) { //Wait until exit button is pressed
-   // busy_wait_ms(50);
-  }
+  while (true) {
+    exitbutton.buttonPushed();  // Poll exitbutton
+    if(exitbutton.pushed) break;
+  } //Wait until exit button is pressed
 }
 
 
@@ -679,7 +681,9 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
   float autotune;
   long localPosition, minCount, frequency;
   float currentSWR;
-  updateMessageBottom("        Initial Calibration");
+  bool lastexitbutton = true;
+  EraseBelowMenu();
+  updateMessageBottom("                 Initial Calibration");
   bandBeingCalculated = 0;
   stepper.ResetStepperToZero();
   position = 0;
@@ -698,7 +702,7 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
       frequency = data.bandEdges[i][j];     // Select a band edge to calibrate
       dds.SendFrequency(frequency);    // Tell the DDS the edge frequency...
       //UpdateFrequency(frequency);      // Change main display data.  Replace with ShowSubmenuData, or not needed here???
-      updateMessageTop("Moving to Freq");
+      updateMessageTop("             Moving to Freq");
       while (true) {
  
     if(DetectMaxSwitch()) return;
@@ -739,10 +743,12 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
   eeprom.WritePositionCounts();               // Write values to EEPROM buffer.  Must also write them to Flash!
   eeprom.write(eeprom.bufferUnion.buffer8);   // This writes a page to Flash memory.  This includes the position counts
                                               // and preset frequencies.
-  updateMessageBottom("     Initial Calibration Complete");
-  updateMessageTop("           Press Exit");
-  while (exitbutton.pushed == false) {
-  //  busy_wait_ms(10);  // Slow this loop down a bit to save power.
+  updateMessageBottom("        Initial Calibration Complete");
+  updateMessageTop("              Press Exit");
+  while (true) {
+    exitbutton.buttonPushed();  // Poll exitbutton.
+    if(exitbutton.pushed and not lastexitbutton) break;  // Check for positive edge.
+    lastexitbutton = exitbutton.pushed;
   }
 }
 
@@ -813,7 +819,8 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption) { //Al Added 
   updateMessageTop("                     Press Exit");
   updateMessageBottom("     Single Band Calibrate Complete");
   while (exitbutton.pushed == false) {
-  //  busy_wait_ms(50);  //  Slow this loop down to save power.
+    exitbutton.buttonPushed();  // Poll exitbutton.
+  if(exitbutton.pushed) break;
   }
 }
 
@@ -1066,7 +1073,7 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption) {
       }
     }
     updateMessageTop("             Exit to Return");
-    updateMessageBottom("   Freq: Adjust - AutoTune: Refine");
+    updateMessageBottom("     Freq: Adjust - AutoTune: Refine");
     dds.SendFrequency(frequency);  // Redundant???
     position = stepper.currentPosition() + ((frequency - frequencyOld) / (data.hertzPerStepperUnitVVC[whichBandOption]));
     stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20

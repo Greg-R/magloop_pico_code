@@ -43,7 +43,7 @@ add_subdirectory(DDS)
 add_subdirectory(SWR)
 add_subdirectory(DisplayManagement)
 #add_subdirectory(Calibrate)
-#add_subdirectory(Buttons)
+add_subdirectory(Button)
 #add_subdirectory(Presets)
 add_subdirectory(Rotary)
 add_subdirectory(EEPROM)
@@ -75,7 +75,7 @@ target_link_libraries(magloop_pico
         SWR
         DisplayManagement
   #      Calibrate
-  #      Buttons
+        Button
   #      Presets
         Rotary
         EEPROM

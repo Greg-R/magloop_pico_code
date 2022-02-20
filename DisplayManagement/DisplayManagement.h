@@ -13,6 +13,7 @@
 #include "EEPROM.h"
 #include "GraphPlot.h"
 #include "Data.h"
+#include "Button.h"
 
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
@@ -20,7 +21,7 @@
 
 #define PRESETSPERBAND   6
 #define PIXELWIDTH 320
-extern const int autotunebutton;
+//extern const int autotunebutton;
 #define INCREMENTPAD  22  // Used to display increment cursor
 #define MENUBUTTON3  4 //  Full Calibrate using band edges for faster calibration.
 #define MENUBUTTON1  8 // Band cal
@@ -30,8 +31,8 @@ extern const int autotunebutton;
 #define MAXSWITCH 10
 #define TARGETMAXSWR 5.5  // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
-extern const int enterbutton;
-extern const int exitbutton;
+//extern const int enterbutton;
+//extern const int exitbutton;
 #define FREQMENU  0  // Menuing indexes
 #define MAXNUMREADINGS              500
 #define PIXELHEIGHT                 240
@@ -70,6 +71,10 @@ float minSWRAuto;
 float minSWR;
 enum class State {state0, state1, state2, state3};  // Used to move between states in state machines.
 State state;
+// Instantiate 3 pushbuttons.  This Class does de-bouncing.
+Button enterbutton =    Button(6);
+Button exitbutton  =    Button(7);
+Button autotunebutton = Button(8);
 
 DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, StepperManagement & stepper, EEPROM & eeprom, Data & data);
 

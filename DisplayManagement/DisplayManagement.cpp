@@ -10,7 +10,11 @@ int quickCalFlag;
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 & tft, DDS & dds, SWR & swr, 
                                      StepperManagement & stepper, EEPROM & eeprom, Data & data
                                      ): tft(tft), dds(dds), swr(swr),
-                                     stepper(stepper), eeprom(eeprom), GraphPlot(tft, dds, data), data(data) {}
+                                     stepper(stepper), eeprom(eeprom), GraphPlot(tft, dds, data), data(data) {
+enterbutton.initialize();                                       
+exitbutton.initialize();
+autotunebutton.initialize();
+}
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
 {
@@ -109,7 +113,10 @@ void DisplayManagement::frequencyMenuOption() {
 *****/
 int DisplayManagement::manualTune() {
 while(true) {
-  if(gpio_get(exitbutton) == false) return dds.currentFrequency;  // Exit manual tuning.
+  exitbutton.buttonPushed();  // Poll exitbutton.
+
+  if(exitbutton.pushed == true) return dds.currentFrequency;  // Exit manual tuning.
+
     if (menuEncoderMovement != 0) {          //Allow stepper to be moved maually
       ManualStepperControl();                //  Is this working???
     }
@@ -117,8 +124,9 @@ while(true) {
       ManualFrequencyControl(whichBandOption);
       frequencyEncoderMovement = 0;
     }
+    autotunebutton.buttonPushed();  // Poll autotunebutton.
                                              // Is this MAXSWITCH protection needed here???
-    if (gpio_get(autotunebutton) == LOW && gpio_get(MAXSWITCH) != LOW) {   //Redo the Autotune at new frequency/position
+    if (autotunebutton.pushed == true && gpio_get(MAXSWITCH) != false) {   //Redo the Autotune at new frequency/position
       position = -80 +  data.bandLimitPositionCounts[whichBandOption][0]  + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20
       minSWRAuto = AutoTuneSWR();   //Auto tune here
@@ -155,6 +163,7 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency)  //Al Mod
   insetMargin      = 20;
   defaultIncrement = 1000L;
   halfScreen   = PIXELHEIGHT / 2 - 25;
+  bool lastexitbuttonPushed;
   updateMessageTop("                 Enter Frequency");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0) {                 // 40M
@@ -195,12 +204,17 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency)  //Al Mod
   tft.setFont(&FreeSerif24pt7b);
 
   // State Machine for frequency input with encoders.
-  while (gpio_get(autotunebutton) != false) {   // Update frequency until user pushes AutoTune button.
-    //  Exit this menu:
-    if(gpio_get(exitbutton) == false) {
+  while (true) {   // Update frequency until user pushes AutoTune button.
+  // Poll autotunebutton and exitbutton.
+  autotunebutton.buttonPushed();
+  exitbutton.buttonPushed();
+    if(autotunebutton.pushed == true) break;
+    //  Exit this menu, but make sure it is a proper edge transition:
+    if(exitbutton.pushed & not lastexitbuttonPushed) {
       frequency = 0;
       return frequency;
     }
+    lastexitbuttonPushed = exitbutton.pushed;    
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(1);
     tft.setFont(&FreeSerif24pt7b);
@@ -275,9 +289,15 @@ int DisplayManagement::MakeMenuSelection(int index) //Al Mod 9-8-19
   tft.setFont();
   tft.setTextSize(2);
   int i;
+  bool lastPushed;
 
   // State Machine:
-  while (gpio_get(enterbutton) != LOW) {
+  while (true) {
+    // Poll enterbutton.
+    enterbutton.buttonPushed();
+ //   if(enterbutton.pushed & not enterbutton.lastPushed) break;  // Looking for a low to high transition here!
+ if(enterbutton.pushed) break;  // Looking for a low to high transition here!
+ //   lastPushed = enterbutton.pushed;
     if (menuEncoderMovement) {                             // Must be i (CW) or -1 (CCW)
       if (menuEncoderMovement == 1) {
         index++;
@@ -326,6 +346,8 @@ int DisplayManagement::SelectBand(const std::string bands[3])
   EraseBelowMenu();  // Redundant???
   int currBand[] = {40, 30, 20};  // Used???
   int i, index, where = 0;
+  bool enterLastPushed = true;  // Must be set to true or a false exit could occur.
+  bool exitLastPushed = true;
   //tft.fillRect(0, 52, PIXELWIDTH, PIXELHEIGHT, ILI9341_BLACK);  // Same as EraseBelow function?
   updateMessageBottom("             Press Enter to Select");
   tft.setTextSize(1);
@@ -366,8 +388,13 @@ int DisplayManagement::SelectBand(const std::string bands[3])
       tft.setCursor(110, 110 + index * 30);
       tft.print(bands[index].c_str());
     }
-    if (gpio_get(enterbutton) == false) break;  // Exit the state machine, return selected index.
-    if (gpio_get(exitbutton) == false) return index = 4;  // 4 is a signal that the menu was exited from without making a selection.
+    // Poll buttons.
+    enterbutton.buttonPushed();
+    exitbutton.buttonPushed();
+    if (enterbutton.pushed & not enterLastPushed) break;  // Exit the state machine if there was a false to true transition, return selected index.
+    enterLastPushed = enterbutton.pushed;
+    if (exitbutton.pushed & not exitLastPushed) return index = 4;  // 4 is a signal that the menu was exited from without making a selection.
+    exitLastPushed = exitbutton.pushed;
   }  // end while
 
   currentBand = currBand[index];  // Used???
@@ -629,8 +656,8 @@ void DisplayManagement::DoNewCalibrate2()  //Al modified 9-14-19
   eeprom.WritePositionCounts();                 // Write values to EEPROM
   updateMessageTop("                    Press Exit");
   updateMessageBottom("         Full Calibration Complete");
-  while (gpio_get(exitbutton) != LOW) { //Wait until exit button is pressed
-    busy_wait_ms(50);
+  while (exitbutton.pushed == false) { //Wait until exit button is pressed
+   // busy_wait_ms(50);
   }
 }
 
@@ -714,8 +741,8 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
                                               // and preset frequencies.
   updateMessageBottom("     Initial Calibration Complete");
   updateMessageTop("           Press Exit");
-  while (gpio_get(exitbutton) != LOW) {
-    busy_wait_ms(10);  // Slow this loop down a bit to save power.
+  while (exitbutton.pushed == false) {
+  //  busy_wait_ms(10);  // Slow this loop down a bit to save power.
   }
 }
 
@@ -785,8 +812,8 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption) { //Al Added 
   //busy_wait_us_32(100L);
   updateMessageTop("                     Press Exit");
   updateMessageBottom("     Single Band Calibrate Complete");
-  while (gpio_get(exitbutton) != LOW) {
-    busy_wait_ms(50);  //  Slow this loop down to save power.
+  while (exitbutton.pushed == false) {
+  //  busy_wait_ms(50);  //  Slow this loop down to save power.
   }
 }
 
@@ -832,7 +859,7 @@ void DisplayManagement::ProcessPresets()
         state = State::state3;
         if(frequency == 0) state = State::state1;  // User pushed exit, return to band select.
         break;
-       case State::state3:
+       case State::state3:   // Run AutoTuneSWR() at the selected preset frequency.
         dds.SendFrequency(frequency);
     // Calculate the approximate position for the stepper and back off a bit.
         position = -25 + data.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
@@ -851,6 +878,8 @@ void DisplayManagement::ProcessPresets()
 
 int DisplayManagement::SelectPreset() {
   int frequency;
+  bool lastexitbutton = true;
+  bool lastautotunebutton = true;
   updateMessageTop("Menu Encoder to select, push AutoTune");
   EraseBelowMenu();
   tft.setTextSize(1);
@@ -870,8 +899,15 @@ int DisplayManagement::SelectPreset() {
   tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
   menuEncoderState = 0;
   //  Preset state selection machine
-  while (gpio_get(autotunebutton) == true and gpio_get(enterbutton) == true) {   // Why 2 buttons???
-    if(gpio_get(exitbutton) == false) return frequency = 0;  // Exit Preset Select if requested by user.
+  while (true) {   // Why 2 buttons???
+    // Poll 3 buttons:
+    autotunebutton.buttonPushed();
+    enterbutton.buttonPushed();
+    exitbutton.buttonPushed();
+    if(exitbutton.pushed & not lastexitbutton) return frequency = 0;  // Exit Preset Select if requested by user.
+    lastexitbutton = exitbutton.pushed;
+    if(autotunebutton.pushed & not lastautotunebutton) break;  // Exit preset select and AutoTune.
+    lastautotunebutton = autotunebutton.pushed;
     if (menuEncoderMovement == 1) {                              // Turning clockwise
       RestorePreviousPresetChoice(submenuIndex, whichBandOption);
       submenuIndex++;
@@ -1020,7 +1056,8 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption) {
   GraphAxis(whichBandOption);
   if (frequencyEncoderMovement2 != 0) {
     frequencyOld = dds.currentFrequency;
-    while (gpio_get(enterbutton) != LOW) { 
+    while (enterbutton.pushed == false) {
+      enterbutton.buttonPushed();
       if (frequencyEncoderMovement2 != 0) {
         frequency = dds.currentFrequency + frequencyEncoderMovement2 * 1000;
         dds.SendFrequency(frequency);
@@ -1132,7 +1169,8 @@ void DisplayManagement::CalibrationMachine()
          state = State::state0;
          break;     
     }
-    busy_wait_ms(200);
-    if(gpio_get(exitbutton) == false) break;  // Break from while if exit button is pushed.
+    //busy_wait_ms(200);
+    exitbutton.buttonPushed();
+    if(exitbutton.pushed == true) break;  // Break from while if exit button is pushed.
   }  // end while
 }

@@ -23,6 +23,7 @@
 #include "Rotary/Rotary.h"
 #include "EEPROM/EEPROM.h"
 #include "Data/Data.h"
+#include "Button/Button.h"
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
@@ -30,9 +31,11 @@ const std::string version = "1.01";
 const std::string releaseDate = "3-15-21";
 
 //  GPIOs for switches and other IO.
-extern const int autotunebutton = 8;
-extern const int enterbutton =    6;
-extern const int exitbutton  =    7;
+//extern const int autotunebutton = 8;
+//extern const int enterbutton =    6;
+//extern const int exitbutton  =    7;
+
+
 
 //  Instantiate the Stepper object:
 #define STEPPERDIR 9
@@ -116,9 +119,9 @@ int main()
   gpio_set_dir(12, GPIO_OUT);  // Stepper Step
   gpio_set_dir(10, GPIO_IN);  // Limit switch
   gpio_set_dir(11, GPIO_IN);  // Limit switch
-//  The limit switch inputs need pull-ups:
-  gpio_put( 9, 0);
-  gpio_put(12, 0);
+  //gpio_put( 9, 0);  GPOs are default 0???
+  //gpio_put(12, 0);
+  //  The limit switch inputs need pull-ups:
   gpio_pull_up(10);
   gpio_pull_up(11);
 
@@ -127,32 +130,34 @@ int main()
   gpio_set_dir(POWER_SWITCH, GPIO_OUT);
   gpio_put(POWER_SWITCH, 1);
 
-  // Initialize 7 buttons and pull-ups.  Buttons are normally open.
-  gpio_set_function( 4, GPIO_FUNC_SIO);  // FULLCAL
-  gpio_set_function( 5, GPIO_FUNC_SIO);  // PRESETS
-  gpio_set_function( enterbutton, GPIO_FUNC_SIO);  // Quick-Cal, also called ACCURACY
-  gpio_set_function( exitbutton, GPIO_FUNC_SIO);  // 
-  gpio_set_function( autotunebutton, GPIO_FUNC_SIO);  // AutoTune button
-  gpio_set_function(19, GPIO_FUNC_SIO);  // Encoder 1 pushbutton
-  gpio_set_function(20, GPIO_FUNC_SIO);  // Encoder 2 pushbutton
-  gpio_set_dir( 4, GPIO_IN);
-  gpio_set_dir( 5, GPIO_IN);
-  gpio_set_dir( 6, GPIO_IN);
-  gpio_set_dir( 7, GPIO_IN);
-  gpio_set_dir( 8, GPIO_IN);
-  gpio_set_dir(19, GPIO_IN);
-  gpio_set_dir(20, GPIO_IN);
-  gpio_pull_up( 4);
-  gpio_pull_up( 5);
-  gpio_pull_up( 6);
-  gpio_pull_up( 7);
-  gpio_pull_up( 8);
+  // Initialiate 3 buttons.  Buttons are normally open with pull-ups.
+  //gpio_set_function( 4, GPIO_FUNC_SIO);  // FULLCAL
+  //gpio_set_function( 5, GPIO_FUNC_SIO);  // PRESETS
+  //gpio_set_function( enterbutton, GPIO_FUNC_SIO);
+  //gpio_set_function( exitbutton, GPIO_FUNC_SIO);
+  //gpio_set_function( autotunebutton, GPIO_FUNC_SIO);  // AutoTune button
+  //gpio_set_function(19, GPIO_FUNC_SIO);  // Encoder 1 pushbutton
+  //gpio_set_function(20, GPIO_FUNC_SIO);  // Encoder 2 pushbutton
+  //gpio_set_dir( 4, GPIO_IN);
+  //gpio_set_dir( 5, GPIO_IN);
+  //gpio_set_dir( 6, GPIO_IN);
+  //gpio_set_dir( 7, GPIO_IN);
+  //gpio_set_dir( 8, GPIO_IN);
+  //gpio_set_dir(19, GPIO_IN);
+  //gpio_set_dir(20, GPIO_IN);
+  //gpio_pull_up( 4);
+  //gpio_pull_up( 5);
+  //gpio_pull_up( 6);
+  //gpio_pull_up( 7);
+  //gpio_pull_up( 8);
   gpio_pull_up(17);  // Encoder
   gpio_pull_up(18);  // Encoder
-  gpio_pull_up(19);
-  gpio_pull_up(20);
+  //gpio_pull_up(19);
+  //gpio_pull_up(20);
   gpio_pull_up(21);  // Encoder
   gpio_pull_up(22);  // Encoder
+
+
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -241,7 +246,7 @@ while(true) {
   display.ShowMainDisplay(display.menuIndex);
   display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
   display.menuIndex = display.MakeMenuSelection(display.menuIndex);  // Select one of the three top menu choices: Freq, Presets, 1st Cal
-  busy_wait_ms(200);       // Crude debounce
+  //busy_wait_ms(200);       // Crude debounce
   switch (display.menuIndex) {
     case FREQMENU:             //  Manual frequency selection selection and AutoTune.
       display.frequencyMenuOption();

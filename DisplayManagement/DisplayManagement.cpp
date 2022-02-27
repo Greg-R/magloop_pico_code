@@ -1157,6 +1157,7 @@ return 1;
 void DisplayManagement::CalibrationMachine()
 {
   int i;
+  bool lastexitbutton = true;
   std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
   EraseBelowMenu();
   state = State::state0;  // Enter state0.
@@ -1165,25 +1166,27 @@ void DisplayManagement::CalibrationMachine()
     switch(state) {
       case State::state0:           // Select Calibration algorithm.
          i = SelectBand(cals) + 1;  // Calibration states are 1,2,3.
-         if(i == 4) return;  // No selection in Calibrate menu; exit machine and return to top level.
+         if(i == 5) return;  // No selection in Calibrate menu; exit machine and return to top level.
          state = (State)i;          // Cast i to State enum type.
          break;
       case State::state1:           // Full Calibration
          DoNewCalibrate2();
          state = State::state0;
          break;
-      case State::state2:
-         state = State::state0;     // Return to Calibration select after exiting state2.
+      case State::state2:           // Band Calibration
          i = SelectBand(band);      // Select band
          if(i == 4) break;  // No selection in Band menu; return to Calibration select without calibrating.
          DoSingleBandCalibrate(i);  // Band Calibration
+         state = State::state0;     // Return to Calibration select after exiting state2.
+         lastexitbutton = true;  // Must set true here, or will jump to top level.
          break;
       case State::state3:           // Initial Calibration
          DoFirstCalibrate();
          state = State::state0;
-         break;     
-    }
-    exitbutton.buttonPushed();
-    if(exitbutton.pushed == true) break;  // Break from while if exit button is pushed.
+         break;   
+    }  // end switch
+    exitbutton.buttonPushed();  // Poll exitbutton.
+    if(exitbutton.pushed and not lastexitbutton) break;  // Break from while if exit button is pushed.
+    lastexitbutton = exitbutton.pushed;  // Make sure exit happens on edge.
   }  // end while
 }

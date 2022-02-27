@@ -746,7 +746,7 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
   eeprom.write(eeprom.bufferUnion.buffer8);   // This writes a page to Flash memory.  This includes the position counts
                                               // and preset frequencies.
   updateMessageBottom("        Initial Calibration Complete");
-  updateMessageTop("              Press Exit");
+  updateMessageTop("                    Press Exit");
   while (true) {
     exitbutton.buttonPushed();  // Poll exitbutton.
     if(exitbutton.pushed and not lastexitbutton) break;  // Check for positive edge.
@@ -1130,7 +1130,7 @@ int DisplayManagement::DetectMaxSwitch()
 stepper.move(-300);
 stepper.runToPosition();
 for(int i = 0; i < 10; i++) {
-updateMessageTop("          Upper Limit Hit!");
+updateMessageTop("                  Upper Limit Hit!");
 busy_wait_ms(1000);
 tft.fillRect(90,0,300,20,ILI9341_BLACK);
 busy_wait_ms(1000);
@@ -1172,6 +1172,7 @@ void DisplayManagement::CalibrationMachine()
       case State::state1:           // Full Calibration
          DoNewCalibrate2();
          state = State::state0;
+         lastexitbutton = true;  // Must set true here, or will jump to top level.
          break;
       case State::state2:           // Band Calibration
          i = SelectBand(band);      // Select band
@@ -1183,6 +1184,7 @@ void DisplayManagement::CalibrationMachine()
       case State::state3:           // Initial Calibration
          DoFirstCalibrate();
          state = State::state0;
+         lastexitbutton = true;  // Must set true here, or will jump to top level.
          break;   
     }  // end switch
     exitbutton.buttonPushed();  // Poll exitbutton.

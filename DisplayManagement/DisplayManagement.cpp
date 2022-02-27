@@ -96,7 +96,7 @@ void DisplayManagement::frequencyMenuOption() {
             GraphAxis(whichBandOption);
             PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
             updateMessageBottom("     Encoders to Adjust, Exit to Return");
-            // Manual frequency and position tune:
+            // Enter Manual frequency and position tune:
             frequency = manualTune();
           break;  //  state is not changed; should go back to state2.
        }  // end switch
@@ -113,21 +113,22 @@ void DisplayManagement::frequencyMenuOption() {
 *****/
 int DisplayManagement::manualTune() {
   bool lastautotunebutton = true;
+  bool lastexitbutton = true;
 while(true) {
   exitbutton.buttonPushed();  // Poll exitbutton.
 
-  if(exitbutton.pushed == true) return dds.currentFrequency;  // Exit manual tuning.
+  if(exitbutton.pushed and not lastexitbutton) return dds.currentFrequency;  // Exit manual tuning.
 
     if (menuEncoderMovement != 0) {          //Allow stepper to be moved maually
-      ManualStepperControl();                //  Is this working???
+      ManualStepperControl();
     }
     if (frequencyEncoderMovement != 0) {     //Allow frequency to be changed maually.
       ManualFrequencyControl(whichBandOption);
-      frequencyEncoderMovement = 0;
+      frequencyEncoderMovement = 0;          // Doesn't reset to 0???
     }
     autotunebutton.buttonPushed();  // Poll autotunebutton.
                                              // Is this MAXSWITCH protection needed here???
-    if (autotunebutton.pushed == true and not lastautotunebutton and gpio_get(MAXSWITCH) != false) {   //Redo the Autotune at new frequency/position
+    if (autotunebutton.pushed == true and (not lastautotunebutton) and gpio_get(MAXSWITCH)) {   //Redo the Autotune at new frequency/position
       position = -80 +  data.bandLimitPositionCounts[whichBandOption][0]  + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20
       minSWRAuto = AutoTuneSWR();   //Auto tune here
@@ -138,6 +139,7 @@ while(true) {
       updateMessageBottom("                  Exit to Return");
     }
     lastautotunebutton = autotunebutton.pushed;
+    lastexitbutton = exitbutton.pushed;
 }  // end while
 }
 
@@ -165,7 +167,7 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency)  //Al Mod
   insetMargin      = 20;
   defaultIncrement = 1000L;
   halfScreen   = PIXELHEIGHT / 2 - 25;
-  bool lastexitbuttonPushed;
+  bool lastexitbuttonPushed = true;
   updateMessageTop("                 Enter Frequency");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0) {                 // 40M
@@ -1053,18 +1055,23 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption) {
   updateMessageTop("     Press Enter: Move to Freq");
   int i, k, yIncrement, xIncrement;
   int stepIncr;
-  long frequency, frequencyOld;
-  long tempTime;
+  int frequency = dds.currentFrequency; 
+  int frequencyOld = frequency;
+  long tempTime;  // Used???
   xIncrement = (XAXISEND - XAXISSTART ) / 3;
   yIncrement = (YAXISEND - YAXISSTART) / 3;
   int xDotIncrement = 10;
   int yTick = YAXISSTART + 5;
+  bool lastenterbutton = true;
   frequencyEncoderMovement = 0;
   GraphAxis(whichBandOption);
   if (frequencyEncoderMovement2 != 0) {
     frequencyOld = dds.currentFrequency;
-    while (enterbutton.pushed == false) {
-      enterbutton.buttonPushed();
+    // Enter this loop until enterbutton is pushed.
+    while (true) {
+      enterbutton.buttonPushed();  // Poll enterbutton.
+      if(enterbutton.pushed and not lastenterbutton) break;     
+      lastenterbutton = enterbutton.pushed;  // Used to make sure enterbutton uses edge.
       if (frequencyEncoderMovement2 != 0) {
         frequency = dds.currentFrequency + frequencyEncoderMovement2 * 1000;
         dds.SendFrequency(frequency);
@@ -1072,7 +1079,7 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption) {
         frequencyEncoderMovement2 = 0;
       }
     }
-    updateMessageTop("             Exit to Return");
+    updateMessageTop("                  Exit to Return");
     updateMessageBottom("     Freq: Adjust - AutoTune: Refine");
     dds.SendFrequency(frequency);  // Redundant???
     position = stepper.currentPosition() + ((frequency - frequencyOld) / (data.hertzPerStepperUnitVVC[whichBandOption]));
@@ -1099,7 +1106,7 @@ void DisplayManagement::ManualStepperControl() {
   position = stepper.currentPosition() + menuEncoderMovement;
   stepper.MoveStepperToPositionCorrected(position); //Al 4-20-20
   ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-  UpdateFrequency(dds.currentFrequency);
+  //UpdateFrequency(dds.currentFrequency);
   menuEncoderMovement = 0;
 }
 
@@ -1123,7 +1130,7 @@ int DisplayManagement::DetectMaxSwitch()
 stepper.move(-300);
 stepper.runToPosition();
 for(int i = 0; i < 10; i++) {
-updateMessageTop("Upper Limit Hit!");
+updateMessageTop("          Upper Limit Hit!");
 busy_wait_ms(1000);
 tft.fillRect(90,0,300,20,ILI9341_BLACK);
 busy_wait_ms(1000);
@@ -1176,7 +1183,6 @@ void DisplayManagement::CalibrationMachine()
          state = State::state0;
          break;     
     }
-    //busy_wait_ms(200);
     exitbutton.buttonPushed();
     if(exitbutton.pushed == true) break;  // Break from while if exit button is pushed.
   }  // end while

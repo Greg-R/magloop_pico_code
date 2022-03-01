@@ -61,7 +61,7 @@ int submenuIndex;
 int SWRFinalPosition;
 volatile int menuEncoderState;
 const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
-std::string band[3] = {"  40M", "  30M", "  20M"};  // Make this a global???
+//std::string band[3] = {"  40M", "  30M", "  20M"};  // Make this a global???  Move to Data object!
 int stepperDirectionOld;
 uint32_t stepperDistanceOld;
 int iMax;

@@ -63,7 +63,7 @@ void DisplayManagement::frequencyMenuOption() {
           case State::state0:
             return;  //  Exit frequency selection and return to top menu Freq.
           case State::state1:
-            whichBandOption = SelectBand(band);  // state1
+            whichBandOption = SelectBand(data.bands);  // state1
             // If SelectBand returns 4, this means the menu was exited without selecting a band.  Move to the top level menu Freq.
             if(whichBandOption == 4) {
               //frequency = dds.currentFrequency;
@@ -854,7 +854,7 @@ void DisplayManagement::ProcessPresets()
        case State::state0:
         return;  // Return to top level.
        case State::state1:
-        whichBandOption = SelectBand(band);  // Select the band to be used
+        whichBandOption = SelectBand(data.bands);  // Select the band to be used
         // If SelectBand returns 4, the user exited before selecting a band.  Return to top menu.
         if(whichBandOption == 4) {
           state = State::state0;
@@ -988,18 +988,18 @@ float DisplayManagement::AutoTuneSWR() {
     tempSWR[i] = 0.0;           // Class member
     tempCurrentPosition[i] = 0; // Class member
   }
-  for (i = 0; i < MAXNUMREADINGS; i++) {       // loop to increment and find min SWR and save values to plot
+  for (i = 0; i < MAXNUMREADINGS; i++) {    // loop to increment and find min SWR and save values to plot
 
     if (gpio_get(MAXSWITCH) == LOW) break;  // Break from this for loop due to limit switch closure.
     
-    minSWR = swr.ReadSWRValue();                   //Save minimum SWR value
+    minSWR = swr.ReadSWRValue();            //Save SWR value
     ShowSubmenuData(minSWR, dds.currentFrequency);
-    tempSWR[i] = minSWR;                       //Array of SWR values
+    tempSWR[i] = minSWR;                    //Array of SWR values
     tempCurrentPosition[i] = stepper.currentPosition();     //Array of Count position values
     if ( minSWR < minSWRAuto) {             // Test to find minimum SWR value
       minSWRAuto = minSWR;
       SWRMinPosition = stepper.currentPosition();
-      stepper.MoveStepperToPositionCorrected(SWRMinPosition);  // Redundant???
+      //stepper.MoveStepperToPositionCorrected(SWRMinPosition);  // Redundant???
     }
     if (minSWR > 3 and whichBandOption == 0) {   //Fast step for 40M band above SWR = 3
       position = position + 10;
@@ -1025,18 +1025,13 @@ float DisplayManagement::AutoTuneSWR() {
   
   // To this else if AutoTune is successful.
       else {
-  position = SWRMinPosition;
-  stepper.MoveStepperToPositionCorrected(SWRMinPosition - 50);   // back up position to take out backlash
-  //busy_wait_us_32(200);
-  stepper.MoveStepperToPositionCorrected(SWRMinPosition);        //Move to final position in CW direction
-  minSWR = swr.ReadSWRValue();  //  Measure VSWR in the final position.
-  iMax = i; //max value in array for plot
-  // These lines moved to after each call of AutoTuneSWR in DisplayManagement.  PUT BACK
-  ShowSubmenuData(minSWR, dds.currentFrequency);  //Update SWR value
-  //tft.fillRect(0, PIXELHEIGHT - 47, 311, 29, ILI9341_BLACK);   //Clear lower screen
-  updateMessageTop("               AutoTune Success");
-  //tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);  // Clear text "Auto Tuning"
-  //tft.drawFastHLine(0, 20, 320, ILI9341_RED);
+         //    position = SWRMinPosition;  // How is this used???
+             stepper.MoveStepperToPositionCorrected(SWRMinPosition - 50);   // back up position to take out backlash
+             stepper.MoveStepperToPositionCorrected(SWRMinPosition);        //Move to final position in CW direction
+             minSWR = swr.ReadSWRValue();  //  Measure VSWR in the final position.
+             iMax = i; //max value in array for plot
+             ShowSubmenuData(minSWR, dds.currentFrequency);  //Update SWR value
+             updateMessageTop("               AutoTune Success");
       }
   return minSWR;
 }
@@ -1175,7 +1170,7 @@ void DisplayManagement::CalibrationMachine()
          lastexitbutton = true;  // Must set true here, or will jump to top level.
          break;
       case State::state2:           // Band Calibration
-         i = SelectBand(band);      // Select band
+         i = SelectBand(data.bands);      // Select band
          if(i == 4) break;  // No selection in Band menu; return to Calibration select without calibrating.
          DoSingleBandCalibrate(i);  // Band Calibration
          state = State::state0;     // Return to Calibration select after exiting state2.

@@ -232,7 +232,7 @@ currentBand = eeprom.ReadCurrentBand();
 
 // Main loop/state machine:
 while(true) {
-  std::string band[] = {"40M", "30M", "20M"};
+  //std::string band[] = {"40M", "30M", "20M"};
   
   int i, submenuIndex;
   //  Refresh display:

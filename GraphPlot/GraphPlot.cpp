@@ -119,24 +119,24 @@ void GraphPlot::PlotNewStartingFrequency(int whichBandOption)
   float HzPerPix;
   switch (whichBandOption) {
     case 0:
-      freqCount = 7.0;
-      highEnd = 7300000L;
-      lowEnd  = 7000000L;
+      freqCount = (float)data.LOWEND40M/1000000.0;
+      highEnd = data.HIGHEND40M;
+      lowEnd  = data.LOWEND40M;
       HzPerPix = float(highEnd - lowEnd) / float(XAXISEND - XAXISSTART);
       x = 25 + float(dds.currentFrequency - lowEnd) / HzPerPix;
       
       break;
     case 1:
-      freqCount = 10.1;
-      highEnd = 10150000L;
-      lowEnd  = 10100000L;
+      freqCount = (float)data.LOWEND30M/1000000.0;
+      highEnd = data.HIGHEND30M;
+      lowEnd  = data.LOWEND30M;
       HzPerPix = float(highEnd - lowEnd) / float(XAXISEND - XAXISSTART);
       x = 25 + float(dds.currentFrequency - lowEnd) / HzPerPix;
       break;
     case 2:
-      freqCount = 14.0;
-      highEnd = 14350000L;
-      lowEnd  = 14000000L;
+      freqCount = (float)data.LOWEND20M/1000000.0;
+      highEnd = data.HIGHEND20M;
+      lowEnd  = data.LOWEND20M;
       HzPerPix = float(highEnd - lowEnd) / float(XAXISEND - XAXISSTART);
       x = 25 + float(dds.currentFrequency - lowEnd) / HzPerPix;
       break;
@@ -171,18 +171,18 @@ void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, long tempCurrentP
   long freqEnd;
   switch (whichBandOption) {   // This should use Data object to get band limits???
     case 0:
-      freqStart = 7000000;
-      freqEnd = 7300000;
+      freqStart = data.LOWEND40M;
+      freqEnd = data.HIGHEND40M;
       break;
 
     case 1:
-      freqStart = 10100000;
-      freqEnd = 10150000;
+      freqStart = data.LOWEND30M;
+      freqEnd = data.HIGHEND30M;
       break;
 
     case 2:
-      freqStart = 14000000;
-      freqEnd = 14350000;
+      freqStart = data.LOWEND20M;
+      freqEnd = data.HIGHEND20M;
       break;
 
   }

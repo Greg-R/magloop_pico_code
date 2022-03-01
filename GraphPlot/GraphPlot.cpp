@@ -25,8 +25,8 @@ void GraphPlot::GraphAxis(int whichBandOption) //al modified 9-8-19
   //  This needs update to use band limit variables, not hard coded???
   switch (whichBandOption) {
     case 0:
-      freqCount = 7.0;
-      freqEnd = 7.3;
+      freqCount = (float)data.LOWEND40M/1000000.0;
+      freqEnd = (float)data.HIGHEND40M/1000000.0;
       pip = 0.1;
       chunks = 3;
       xDotIncrement = 12;
@@ -34,16 +34,16 @@ void GraphPlot::GraphAxis(int whichBandOption) //al modified 9-8-19
       break;
 
     case 1:
-      freqCount = 10.1;
-      freqEnd = 10.15;
+      freqCount = (float)data.LOWEND30M/1000000.0;
+      freqEnd = (float)data.HIGHEND30M/1000000.0;
       pip = 0.02;
       chunks = 3;
       xDotIncrement = 20;
       break;
 
     case 2:
-      freqCount = 14.0;
-      freqEnd = 14.35;
+      freqCount = (float)data.LOWEND20M/1000000.0;
+      freqEnd = (float)data.HIGHEND20M/1000000.0;
       pip = 0.10;
       chunks = 3;
       xDotIncrement = 12;

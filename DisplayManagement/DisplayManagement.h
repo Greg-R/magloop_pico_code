@@ -38,6 +38,7 @@
 #define PIXELHEIGHT                 240
 #define ACCURACYBUTTON         6
 
+//  DisplayManagement inherits from class GraphPlot.
 class DisplayManagement : public GraphPlot {
 
 public:

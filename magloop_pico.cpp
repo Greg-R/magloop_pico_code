@@ -30,13 +30,6 @@
 const std::string version = "1.01";
 const std::string releaseDate = "3-15-21";
 
-//  GPIOs for switches and other IO.
-//extern const int autotunebutton = 8;
-//extern const int enterbutton =    6;
-//extern const int exitbutton  =    7;
-
-
-
 //  Instantiate the Stepper object:
 #define STEPPERDIR 9
 #define STEPPERPUL 12

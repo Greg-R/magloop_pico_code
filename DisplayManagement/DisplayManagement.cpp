@@ -81,7 +81,7 @@ void DisplayManagement::frequencyMenuOption() {
                break;
             }
             dds.SendFrequency(frequency);  // Done in ChangeFrequency???
-            busy_wait_ms(100);             // Let DDS catch up
+            Power(true);
             SWRValue = swr.ReadSWRValue();
             readSWRValue        = SWRValue;   // Redundant???
             ShowSubmenuData(SWRValue, frequency);
@@ -114,11 +114,14 @@ void DisplayManagement::frequencyMenuOption() {
 int DisplayManagement::manualTune() {
   bool lastautotunebutton = true;
   bool lastexitbutton = true;
+  Power(true);
 while(true) {
   exitbutton.buttonPushed();  // Poll exitbutton.
 
-  if(exitbutton.pushed and not lastexitbutton) return dds.currentFrequency;  // Exit manual tuning.
-
+  if(exitbutton.pushed and not lastexitbutton) {
+    Power(false);
+    return dds.currentFrequency;  // Exit manual tuning.
+  }
     if (menuEncoderMovement != 0) {          //Allow stepper to be moved maually
       ManualStepperControl();
     }
@@ -140,6 +143,7 @@ while(true) {
     }
     lastautotunebutton = autotunebutton.pushed;
     lastexitbutton = exitbutton.pushed;
+
 }  // end while
 }
 
@@ -608,6 +612,8 @@ void DisplayManagement::DoNewCalibrate2()  //Al modified 9-14-19
   float currentSWR;
   updateMessageTop("            Full Calibrate");
   bandBeingCalculated = 0;
+    // Turn on power.
+  Power(true);
   stepper.ResetStepperToZero();     //Start off at zero
   tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
   updateMessageBottom("          Full Calibration in Progress");
@@ -659,6 +665,8 @@ void DisplayManagement::DoNewCalibrate2()  //Al modified 9-14-19
   eeprom.WritePositionCounts();                 // Write values to EEPROM
   updateMessageTop("                    Press Exit");
   updateMessageBottom("         Full Calibration Complete");
+  // Turn off power.
+  Power(false);
   while (true) {
     exitbutton.buttonPushed();  // Poll exitbutton
     if(exitbutton.pushed) break;
@@ -687,6 +695,7 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
   EraseBelowMenu();
   updateMessageBottom("                 Initial Calibration");
   bandBeingCalculated = 0;
+  Power(true);
   stepper.ResetStepperToZero();
   position = 0;
   tft.setFont(&FreeSerif9pt7b);
@@ -745,8 +754,17 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
   eeprom.WritePositionCounts();               // Write values to EEPROM buffer.  Must also write them to Flash!
   eeprom.write(eeprom.bufferUnion.buffer8);   // This writes a page to Flash memory.  This includes the position counts
                                               // and preset frequencies.
+  //  Now get the newly written values into the current session:
+    //  Read the position counts and presets into the EEPROM object's buffer.
+  eeprom.ReadEEPROMValuesToBuffer();
+  //  Overwrite the position counts and preset frequencies:
+  eeprom.ReadPositionCounts();
+  // Slopes can't be computed until the actual values are loaded from flash:
+  data.computeSlopes();
+
   updateMessageBottom("        Initial Calibration Complete");
   updateMessageTop("                    Press Exit");
+  Power(false);
   while (true) {
     exitbutton.buttonPushed();  // Poll exitbutton.
     if(exitbutton.pushed and not lastexitbutton) break;  // Check for positive edge.
@@ -783,6 +801,7 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption) { //Al Added 
   whichLine = 0;                              // X coord for mins
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Table data
   updateMessageBottom("            Single Band Calibrate");
+  Power(true);
   for (j = 0; j < 2; j++) {                 // For each band edge...
     frequency = data.bandEdges[whichBandOption][j];     // Select a band edge
     position = data.bandLimitPositionCounts[whichBandOption][j] - 50;
@@ -820,6 +839,7 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption) { //Al Added 
   //busy_wait_us_32(100L);
   updateMessageTop("                     Press Exit");
   updateMessageBottom("     Single Band Calibrate Complete");
+  Power(false);
   while (exitbutton.pushed == false) {
     exitbutton.buttonPushed();  // Poll exitbutton.
   if(exitbutton.pushed) break;
@@ -976,6 +996,8 @@ void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBand
 }
 
 //  This is the primary auto-tuning algorithm which minimizes VSWR.
+//  The stepper should be positioned below the minimum SWR.
+//  This is done either by starting at stepper position 0, or using a calculated estimation.
 float DisplayManagement::AutoTuneSWR() {
   float oldMinSWR;
   oldMinSWR = 100;
@@ -983,38 +1005,42 @@ float DisplayManagement::AutoTuneSWR() {
   int i;
   long currPositionTemp;
   SWRMinPosition = 4000;
+  position = stepper.currentPosition();  // Retrieve the entry position of the stepper.
   updateMessageTop("                   Auto Tuning");
+  // Activate relay, SWR circuits, and DDS.
+  Power(true);
   for (int i = 0; i < MAXNUMREADINGS; i++) {   //reset temp arrays - used to plot SWR vs frequency
     tempSWR[i] = 0.0;           // Class member
     tempCurrentPosition[i] = 0; // Class member
   }
-  for (i = 0; i < MAXNUMREADINGS; i++) {    // loop to increment and find min SWR and save values to plot
+  // Main loop to sweep for minimum SWR and save data for plotting.
+  for (i = 0; i < MAXNUMREADINGS; i++) {    
 
     if (gpio_get(MAXSWITCH) == LOW) break;  // Break from this for loop due to limit switch closure.
     
-    minSWR = swr.ReadSWRValue();            //Save SWR value
-    ShowSubmenuData(minSWR, dds.currentFrequency);
-    tempSWR[i] = minSWR;                    //Array of SWR values
-    tempCurrentPosition[i] = stepper.currentPosition();     //Array of Count position values
+    minSWR = swr.ReadSWRValue();            // Save SWR value
+    ShowSubmenuData(minSWR, dds.currentFrequency);  // Update display during sweep.
+    tempSWR[i] = minSWR;                    // Array of SWR values saved for plotting.
+    tempCurrentPosition[i] = stepper.currentPosition();  //Array of Count position values saved for plotting.
     if ( minSWR < minSWRAuto) {             // Test to find minimum SWR value
-      minSWRAuto = minSWR;
-      SWRMinPosition = stepper.currentPosition();
+      minSWRAuto = minSWR;       // If this measurement is lower, save it.
+      SWRMinPosition = stepper.currentPosition();  // Save the stepper position.
       //stepper.MoveStepperToPositionCorrected(SWRMinPosition);  // Redundant???
     }
     if (minSWR > 3 and whichBandOption == 0) {   //Fast step for 40M band above SWR = 3
       position = position + 10;
-      i = i + 10;
+      i = i + 10;  // Skip forward by 10.
     }
     else
     {
-      position++;
+      position = position + 1;  // Increment forward by 1 step.
     }
     stepper.MoveStepperToPositionCorrected(position);
-    if (stepper.currentPosition() > SWRMinPosition + 10 and minSWR > minSWRAuto + 1.5 and minSWRAuto < 3.5) {   //Test to find if position is after minimum
+    if (stepper.currentPosition() > (SWRMinPosition + 10) and minSWR > (minSWRAuto + 1.5) and minSWRAuto < 3.5) {   //Test to find if position is after minimum
       break;                                                                                      //if after minimum break out of for loop
     }
-    SWRFinalPosition = stepper.currentPosition(); // Save final value for calibrate to continue to find band end positions
-    if (i > 498) {                                //Repeat loop if minimum is not found
+    SWRFinalPosition = stepper.currentPosition(); // Save final value for calibrate to continue to find band end positions.  Needed???
+    if (i > 498) {                                // Repeat loop if minimum is not found
       i = 1;
       position = stepper.currentPosition() - 50;
     }
@@ -1033,6 +1059,8 @@ float DisplayManagement::AutoTuneSWR() {
              ShowSubmenuData(minSWR, dds.currentFrequency);  //Update SWR value
              updateMessageTop("               AutoTune Success");
       }
+  // Turn down circuits.
+  Power(false);
   return minSWR;
 }
 
@@ -1186,4 +1214,27 @@ void DisplayManagement::CalibrationMachine()
     if(exitbutton.pushed and not lastexitbutton) break;  // Break from while if exit button is pushed.
     lastexitbutton = exitbutton.pushed;  // Make sure exit happens on edge.
   }  // end while
+}
+
+
+
+/*****
+  Purpose: This function sets power on or off, including the DDS.
+
+  Parameter list:
+    bool setpower
+
+  Return value:
+    void
+
+  CAUTION:
+
+*****/
+void DisplayManagement::Power(bool setpower)
+{
+// Power down RF relay and SWR circuits.
+gpio_put(data.POWER_SWITCH, setpower);
+// Power down the DDS or set frequency.
+if(setpower) dds.SendFrequency(dds.currentFrequency);
+else dds.SendFrequency(0);
 }

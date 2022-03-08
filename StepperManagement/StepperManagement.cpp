@@ -166,7 +166,7 @@ setCurrentPosition(0);
                                 614                 // 20M
                           };
 
-*****/
+
 void StepperManagement::DoFastStepperMove(uint32_t whichBandOption)
 {
   int yAxisPixelPerUnit, totalPixels, yDotIncrement;
@@ -178,18 +178,7 @@ void StepperManagement::DoFastStepperMove(uint32_t whichBandOption)
   setAcceleration(1100);
   startOffset = 0;
   moveToStepperIndex = bandLimitPositionCounts[whichBandOption][0];
-#ifdef DEBUG1
-  Serial.print("currentFrequency = ");
-  Serial.print(currentFrequency);
-  Serial.print("   moveToStepperIndex = ");
-  Serial.println(moveToStepperIndex);
-  Serial.print("   bandLimitPositionCounts = ");
-  Serial.println(bandLimitPositionCounts[whichBandOption][0]);
-  Serial.print("   bandEdges[whichBandOption][0] = ");
-  Serial.println(bandEdges[whichBandOption][0]);
-  Serial.print("   hertzPerStepperUnitAir[whichBandOption] = ");
-  Serial.println(hertzPerStepperUnitAir[whichBandOption]);
-#endif
+
   while (1) {
     //stepper.moveTo(moveToStepperIndex);
               moveTo(moveToStepperIndex);
@@ -200,18 +189,12 @@ void StepperManagement::DoFastStepperMove(uint32_t whichBandOption)
       break;
     }
   }
-
-#ifdef DEBUG1
-  Serial.print("Move complete ");
-  Serial.println(swr);
-#endif
-
   totalPixels = YAXISEND - YAXISSTART;
   pixelsPerTenth = totalPixels / 50.0;      // HIghest SWR is 5, so 50 tenths.
   //stepper.setMaxSpeed(NORMALMOVESPEED);
             setMaxSpeed(NORMALMOVESPEED);
 }
-
+*/
 
 /*****
   Purpose: Allow the user to change frequency and have the stepper automatically follow frequency change
@@ -230,15 +213,15 @@ long StepperManagement::ConvertFrequencyToStepperCount(long presentFrequency)
   long count;
   switch (currentBand) {
     case 40:       //   intercept                  + slopeCoefficient * newFrequency
-      count = bandLimitPositionCounts[0][0] + (long) (countPerHertz[0] * ((float) (presentFrequency - data.LOWEND40M)));
+      count = data.bandLimitPositionCounts[0][0] + (long) (countPerHertz[0] * ((float) (presentFrequency - data.LOWEND40M)));
       break;
 
     case 30:
-      count = bandLimitPositionCounts[1][0] + (long) (countPerHertz[1] * ((float) (presentFrequency - data.LOWEND30M)));
+      count = data.bandLimitPositionCounts[1][0] + (long) (countPerHertz[1] * ((float) (presentFrequency - data.LOWEND30M)));
       break;
 
     case 20:
-      count = bandLimitPositionCounts[2][0] + (long) (countPerHertz[2] * ((float) (presentFrequency - data.LOWEND20M)));
+      count = data.bandLimitPositionCounts[2][0] + (long) (countPerHertz[2] * ((float) (presentFrequency - data.LOWEND20M)));
       break;
 
     default:

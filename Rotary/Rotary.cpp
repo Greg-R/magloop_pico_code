@@ -81,21 +81,18 @@ Rotary::Rotary(char _pin1, char _pin2) {
 void Rotary::begin(bool internalPullup, bool flipLogicForPulldown) {
 
   if (internalPullup){
-    // Enable weak pullups
-  //  pinMode(pin1,INPUT_PULLUP);
-  //  pinMode(pin2,INPUT_PULLUP);
     gpio_set_function(pin1, GPIO_FUNC_SIO);
     gpio_set_function(pin2, GPIO_FUNC_SIO);
     gpio_set_dir(pin1, GPIO_IN);
     gpio_set_dir(pin2, GPIO_IN);
+    gpio_pull_up(pin1);
+    gpio_pull_up(pin2);
   }else{
-    // Set pins to input.
+    // Set pins to input and pull up.
     gpio_set_function(pin1, GPIO_FUNC_SIO);
     gpio_set_function(pin2, GPIO_FUNC_SIO);
     gpio_set_dir(pin1, GPIO_IN);
     gpio_set_dir(pin2, GPIO_IN);
-  //  pinMode(pin1, INPUT);
-  //  pinMode(pin2, INPUT);
   }
   inverter = flipLogicForPulldown ? 1 : 0;
 }

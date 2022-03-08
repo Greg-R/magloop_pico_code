@@ -25,7 +25,6 @@ float countPerHertz[3];
 float hertzPerStepperUnitAir[3];
 uint32_t position;
 uint32_t stepperDistanceOld;
-uint32_t bandLimitPositionCounts[3][2];
 uint32_t moveToStepperIndex;
 Data & data;
 
@@ -40,7 +39,7 @@ void MoveStepperToPositionCorrected(uint32_t position);
 
 void ResetStepperToZero();
 
-void DoFastStepperMove(uint32_t whichBandOption);
+//void DoFastStepperMove(uint32_t whichBandOption);
 
 long ConvertFrequencyToStepperCount(long presentFrequency);
 

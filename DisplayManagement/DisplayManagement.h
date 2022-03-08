@@ -144,4 +144,6 @@ int DetectMaxSwitch();
 
 void CalibrationMachine();
 
+void Power(bool setpower);
+
 };

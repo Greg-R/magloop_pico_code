@@ -44,7 +44,7 @@ const std::string releaseDate = "3-15-21";
 #define CALIBRATEMENU 2
 
 // +12V and +5V power switch GPIO:
-#define POWER_SWITCH 28
+//#define POWER_SWITCH 28
 
 #define PRESETSPERBAND              6                   // Allow this many preset frequencies on each band
 #define MAXBANDS                    3                   // Can only process this many frequency bands
@@ -94,7 +94,6 @@ result = frequencyEncoder.process();
     }
   }
 }
-//else if(gpio == 6) quickCalFlag = 1;  // Also called Accuracy.  Not sure exactly how this is used.
 if(result == DIR_CW ) countEncoder = countEncoder + 1;
 if(result == DIR_CCW ) countEncoder = countEncoder - 1;
 }
@@ -103,7 +102,7 @@ int main()
 {
   stdio_init_all();
 
-  // Initialize stepper GPIOs:
+  // Initialize stepper and limit switch GPIOs:
   gpio_set_function( 9, GPIO_FUNC_SIO);
   gpio_set_function(10, GPIO_FUNC_SIO);
   gpio_set_function(11, GPIO_FUNC_SIO);
@@ -112,45 +111,19 @@ int main()
   gpio_set_dir(12, GPIO_OUT);  // Stepper Step
   gpio_set_dir(10, GPIO_IN);  // Limit switch
   gpio_set_dir(11, GPIO_IN);  // Limit switch
-  //gpio_put( 9, 0);  GPOs are default 0???
-  //gpio_put(12, 0);
   //  The limit switch inputs need pull-ups:
   gpio_pull_up(10);
   gpio_pull_up(11);
 
-  // Initialize power switch GPIO, and then set to ON:
-  gpio_set_function(POWER_SWITCH, GPIO_FUNC_SIO);
-  gpio_set_dir(POWER_SWITCH, GPIO_OUT);
-  gpio_put(POWER_SWITCH, 1);
+  //  The data object manages constants and variables involved with frequencies, stepper motor positions,
+  //  and GPIOs.
+  Data data = Data();
 
-  // Initialiate 3 buttons.  Buttons are normally open with pull-ups.
-  //gpio_set_function( 4, GPIO_FUNC_SIO);  // FULLCAL
-  //gpio_set_function( 5, GPIO_FUNC_SIO);  // PRESETS
-  //gpio_set_function( enterbutton, GPIO_FUNC_SIO);
-  //gpio_set_function( exitbutton, GPIO_FUNC_SIO);
-  //gpio_set_function( autotunebutton, GPIO_FUNC_SIO);  // AutoTune button
-  //gpio_set_function(19, GPIO_FUNC_SIO);  // Encoder 1 pushbutton
-  //gpio_set_function(20, GPIO_FUNC_SIO);  // Encoder 2 pushbutton
-  //gpio_set_dir( 4, GPIO_IN);
-  //gpio_set_dir( 5, GPIO_IN);
-  //gpio_set_dir( 6, GPIO_IN);
-  //gpio_set_dir( 7, GPIO_IN);
-  //gpio_set_dir( 8, GPIO_IN);
-  //gpio_set_dir(19, GPIO_IN);
-  //gpio_set_dir(20, GPIO_IN);
-  //gpio_pull_up( 4);
-  //gpio_pull_up( 5);
-  //gpio_pull_up( 6);
-  //gpio_pull_up( 7);
-  //gpio_pull_up( 8);
-  gpio_pull_up(17);  // Encoder
-  gpio_pull_up(18);  // Encoder
-  //gpio_pull_up(19);
-  //gpio_pull_up(20);
-  gpio_pull_up(21);  // Encoder
-  gpio_pull_up(22);  // Encoder
-
-
+  // Initialize power switch GPIO, and then set to ON.
+  // Subsequent power control will be done with the Power method in the DisplayManagement class.
+  gpio_set_function(data.POWER_SWITCH, GPIO_FUNC_SIO);
+  gpio_set_dir(data.POWER_SWITCH, GPIO_OUT);
+  gpio_put(data.POWER_SWITCH, true);
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -160,8 +133,7 @@ int main()
   tft.setRotation(3);
   tft.fillScreen(ILI9341_BLACK);
   
-  //  The data object manages constants and variables involved with frequencies and stepper motor positions.
-  Data data = Data();
+
   uint32_t eeprom_data;
   EEPROM eeprom = EEPROM(data);
   //  Use this method one time only and then comment out!
@@ -173,7 +145,7 @@ int main()
   // Slopes can't be computed until the actual values are loaded from flash:
   data.computeSlopes();
   
-  //  Instantiate the Stepper Manager: 
+  //  Instantiate the Stepper Manager:
   StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
 
   //  Next instantiate the DDS.
@@ -225,6 +197,7 @@ currentBand = eeprom.ReadCurrentBand();
   //  Now measure the ADC (SWR bridge) offsets before the DDS is active.
   //  Note that this should be done as late as possible for circuits to stabilize.
   swr.ReadADCoffsets();
+  
   dds.SendFrequency(currentFrequency);    // Set the DDS
 
   display.menuIndex = FREQMENU;  // Begin in Frequency menu.
@@ -232,14 +205,16 @@ currentBand = eeprom.ReadCurrentBand();
 
 // Main loop/state machine:
 while(true) {
-  //std::string band[] = {"40M", "30M", "20M"};
-  
   int i, submenuIndex;
+  // Turn on power.
+  display.Power(true);
   //  Refresh display:
   display.ShowMainDisplay(display.menuIndex);
   display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
+  // Turn off power.
+  display.Power(false);
   display.menuIndex = display.MakeMenuSelection(display.menuIndex);  // Select one of the three top menu choices: Freq, Presets, 1st Cal
-  //busy_wait_ms(200);       // Crude debounce
+
   switch (display.menuIndex) {
     case FREQMENU:             //  Manual frequency selection selection and AutoTune.
       display.frequencyMenuOption();

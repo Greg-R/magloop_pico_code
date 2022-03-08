@@ -76,7 +76,7 @@ void DDS::SendFrequency(long frequency) {   //Set DDS frequency
   gpio_put (FQ_UD, 1);  // Done!  Should see output
   busy_wait_us_32(2000);
   gpio_put (FQ_UD, 0);
-  // Store the frequency in the DDS object:
-  currentFrequency = frequency;
-  busy_wait_ms(100);  // Settling time.
+  // Store the frequency in the DDS object, unless it is 0 (deactivates DDS).
+  if(frequency != 0) currentFrequency = frequency;
+  busy_wait_ms(100);  // Settling time 100 ms.
 }

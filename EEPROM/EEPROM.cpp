@@ -1,7 +1,6 @@
 
 #include "EEPROM.h"
 
-//extern long bandLimitPositionCounts[3][2];  // 3 bands, 2 limits, upper and lower.
 /*****
 
   The EEPROM memory map for the remote unit is as follows:

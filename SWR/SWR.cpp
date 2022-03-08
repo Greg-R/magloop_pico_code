@@ -1,7 +1,6 @@
 #include "SWR.h"
 #include <Arduino.h>
 
-//extern long bandLimitPositionCounts[3][2];  // extern, defined in magloop_pico.cpp
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;

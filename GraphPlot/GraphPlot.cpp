@@ -1,8 +1,6 @@
 
 #include "GraphPlot.h"
 
-extern long bandLimitPositionCounts[3][2];  // Is this in the Data object?
-
 GraphPlot::GraphPlot(Adafruit_ILI9341 & tft, DDS & dds, Data & data): tft(tft), dds(dds), data(data) {}
 
 /*****

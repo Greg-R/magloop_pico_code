@@ -265,15 +265,16 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency)  //Al Mod
     menuEncoderMovement = 0;
     if (frequencyEncoderMovement) {     //Change digit value
       frequency += (long) (frequencyEncoderMovement * defaultIncrement);
-      dds.SendFrequency(frequency);    // Send the frequency
-      SWRcurrent = swr.ReadSWRValue();
-      ShowSubmenuData(SWRcurrent, dds.currentFrequency);
+ //     dds.SendFrequency(frequency);    // Send the frequency
+ //     SWRcurrent = swr.ReadSWRValue();
+ //     ShowSubmenuData(SWRcurrent, dds.currentFrequency);
       position = stepper.ConvertFrequencyToStepperCount(frequency);
       tft.fillRect(insetMargin, halfScreen - 35, PIXELWIDTH * .80, 40, ILI9341_BLACK);
       tft.setCursor(insetMargin, halfScreen);
       tft.setTextSize(1);
       tft.setFont(&FreeSerif24pt7b);
-      tft.print(dds.currentFrequency);
+ //     tft.print(dds.currentFrequency);
+      tft.print(frequency);
       frequencyEncoderMovement = 0L;   // Reset encoder flag
     }
   }  // end while loop
@@ -710,6 +711,7 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
 
   for (i = 0; i < MAXBANDS; i++) {            // For the 3 bands...
     for (j = 0; j < 2; j++) {
+      Power(true);  // Because AutoTuneSWR turns off power.
       frequency = data.bandEdges[i][j];     // Select a band edge to calibrate
       dds.SendFrequency(frequency);    // Tell the DDS the edge frequency...
       //UpdateFrequency(frequency);      // Change main display data.  Replace with ShowSubmenuData, or not needed here???
@@ -752,6 +754,7 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
   }         // end for (i
 
   eeprom.WritePositionCounts();               // Write values to EEPROM buffer.  Must also write them to Flash!
+  eeprom.WriteCurrentBand();                  // The current band is a #define.
   eeprom.write(eeprom.bufferUnion.buffer8);   // This writes a page to Flash memory.  This includes the position counts
                                               // and preset frequencies.
   //  Now get the newly written values into the current session:
@@ -1232,8 +1235,11 @@ void DisplayManagement::CalibrationMachine()
 *****/
 void DisplayManagement::Power(bool setpower)
 {
-// Power down RF relay and SWR circuits.
-gpio_put(data.POWER_SWITCH, setpower);
+// Power down RF amplifier and SWR circuits.
+// gpio_put(data.STEPPERSLEEPNOT, setpower);  //  This control is not currently used; must be set true in main.
+gpio_put(data.OPAMPPOWER, setpower);
+gpio_put(data.RFAMPPOWER, setpower);
+gpio_put(data.RFRELAYPOWER, setpower);
 // Power down the DDS or set frequency.
 if(setpower) dds.SendFrequency(dds.currentFrequency);
 else dds.SendFrequency(0);

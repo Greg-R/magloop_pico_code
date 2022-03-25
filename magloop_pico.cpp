@@ -31,14 +31,14 @@ const std::string version = "1.01";
 const std::string releaseDate = "3-15-21";
 
 //  Instantiate the Stepper object:
-#define STEPPERDIR 9
-#define STEPPERPUL 12
+//#define STEPPERDIR 9
+//#define STEPPERPUL 12
 
 //  Interface for the DDS object.
-#define DDS_RST   3
-#define DDS_DATA  2
-#define DDS_FQ_UD 1
-#define WLCK      0
+#define DDS_RST   4
+#define DDS_DATA  5
+#define DDS_FQ_UD 12
+#define WLCK      22
 
 #define PRESETSMENU 1
 #define CALIBRATEMENU 2
@@ -55,8 +55,8 @@ int whichBandOption;
 
 volatile uint8_t result;
 volatile uint32_t countEncoder;
-Rotary menuEncoder = Rotary(17, 18);   // Swap if encoder works in wrong direction.
-Rotary frequencyEncoder = Rotary(21, 22);
+Rotary menuEncoder = Rotary(20, 18);   // Swap if encoder works in wrong direction.
+Rotary frequencyEncoder = Rotary(17, 21);
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
@@ -64,7 +64,7 @@ extern int digitEncoderMovement;
 extern int quickCalFlag;
 
 void encoderCallback(uint gpio, uint32_t events) {
-if((gpio == 17) || (gpio == 18)) {
+if((gpio == 18) || (gpio == 20)) {
   result = menuEncoder.process();
   if (result != 0) {
     switch (result) {
@@ -79,7 +79,7 @@ if((gpio == 17) || (gpio == 18)) {
     }
   }
 }
-else if((gpio == 21) || (gpio == 22)) {
+else if((gpio == 17) || (gpio == 21)) {
 result = frequencyEncoder.process();
   if (result != 0) {
     switch (result) {
@@ -103,14 +103,32 @@ int main()
   stdio_init_all();
 
   // Initialize stepper and limit switch GPIOs:
-  gpio_set_function( 9, GPIO_FUNC_SIO);
-  gpio_set_function(10, GPIO_FUNC_SIO);
-  gpio_set_function(11, GPIO_FUNC_SIO);
-  gpio_set_function(12, GPIO_FUNC_SIO);
-  gpio_set_dir( 9, GPIO_OUT);  // Stepper Dir
-  gpio_set_dir(12, GPIO_OUT);  // Stepper Step
+  
+  gpio_set_function( 0, GPIO_FUNC_SIO);  // Stepper Step
+  gpio_set_function( 1, GPIO_FUNC_SIO);  // Stepper Dir
+
+  gpio_set_function( 2, GPIO_FUNC_SIO);  // RF Amp Power
+  gpio_set_function( 3, GPIO_FUNC_SIO);  // Op Amp Power
+  gpio_set_function( 9, GPIO_FUNC_SIO);  // Stepper Sleep Not
+
+  gpio_set_function(10, GPIO_FUNC_SIO);  // Limit switch
+  gpio_set_function(11, GPIO_FUNC_SIO);  // Limit switch
+  gpio_set_function(19, GPIO_FUNC_SIO);
+  
+  gpio_set_dir( 0, GPIO_OUT);  // Stepper Step
+  gpio_set_dir( 1, GPIO_OUT);  // Stepper Dir
+
+gpio_set_dir( 2, GPIO_OUT);  // RF Amp Power
+gpio_put(2, false);
+gpio_set_dir( 3, GPIO_OUT);  // Op Amp Power
+gpio_put(3, false);
+gpio_set_dir( 9, GPIO_OUT);  // Stepper Sleep Not
+gpio_put(9, false);
+
   gpio_set_dir(10, GPIO_IN);  // Limit switch
   gpio_set_dir(11, GPIO_IN);  // Limit switch
+  gpio_set_dir(19, GPIO_OUT);  // RF Relay
+  gpio_put(19, false);
   //  The limit switch inputs need pull-ups:
   gpio_pull_up(10);
   gpio_pull_up(11);
@@ -121,9 +139,9 @@ int main()
 
   // Initialize power switch GPIO, and then set to ON.
   // Subsequent power control will be done with the Power method in the DisplayManagement class.
-  gpio_set_function(data.POWER_SWITCH, GPIO_FUNC_SIO);
-  gpio_set_dir(data.POWER_SWITCH, GPIO_OUT);
-  gpio_put(data.POWER_SWITCH, true);
+  gpio_set_function(data.STEPPERSLEEPNOT, GPIO_FUNC_SIO);
+  gpio_set_dir(data.STEPPERSLEEPNOT, GPIO_OUT);
+  gpio_put(data.STEPPERSLEEPNOT, true);  // Stepper sleep control not currently used.
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -146,7 +164,7 @@ int main()
   data.computeSlopes();
   
   //  Instantiate the Stepper Manager:
-  StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, STEPPERPUL, STEPPERDIR);
+  StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
 
   //  Next instantiate the DDS.
   DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
@@ -156,6 +174,10 @@ int main()
 SWR swr = SWR();
 
 DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
+
+// Power on circuits.
+display.Power(true);
+
 // Show "Splash" screen for 5 seconds.
 display.Splash(version, releaseDate);
 busy_wait_ms(5000);
@@ -167,11 +189,11 @@ frequencyEncoder.begin(true, false);
 // Encoder interrupts:
 uint32_t events = 0x0000000C;  // Rising and falling edges.
 countEncoder = 0;
-gpio_set_irq_enabled_with_callback(18, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(17, events, 1, &encoderCallback);
+gpio_set_irq_enabled_with_callback(18, events, 1, &encoderCallback);
+gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
 gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
-gpio_set_irq_enabled_with_callback(22, events, 1, &encoderCallback);
-gpio_set_irq_enabled_with_callback( 6, events, 1, &encoderCallback);
+//gpio_set_irq_enabled_with_callback( 6, events, 1, &encoderCallback);
 
 // The default band is read from Flash.
 currentBand = eeprom.ReadCurrentBand();
@@ -194,8 +216,9 @@ currentBand = eeprom.ReadCurrentBand();
   display.updateMessageTop("                Resetting to Zero");
   stepper.ResetStepperToZero();
 
-  //  Now measure the ADC (SWR bridge) offsets before the DDS is active.
+  //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
   //  Note that this should be done as late as possible for circuits to stabilize.
+  dds.SendFrequency(0);
   swr.ReadADCoffsets();
   
   dds.SendFrequency(currentFrequency);    // Set the DDS

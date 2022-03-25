@@ -29,6 +29,7 @@ void SWR::ReadADCoffsets(){
   busy_wait_ms(1000);
   adc_select_input(1);
   forward_offset = adc_read();
+  return;
 }
 
 

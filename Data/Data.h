@@ -55,7 +55,10 @@ float countPerHertz[3];
 float hertzPerStepperUnitVVC[3];  // Voltage Variable Cap
 int currentBand;
 
-const int POWER_SWITCH = 28;
+const int STEPPERSLEEPNOT = 9;
+const int OPAMPPOWER = 3;
+const int RFAMPPOWER = 2;
+const int RFRELAYPOWER = 19;
 
 Data();
 

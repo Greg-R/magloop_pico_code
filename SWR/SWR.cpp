@@ -16,19 +16,19 @@ reverse_offset = 0;
 
 /*
 Read and store the ADC offset values.  This must be done with the DDS off.
-
+Note that the third ADC input is grounded on the board; this is used to
+compensate for inherent ADC input offset.
 */
 void SWR::ReadADCoffsets(){
-  adc_select_input(0);
-  adc_read();
-  adc_select_input(1);
-  adc_read();
+  busy_wait_ms(1000);
+  adc_select_input(2);
+  ground_offset = adc_read();  // Read the shorted input.
   busy_wait_ms(1000);
   adc_select_input(0);
-  reverse_offset = adc_read();
+  reverse_offset = adc_read() - ground_offset; // Subtract the ground offset.
   busy_wait_ms(1000);
   adc_select_input(1);
-  forward_offset = adc_read();
+  forward_offset = adc_read() - ground_offset;
   return;
 }
 
@@ -58,10 +58,10 @@ float SWR::ReadSWRValue()
   for (i = 0; i < MAXPOINTSPERSAMPLE; i++) {             // Take multiple samples at each frequency
     busy_wait_ms(20);
     adc_select_input(1);
-    sum[0] += (float) adc_read(); // - (float) forward_offset;  // Read forward voltage.
+    sum[0] += (float) (adc_read() - ground_offset); // - (float) forward_offset;  // Read forward voltage, subtract ground offset.
     busy_wait_ms(20);
     adc_select_input(0);
-    sum[1] += (float) adc_read(); // - (float) reverse_offset;  //  Read reverse voltage.
+    sum[1] += (float) (adc_read() - ground_offset); // - (float) reverse_offset;  // Read reverse voltage, subtract ground offset.
   }
   forward_voltage = sum[0] / (float) MAXPOINTSPERSAMPLE - (float) forward_offset;
   reverse_voltage = sum[1] / (float) MAXPOINTSPERSAMPLE - (float) reverse_offset;

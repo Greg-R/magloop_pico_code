@@ -8,7 +8,7 @@ class SWR {
 public:
 
 const int MAXPOINTSPERSAMPLE = 2;
-int forward_offset, reverse_offset;
+int forward_offset, reverse_offset, ground_offset;
 float forward_voltage, reverse_voltage;
 
 SWR();

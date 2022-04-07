@@ -56,7 +56,7 @@ int whichBandOption;
 volatile uint8_t result;
 volatile uint32_t countEncoder;
 Rotary menuEncoder = Rotary(20, 18);   // Swap if encoder works in wrong direction.
-Rotary frequencyEncoder = Rotary(17, 21);
+Rotary frequencyEncoder = Rotary(21, 17);
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;

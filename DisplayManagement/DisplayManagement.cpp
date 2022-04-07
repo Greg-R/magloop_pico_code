@@ -722,7 +722,7 @@ void DisplayManagement::DoFirstCalibrate()  //Al modified 9-14-19
 
         position = stepper.currentPosition();
         while (swr.ReadSWRValue() > 5) {     //Move stepper in CW direction in larger steps for SWR>5
-          position = position + 40;  // Better to always get this from StepperManagement???
+          position = position + 20;  // Reduced from 40 due to butterfly capacitor.
           ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
           stepper.MoveStepperToPositionCorrected(position);
           if(DetectMaxSwitch()) return;
@@ -1031,8 +1031,8 @@ float DisplayManagement::AutoTuneSWR() {
       //stepper.MoveStepperToPositionCorrected(SWRMinPosition);  // Redundant???
     }
     if (minSWR > 3 and whichBandOption == 0) {   //Fast step for 40M band above SWR = 3
-      position = position + 10;
-      i = i + 10;  // Skip forward by 10.
+      position = position + 5;  // This was reduced from 10 due to butterfly capacitor.
+      i = i + 5;  // Skip forward by 10.
     }
     else
     {
@@ -1235,8 +1235,10 @@ void DisplayManagement::CalibrationMachine()
 *****/
 void DisplayManagement::Power(bool setpower)
 {
+// Don't power down stepper if stepper position is 0.  The zero stop switch can move the rotor if the stepper turns off.
+if(stepper.currentPosition() != 0)
+gpio_put(data.STEPPERSLEEPNOT, setpower);  //  This control is not currently used; must be set true in main.
 // Power down RF amplifier and SWR circuits.
-// gpio_put(data.STEPPERSLEEPNOT, setpower);  //  This control is not currently used; must be set true in main.
 gpio_put(data.OPAMPPOWER, setpower);
 gpio_put(data.RFAMPPOWER, setpower);
 gpio_put(data.RFRELAYPOWER, setpower);

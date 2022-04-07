@@ -24,7 +24,7 @@ moveTo(position);
 
 while(distanceToGo() != 0) {
     run();
-  if(gpio_get(MAXSWITCH) == 0) {
+  if((gpio_get(MAXSWITCH) == 0) or (gpio_get(ZEROSWITCH) == 0)) {  // Protect limit switches.
   stop();  // Properly decelerate and stop the stepper.
   runToPosition();
   break;
@@ -135,7 +135,7 @@ runToPosition();
 moveTo(-100000);
 while(distanceToGo() != 0) {
     run();
-  if(gpio_get(ZEROSWITCH) == 0) {
+  if((gpio_get(MAXSWITCH) == 0) or (gpio_get(ZEROSWITCH) == 0)) {  // Detect zero switch, protect max switch.
   stop();  // Properly decelerate and stop the stepper.
   runToPosition();
   break;

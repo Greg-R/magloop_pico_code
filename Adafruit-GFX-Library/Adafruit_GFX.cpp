@@ -1,5 +1,8 @@
 /*
 Modified to work with the Raspberry Pi Pico.
+This is intended to be used with the Raspberry Pi Pico SDK.
+It will not work with the Arduino IDE.
+
 This is the core graphics library for all our displays, providing a common
 set of graphics primitives (points, lines, circles, etc.).  It needs to be
 paired with a hardware-specific library for each display device we carry

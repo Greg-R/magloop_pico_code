@@ -1,3 +1,6 @@
 build
 core
+release
+pico_sdk_import.cmake
+archive
 

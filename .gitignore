@@ -1,7 +1,7 @@
 build
 core
 release
-pico_sdk_import.cmake
+./pico_sdk_import.cmake
 archive
-.vscode
+./.vscode
 

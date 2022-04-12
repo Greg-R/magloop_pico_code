@@ -1,3 +1,0 @@
-#!/bin/bash
-
-openocd -f interface/raspberrypi-swd.cfg -f target/rp2040.cfg -c "program build/magloop_pico.elf verify reset exit"

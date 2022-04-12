@@ -18,9 +18,4 @@ The firmware was developed using Visual Studio Code and the Raspberry Pi Pico SD
 It is not compatible with the Arduino IDE, although a future fork to Arduino may be possible in the
 future.
 
-The project will add Gerber files for PCB manufacture.  Also Freecad files for 3D
-printing of the case and antenna components will be added.
-
-Documentation is a work-in-progress.  Also, soon!
-
 Copyright (C) 2022  Gregory Raven

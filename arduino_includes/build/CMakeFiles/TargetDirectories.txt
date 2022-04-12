@@ -1,3 +1,0 @@
-/home/pi/projects_pico/magloop_pico/arduino_includes/build/CMakeFiles/rebuild_cache.dir
-/home/pi/projects_pico/magloop_pico/arduino_includes/build/CMakeFiles/print.dir
-/home/pi/projects_pico/magloop_pico/arduino_includes/build/CMakeFiles/edit_cache.dir

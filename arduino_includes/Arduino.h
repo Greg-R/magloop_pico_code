@@ -28,6 +28,8 @@
 
 #include <stdint.h>
 
+//#include "pico/stdlib.h"
+
 //#include <avr/pgmspace.h>
 //#include <avr/io.h>
 //#include <avr/interrupt.h>
@@ -92,8 +94,8 @@ void yield(void);
 #undef abs
 #endif
 
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
+//#define min(a,b) ((a)<(b)?(a):(b))
+//#define max(a,b) ((a)>(b)?(a):(b))
 #define abs(x) ((x)>0?(x):-(x))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
@@ -142,7 +144,7 @@ void analogReference(uint8_t mode);
 void analogWrite(uint8_t pin, int val);
 
 unsigned long millis(void);
-unsigned long micros(void);
+////unsigned long time_us_32(void);
 void delay(unsigned long ms);
 void delayMicroseconds(unsigned int us);
 //unsigned long pulseIn(uint8_t pin, uint8_t state, unsigned long timeout);

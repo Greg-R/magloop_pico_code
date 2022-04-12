@@ -37,6 +37,7 @@ Modified to work with the Raspberry Pi Pico.
 //#ifndef _ADAFRUIT_ILI9341H_
 //#define _ADAFRUIT_ILI9341H_
 
+#pragma once
 #include "Adafruit_GFX.h"
 #include "Arduino.h"
 #include "Print.h"
@@ -146,4 +147,3 @@ public:
   uint8_t readcommand8(uint8_t reg, uint8_t index = 0);
 };
 
-//#endif // _ADAFRUIT_ILI9341H_

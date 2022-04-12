@@ -1,0 +1,46 @@
+#pragma once
+#include <stdint.h>
+#include "pico/stdlib.h"
+#include "AccelStepper.h"
+#include "SWR.h"
+#include "Adafruit_ILI9341.h"
+#include "StepperManagement.h"
+
+#define FASTMOVESPEED               1000
+//#define NORMALMOVESPEED             500  // Was 100, changed to speed up AutoTune.
+#define MAXNUMREADINGS              500
+const int PIXELHEIGHT        =         240;
+#define ACCURACYBUTTON         6
+
+class DisplayManagement;
+
+class AutoTune {
+
+public:
+
+SWR & swr;
+Adafruit_ILI9341 & tft;
+StepperManagement & steppermanage;
+DisplayManagement & display;
+int stepperDirectionOld;
+uint32_t currPosition;
+uint32_t stepperDistanceOld;
+int iMax;
+float tempSWR[500];
+int tempCurrentPosition[500];
+long  SWRMinPosition;
+float minSWRAuto;
+float minSWR;
+int whichBandOption;
+long  SWRFinalPosition;
+
+
+AutoTune(SWR & swr, Adafruit_ILI9341 & tft, StepperManagement & steppermanage, DisplayManagement & display);
+
+float AutoTuneSWR();
+
+float AutoTuneSWRQuick();
+
+//void MoveStepperToPositionCorrected(long currentPosition);
+
+};

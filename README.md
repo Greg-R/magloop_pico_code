@@ -1,3 +1,8 @@
 # magloop_pico
 
-A major hack of the Adafruit_ILI9341 library to work with the Raspberry Pi Pico.
+This is a derivative of the Magnetic Loop Controller based on the STM32 "Blue Pill" microcontroller.
+This derivative uses the Raspberry Pi Pico microcontroller.
+
+The firmware was developed using Visual Studio Code and the Raspberry Pi Pico SDK.
+It is not compatible with the Arduino IDE, although a future fork to Arduino may be possible in the
+future.

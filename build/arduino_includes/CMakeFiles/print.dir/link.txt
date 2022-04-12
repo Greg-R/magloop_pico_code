@@ -1,2 +1,0 @@
-/bin/arm-none-eabi-ar qc libprint.a CMakeFiles/print.dir/Print.cpp.obj
-/bin/arm-none-eabi-ranlib libprint.a

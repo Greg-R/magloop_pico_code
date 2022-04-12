@@ -1,6 +1,7 @@
-// Modified for Raspberry Pi Pico.
-// This is the 'classic' fixed-space bitmap font for Adafruit_GFX since 1.0.
-// See gfxfont.h for newer custom bitmap font info.
+/* Modified for Raspberry Pi Pico.
+   This is the 'classic' fixed-space bitmap font for Adafruit_GFX since 1.0.
+   See gfxfont.h for newer custom bitmap font info.
+*/
 
 // Standard ASCII 5x7 font
 

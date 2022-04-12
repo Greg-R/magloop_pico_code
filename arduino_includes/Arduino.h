@@ -1,5 +1,7 @@
-/*
-  Modified for use with Raspberry Pi Pico.
+/*!
+This derivative is modified to work with the Raspberry Pi Pico SDK.
+This will not work with the Arduino IDE.
+Copyright (c) 2022 Gregory Raven.  All rights reserved.
   Arduino.h - Main include file for the Arduino SDK
   Copyright (c) 2005-2013 Arduino Team.  All right reserved.
 

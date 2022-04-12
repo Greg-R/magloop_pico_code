@@ -1,5 +1,7 @@
 /*!
-Modified to work with the Raspberry Pi Pico.
+This derivative is modified to work with the Raspberry Pi Pico SDK.
+This will not work with the Arduino IDE.
+Copyright (c) 2022 Gregory Raven.  All rights reserved.
  * @file Adafruit_ILI9341.cpp
  *
  * @mainpage Adafruit ILI9341 TFT Displays

@@ -1,6 +1,7 @@
-// Modified to work with the Raspberry Pi Pico.
-// This is intended to be used with the Raspberry Pi Pico SDK.
-// It will not work with the Arduino IDE.
+/* Modified to work with the Raspberry Pi Pico.
+   This is intended to be used with the Raspberry Pi Pico SDK.
+   It will not work with the Arduino IDE.
+*/
 
 #ifndef _ADAFRUIT_GFX_H
 #define _ADAFRUIT_GFX_H

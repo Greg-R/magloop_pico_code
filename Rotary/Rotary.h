@@ -1,5 +1,16 @@
-/*
- * Rotary encoder library for Arduino.
+/* A "proof of concept" project to replace the STM32F103 "Blue Pill"
+   which is used in the "Magnetic Loop Controller" described in the book
+   "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
+   Albert Peter, AC8GY" with the Raspberry Pi Pico.
+   Copyright (C) 2022  Gregory Raven
+      This is a derivative for the Raspberry Pi Pico SDK.
+   It will not work with the Arduino IDE.
+
+ * Rotary encoder handler for arduino.
+ *
+ * Copyright 2011 Ben Buxton. Licenced under the GNU GPL Version 3.
+ * Contact: bb@cactii.net
+ *
  */
 
 #ifndef Rotary_h
@@ -18,8 +29,6 @@
 #define DIR_CW 0x10
 // Counter-clockwise step.
 #define DIR_CCW 0x20
-
-//gpio_irq_callback_t encoderCallback1(uint gpio, uint32_t events);
 
 class Rotary
 {

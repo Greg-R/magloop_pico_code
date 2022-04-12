@@ -1,4 +1,12 @@
-/* Rotary encoder handler for arduino.
+/* A "proof of concept" project to replace the STM32F103 "Blue Pill"
+   which is used in the "Magnetic Loop Controller" described in the book
+   "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
+   Albert Peter, AC8GY" with the Raspberry Pi Pico.
+   Copyright (C) 2022  Gregory Raven
+   This is a derivative for the Raspberry Pi Pico SDK.
+   It will not work with the Arduino IDE.
+
+ * Rotary encoder handler for arduino.
  *
  * Copyright 2011 Ben Buxton. Licenced under the GNU GPL Version 3.
  * Contact: bb@cactii.net

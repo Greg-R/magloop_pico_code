@@ -50,22 +50,26 @@ void DisplayManagement::Splash(std::string version, std::string releaseDate)
   tft.fillScreen(ILI9341_BLACK);
   tft.setTextSize(2);
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_BLACK);
-  tft.setCursor(10, 20);
-  tft.print("Microcontroller Projects");
-  tft.setCursor(40, 45);
-  tft.print("for Amateur Radio");
+  tft.setCursor(22, 20);
+  tft.print("Loop Antenna Controller");
+  tft.setCursor(37, 45);
+  tft.print("by Gregory Raven KF5N");
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
-  tft.setCursor(PIXELWIDTH / 2 - 30, PIXELHEIGHT / 4 + 20);
-  tft.print("by");
-  tft.setCursor(65, PIXELHEIGHT - 100);
+  tft.setCursor(25, 73);
+  tft.print("based on a project from");
+  tft.setCursor(15, 93);
+  tft.print("Microcontroller Projects");
+  tft.setCursor(30, 110);
+  tft.print("for Amateur Radio by");
+  tft.setCursor(65, 142);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.println("Al Peter  AC8GY");
-  tft.setCursor(45, PIXELHEIGHT - 70);
+  tft.setCursor(45, 168);
   tft.print("Jack Purdum  W8TEE");
-  tft.setCursor(65, PIXELHEIGHT - 40);
+  tft.setCursor(75, 200);
   tft.print("Version ");
   tft.print(version.c_str());
-  tft.setCursor(65, PIXELHEIGHT - 20);
+  tft.setCursor(35, 220);
   tft.print("Release Date ");
   tft.print(releaseDate.c_str());
   tft.setTextSize(2);
@@ -671,14 +675,14 @@ void DisplayManagement::updateMessageBottom(std::string messageToPrint)
 
 /*****
   Purpose: To set the band end point counts
-           Uses initial Band Edge counts for rapid re-calibrate
+           Uses initial Band Edge counts for rapid re-calibrate.
   Argument list:
     void
 
   Return value:
     void
 *****/
-void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19
+void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19.  Greg modified May 2022.
 {
   int bandBeingCalculated;
   int i, j, whichLine;
@@ -707,6 +711,8 @@ void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19
     {
       frequency = data.bandEdges[i][j];                    // Select a band edge
       position = data.bandLimitPositionCounts[i][j] - 200; // Set Band limit count -200 counts to approach band limit from CW direction
+      Power(true);
+      stepper.MoveStepperToPositionCorrected(position);    // Move to the estimated position below the target.
       dds.SendFrequency(frequency);                        // Tell the DDS the edge frequency...
       UpdateFrequency(frequency);                          // Change main display data
 
@@ -895,11 +901,11 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
   whichLine = 0;                                  // X coord for mins
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Table data
   updateMessageBottom("            Single Band Calibrate");
-  Power(true);
   for (j = 0; j < 2; j++)
   {                                                 // For each band edge...
     frequency = data.bandEdges[whichBandOption][j]; // Select a band edge
     position = data.bandLimitPositionCounts[whichBandOption][j] - 50;
+    Power(true);
     stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
     dds.SendFrequency(frequency);                     // Tell the DDS the edge frequency...
     while (true)
@@ -1362,13 +1368,13 @@ void DisplayManagement::Power(bool setpower)
   // Don't power down stepper if stepper position is 0.  The zero stop switch can move the rotor if the stepper turns off.
   if (stepper.currentPosition() != 0)
     gpio_put(data.STEPPERSLEEPNOT, setpower); //  This control is not currently used; must be set true in main.
+  // Power down the DDS or set frequency.
+  if (setpower)
+    dds.SendFrequency(dds.currentFrequency);  // Redundant?
+  else
+    dds.SendFrequency(0);
   // Power down RF amplifier and SWR circuits.
   gpio_put(data.OPAMPPOWER, setpower);
   gpio_put(data.RFAMPPOWER, setpower);
   gpio_put(data.RFRELAYPOWER, setpower);
-  // Power down the DDS or set frequency.
-  if (setpower)
-    dds.SendFrequency(dds.currentFrequency);
-  else
-    dds.SendFrequency(0);
 }

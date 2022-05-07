@@ -45,8 +45,9 @@
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
-const std::string version = "1.01";
-const std::string releaseDate = "3-15-21";
+
+const std::string version = "1.00";
+const std::string releaseDate = "05-08-22";
 
 //  Interface for the DDS object.
 #define DDS_RST 4

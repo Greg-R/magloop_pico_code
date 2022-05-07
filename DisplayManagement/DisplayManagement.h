@@ -34,12 +34,10 @@
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
-//#include "Calibrate.h"
 #include "DDS.h"
 #include "SWR.h"
 #include "AutoTune.h"
 #include "StepperManagement.h"
-//#include "Buttons.h"
 #include "EEPROM.h"
 #include "GraphPlot.h"
 #include "Data.h"
@@ -51,7 +49,6 @@
 
 #define PRESETSPERBAND 6
 #define PIXELWIDTH 320
-// extern const int autotunebutton;
 #define INCREMENTPAD 22 // Used to display increment cursor
 #define MENUBUTTON3 4   //  Full Calibrate using band edges for faster calibration.
 #define MENUBUTTON1 8   // Band cal

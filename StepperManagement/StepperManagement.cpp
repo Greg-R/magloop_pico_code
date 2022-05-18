@@ -63,93 +63,6 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t position)
   }
 }
 
-/*  Original function.  Did not understand why this function was required.???
-// This function was in the Encoders file???
-void StepperManagement::MoveStepperToPositionCorrected(uint32_t position) {
-  int stepperDirection;
-  long stepperDistance;
-  setMaxSpeed(500);
-  setAcceleration(200);
-  setSpeed(500);
-  while (1)
-  {
-    stepperDistanceOld = stepperDistance;
-    moveTo(position);
-    runSpeed();
-    //  Check for maximum limit switch.  Bail out if switch goes low!
-    if (gpio_get(MAXSWITCH) == 0) {
-
-      break;
-    }
-    stepperDistance = distanceToGo();
-    if (distanceToGo() == 0)
-    {
-      if (stepperDistanceOld >= 0)
-      {
-        stepperDirection = 1;
-      }
-      else
-      {
-        if (stepperDistanceOld < 0)
-        {
-          stepperDirection = -1;
-        }
-      }
-      break;
-    }
-  }
-  if (stepperDirection != stepperDirectionOld)
-  {
-  //  stepper.setCurrentPosition(currentPosition - 1);
-              setCurrentPosition(position - 1);
-  }
-  stepperDirectionOld = stepperDirection;
-}
-*/
-
-/*
-  Purpose: Resets stepper motor to 0 position
-
-  Parameter list:
-    void
-  Return value:
-    void
-
-  CAUTION:
-
-void StepperManagement::ResetStepperToZero()
-{
-  //updateMessage("Resetting to Zero");
-  setCurrentPosition(0);
-  setMaxSpeed(500);
-  setAcceleration(2000);
-  setSpeed(500);  // Move towards the low limit switch using constant-speed.
-  position = -10000;  // Assume the default position is zero.
-  // This loop moves the stepper in a negative direction until
-  // the zero switch closes.
-  while (gpio_get(ZEROSWITCH) != 0) {      // move to zero position
-  //  moveTo(position);
-  //  run();  // This uses acceleration-deceleration.
-    runSpeed();  // This uses constant-speed.
-  //  position--;  // Rotate towards zero stop switch.
-  }
-  // Reset to zero:
-  setCurrentPosition(0);
-  setMaxSpeed(500);  // Note: setCurrentPosition sets max speed to 0.
-  // Now bump the stepper off the zero limit switch enough to open the switch.
-  position = 0;
-  //MoveStepperToPositionCorrected(position); //Al 4-20-20
-  while (true) {
-    position++;    // Rotate away from zero stop switch.
-    move(position);
-    run();
-    if (gpio_get(ZEROSWITCH) == 1)  // When the zero stop switch opens, break from loop.
-      break;
-  }
-  // Bump it up just a little more for margin.
-  runToNewPosition(position + 20);
-}
-*/
 
 void StepperManagement::ResetStepperToZero()
 {
@@ -176,11 +89,15 @@ void StepperManagement::ResetStepperToZero()
       break;
     }
   }
-  // Bump off the switch:
+//  Set the zero calibration step.
   setCurrentPosition(0);
   moveTo(150);
   runToPosition();
-  setCurrentPosition(0);
+  setCurrentPosition(0);  //  The stepper is now calibrated!
+  // Bump off the switch.  Need to sufficiently clear the switch, as the
+  // stepper will be powered off, and the force of the switch could move the motor.
+  moveTo(150);
+  runToPosition();
 }
 
 /*****

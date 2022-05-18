@@ -251,12 +251,11 @@ int main()
   {
     int i, submenuIndex;
     // Turn on power.
-    display.Power(true);
+    // display.Power(true);
     //  Refresh display:
     display.ShowMainDisplay(display.menuIndex);
     display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    // Turn off power.
-    display.Power(false);
+    display.Power(false);  //  Power down circuits.
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)

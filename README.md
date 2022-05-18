@@ -1,4 +1,4 @@
-# magloop_pico
+# C++ Code for the Raspberry Pi Pico Magnetic Loop Antenna Controller
 
 A "proof of concept" project to replace the STM32F103 "Blue Pill"
 which is used in the "Controller for Double-Double Mag Loop" described in the book

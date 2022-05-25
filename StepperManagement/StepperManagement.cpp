@@ -99,51 +99,6 @@ void StepperManagement::ResetStepperToZero()
   setCurrentPosition(0);  //  The stepper is now calibrated!
 }
 
-/*****
-  Purpose: To move the capacitor to the approximate location via the stepper motor
-
-  Parameter list:
-  int whichBandOption           the band selected (probably don't need since currentFrequency tells us
-
-  Return value:
-    void
-
-  CAUTION:
-
-  int hertzPerStepperUnitVVC[] = {909,              // 40M 909Hz move per stepper revolution with VVC
-                                761,                // 30M
-                                614                 // 20M
-                          };
-
-
-void StepperManagement::DoFastStepperMove(uint32_t whichBandOption)
-{
-  int yAxisPixelPerUnit, totalPixels, yDotIncrement;
-  int startOffset;
-  float pixelsPerTenth, swr;
-  //stepper.setMaxSpeed(FASTMOVESPEED);       // Get ready for a fast move
-            setMaxSpeed(FASTMOVESPEED);
-  //stepper.setAcceleration(1100);
-  setAcceleration(1100);
-  startOffset = 0;
-  moveToStepperIndex = bandLimitPositionCounts[whichBandOption][0];
-
-  while (1) {
-    //stepper.moveTo(moveToStepperIndex);
-              moveTo(moveToStepperIndex);
-    //stepper.run();
-              run();
-    //if (stepper.distanceToGo() == 0) {c
-      if (        distanceToGo() == 0) {
-      break;
-    }
-  }
-  totalPixels = YAXISEND - YAXISSTART;
-  pixelsPerTenth = totalPixels / 50.0;      // HIghest SWR is 5, so 50 tenths.
-  //stepper.setMaxSpeed(NORMALMOVESPEED);
-            setMaxSpeed(NORMALMOVESPEED);
-}
-*/
 
 /*****
   Purpose: Allow the user to change frequency and have the stepper automatically follow frequency change

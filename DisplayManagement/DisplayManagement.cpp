@@ -1121,7 +1121,7 @@ float DisplayManagement::AutoTuneSWR()
   long currPositionTemp;
   SWRMinPosition = 4000;
   position = stepper.currentPosition(); // Retrieve the entry position of the stepper.
-  updateMessageTop("                   Auto Tuning");
+  updateMessageTop("                    Auto Tuning");
   // Activate relay, SWR circuits, and DDS.
   //  Power(true);
   for (int i = 0; i < MAXNUMREADINGS; i++)
@@ -1351,7 +1351,7 @@ void DisplayManagement::CalibrationMachine()
 }
 
 /*****
-  Purpose: This function sets power on or off, including the DDS.
+  Purpose: This function sets power on or off to all circuits, including the DDS.
 
   Parameter list:
     bool setpower
@@ -1364,9 +1364,7 @@ void DisplayManagement::CalibrationMachine()
 *****/
 void DisplayManagement::Power(bool setpower)
 {
-  // Don't power down stepper if stepper position is 0.  The zero stop switch can move the rotor if the stepper turns off.
-  if (stepper.currentPosition() != 0)
-    gpio_put(data.STEPPERSLEEPNOT, setpower); //  This control is not currently used; must be set true in main.
+  gpio_put(data.STEPPERSLEEPNOT, setpower); //  Deactivating the stepper driver is important to reduce RFI.
   // Power down the DDS or set frequency.
   if (setpower)
     dds.SendFrequency(dds.currentFrequency);  // Redundant?
@@ -1376,4 +1374,33 @@ void DisplayManagement::Power(bool setpower)
   gpio_put(data.OPAMPPOWER, setpower);
   gpio_put(data.RFAMPPOWER, setpower);
   gpio_put(data.RFRELAYPOWER, setpower);
+  busy_wait_ms(500);  //  Wait for relay to switch.
+}
+
+
+/*****
+  Purpose: This function sets power on or off to only SWR measuring circuits, including the DDS.
+           It does not affect the stepper driver sleep.
+
+  Parameter list:
+    bool setpower
+
+  Return value:
+    void
+
+  CAUTION:
+
+*****/
+void DisplayManagement::PowerSWR(bool setpower)
+{
+  // Power down the DDS or set frequency.
+  if (setpower)
+    dds.SendFrequency(dds.currentFrequency);  // Redundant?
+  else
+    dds.SendFrequency(0);
+  // Power down RF amplifier and SWR circuits.
+  gpio_put(data.OPAMPPOWER, setpower);
+  gpio_put(data.RFAMPPOWER, setpower);
+  gpio_put(data.RFRELAYPOWER, setpower);
+  busy_wait_ms(500);  //  Wait for relay to switch.
 }

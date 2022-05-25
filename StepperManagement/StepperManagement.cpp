@@ -79,25 +79,24 @@ void StepperManagement::ResetStepperToZero()
   }
   // Move in negative direction until ZEROSWITCH state changes.
   moveTo(-100000);
-  while (distanceToGo() != 0)
+  while (distanceToGo() != 0) 
   {
     run();
-    if ((gpio_get(MAXSWITCH) == 0) or (gpio_get(ZEROSWITCH) == 0))
-    {         // Detect zero switch, protect max switch.
+    // Detect zero switch, protect max switch.  Note that switch closure pulls the GPI low.
+    if ((gpio_get(MAXSWITCH) == false) or (gpio_get(ZEROSWITCH) == false))
+    {         
       stop(); // Properly decelerate and stop the stepper.
       runToPosition();
       break;
     }
   }
-//  Set the zero calibration step.
+  //  If MAXSWITCH switch closed, bail out!
+  if (gpio_get(MAXSWITCH) == false) return;
+  //  Set the zero calibration step.
   setCurrentPosition(0);
-  moveTo(150);
+  moveTo(320);  //  Move the stepper off the zero switch.  The number of steps required is dependent on the mechanics.
   runToPosition();
   setCurrentPosition(0);  //  The stepper is now calibrated!
-  // Bump off the switch.  Need to sufficiently clear the switch, as the
-  // stepper will be powered off, and the force of the switch could move the motor.
-  moveTo(150);
-  runToPosition();
 }
 
 /*****

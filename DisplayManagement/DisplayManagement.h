@@ -36,7 +36,6 @@
 #include "Arduino.h"
 #include "DDS.h"
 #include "SWR.h"
-#include "AutoTune.h"
 #include "StepperManagement.h"
 #include "EEPROM.h"
 #include "GraphPlot.h"
@@ -55,11 +54,8 @@
 #define MAXMENUES 3     // The menu selections are: Freq, Presets, 1st Cal
 
 #define MAXBANDS 3
-#define MAXSWITCH 10
 #define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
-// extern const int enterbutton;
-// extern const int exitbutton;
 #define FREQMENU 0 // Menuing indexes
 #define MAXNUMREADINGS 500
 #define PIXELHEIGHT 240
@@ -107,9 +103,9 @@ public:
     State state;
     // Instantiate 3 pushbuttons.  This Class does de-bouncing.
     Button enterbutton = Button(6);
-    Button exitbutton = Button(7);
-    Button autotunebutton = Button(8);
-
+    Button autotunebutton = Button(7);
+    Button exitbutton = Button(8);
+    
     DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROM &eeprom, Data &data);
 
     void Splash(std::string version, std::string releaseDate);
@@ -140,21 +136,12 @@ public:
 
     void updateMessageBottom(std::string messageToPrint);
 
-    // The following 4 methods were consolidated from "Calibrate".
+    // The following 3 methods were consolidated from "Calibrate".
     void DoNewCalibrate2();
 
     void DoFirstCalibrate();
 
-    // void CalSWR();
-
     void DoSingleBandCalibrate(int whichBandOption);
-
-    // The following 3 methods were consolidated from "Buttons":
-    // void executeButton1();
-
-    // void executeButton3();
-
-    // void quickCalISR();
 
     // The following 3 methods were consolidated from "Presets":
     void ProcessPresets();
@@ -167,8 +154,6 @@ public:
 
     float AutoTuneSWR();
 
-    // float AutoTuneSWRQuick();
-
     void ManualFrequencyControl(int whichBandOption);
 
     void ManualStepperControl();
@@ -178,4 +163,6 @@ public:
     void CalibrationMachine();
 
     void Power(bool setpower);
+
+    void PowerSWR(bool setpower);
 };

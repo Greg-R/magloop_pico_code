@@ -194,7 +194,7 @@ int main()
   // Instantiate the DisplayManagement object.  This object has many important methods.
   DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
 
-  // Power on all circuits.
+  // Power on all circuits.  This is done early to allow circuits to stabilize before calibration.
   display.Power(true);
 
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
@@ -253,9 +253,10 @@ int main()
     // Turn on power.
     // display.Power(true);
     //  Refresh display:
-    display.ShowMainDisplay(display.menuIndex);
+    display.ShowMainDisplay(display.menuIndex);  //  This function erases the entire display.
+    display.PowerSWR(true);  //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
     display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    display.Power(false);  //  Power down circuits.
+    display.Power(false);  //  Power down all circuits.  This function is used since stepper will be active at start-up.
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)

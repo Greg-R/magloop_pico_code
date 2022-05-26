@@ -49,17 +49,13 @@
 #define PRESETSPERBAND 6
 #define PIXELWIDTH 320
 #define INCREMENTPAD 22 // Used to display increment cursor
-#define MENUBUTTON3 4   //  Full Calibrate using band edges for faster calibration.
-#define MENUBUTTON1 8   // Band cal
 #define MAXMENUES 3     // The menu selections are: Freq, Presets, 1st Cal
-
 #define MAXBANDS 3
 #define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
 #define FREQMENU 0 // Menuing indexes
 #define MAXNUMREADINGS 500
 #define PIXELHEIGHT 240
-#define ACCURACYBUTTON 6
 
 //  DisplayManagement inherits from class GraphPlot.
 class DisplayManagement : public GraphPlot
@@ -84,7 +80,6 @@ public:
     int SWRFinalPosition;
     volatile int menuEncoderState;
     const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
-    // std::string band[3] = {"  40M", "  30M", "  20M"};  // Make this a global???  Move to Data object!
     int stepperDirectionOld;
     uint32_t stepperDistanceOld;
     int iMax;
@@ -101,11 +96,11 @@ public:
         state3
     }; // Used to move between states in state machines.
     State state;
-    // Instantiate 3 pushbuttons.  This Class does de-bouncing.
+    // Instantiate 3 pushbuttons.  This Class does de-bouncing.  The GPIs need to be moved to the Data object.
     Button enterbutton = Button(6);
     Button autotunebutton = Button(7);
     Button exitbutton = Button(8);
-    
+
     DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROM &eeprom, Data &data);
 
     void Splash(std::string version, std::string releaseDate);

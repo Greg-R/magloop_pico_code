@@ -3,7 +3,7 @@
    "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
    Albert Peter, AC8GY" with the Raspberry Pi Pico.
    Copyright (C) 2022  Gregory Raven
-   
+
                                                     LICENSE AGREEMENT
 
   This program source code and its associated hardware design at subject to the GNU General Public License version 2,
@@ -66,13 +66,13 @@ int whichBandOption;
 
 volatile uint8_t result;
 volatile uint32_t countEncoder;
+//  Instantiate the rotary encoder objects.
 Rotary menuEncoder = Rotary(20, 18); // Swap if encoder works in wrong direction.
 Rotary frequencyEncoder = Rotary(21, 17);
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
 extern int digitEncoderMovement;
-extern int quickCalFlag;
 
 void encoderCallback(uint gpio, uint32_t events)
 {
@@ -169,11 +169,8 @@ int main()
   tft.setRotation(3);
   tft.fillScreen(ILI9341_BLACK);
 
-  // uint32_t eeprom_data;
   //  Instantiate the EEPROM object, which is actually composed of FLASH.
   EEPROM eeprom = EEPROM(data);
-  //  Use this method one time only and then comment out!
-  // eeprom.WriteDefaultEEPROMValues();
   //  Read the position counts and presets into the EEPROM object's buffer.
   eeprom.ReadEEPROMValuesToBuffer();
   //  Overwrite the position counts and preset frequencies:
@@ -253,10 +250,10 @@ int main()
     // Turn on power.
     // display.Power(true);
     //  Refresh display:
-    display.ShowMainDisplay(display.menuIndex);  //  This function erases the entire display.
-    display.PowerSWR(true);  //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
+    display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
+    display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
     display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    display.Power(false);  //  Power down all circuits.  This function is used since stepper will be active at start-up.
+    display.Power(false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)

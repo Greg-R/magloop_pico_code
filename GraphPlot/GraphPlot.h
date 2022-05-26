@@ -3,7 +3,7 @@
    "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
    Albert Peter, AC8GY" with the Raspberry Pi Pico.
    Copyright (C) 2022  Gregory Raven
-   
+
                                                     LICENSE AGREEMENT
 
   This program source code and its associated hardware design at subject to the GNU General Public License version 2,
@@ -39,26 +39,26 @@
 
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
 
-
-class GraphPlot {
+class GraphPlot
+{
 
 public:
-const int YAXISSTART       =           55;     // For graphing purposes
-const int YAXISEND           =         170;    // Changed from original to adjust x-axis upward.
-const int XAXISSTART         =         25;
-const int XAXISEND           =         315;
-const int PIXELWIDTH         =         320;    // Display limits
-const int PIXELHEIGHT        =         240;
-const int TEXTLINESPACING    =         20;     // Pixel spacing per line with text size = 2
-   
+    const int YAXISSTART = 55; // For graphing purposes
+    const int YAXISEND = 170;  // Changed from original to adjust x-axis upward.
+    const int XAXISSTART = 25;
+    const int XAXISEND = 315;
+    const int PIXELWIDTH = 320; // Display limits
+    const int PIXELHEIGHT = 240;
+    const int TEXTLINESPACING = 20; // Pixel spacing per line with text size = 2
+
     int xIncrement, yIncrement;
     int xOld;
 
-    Adafruit_ILI9341 & tft;
-    DDS & dds;
-    Data & data;
+    Adafruit_ILI9341 &tft;
+    DDS &dds;
+    Data &data;
 
-    GraphPlot(Adafruit_ILI9341 & tft, DDS & dds, Data & data);
+    GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data);
 
     void GraphAxis(int whichBandOption);
 

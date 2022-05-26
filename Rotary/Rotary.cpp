@@ -33,18 +33,18 @@
 #define R_CW_BEGIN_M 0x4
 #define R_CCW_BEGIN_M 0x5
 const unsigned char ttable[6][4] = {
-  // R_START (00)
-  {R_START_M,            R_CW_BEGIN,     R_CCW_BEGIN,  R_START},
-  // R_CCW_BEGIN
-  {R_START_M | DIR_CCW, R_START,        R_CCW_BEGIN,  R_START},
-  // R_CW_BEGIN
-  {R_START_M | DIR_CW,  R_CW_BEGIN,     R_START,      R_START},
-  // R_START_M (11)
-  {R_START_M,            R_CCW_BEGIN_M,  R_CW_BEGIN_M, R_START},
-  // R_CW_BEGIN_M
-  {R_START_M,            R_START_M,      R_CW_BEGIN_M, R_START | DIR_CW},
-  // R_CCW_BEGIN_M
-  {R_START_M,            R_CCW_BEGIN_M,  R_START_M,    R_START | DIR_CCW},
+    // R_START (00)
+    {R_START_M, R_CW_BEGIN, R_CCW_BEGIN, R_START},
+    // R_CCW_BEGIN
+    {R_START_M | DIR_CCW, R_START, R_CCW_BEGIN, R_START},
+    // R_CW_BEGIN
+    {R_START_M | DIR_CW, R_CW_BEGIN, R_START, R_START},
+    // R_START_M (11)
+    {R_START_M, R_CCW_BEGIN_M, R_CW_BEGIN_M, R_START},
+    // R_CW_BEGIN_M
+    {R_START_M, R_START_M, R_CW_BEGIN_M, R_START | DIR_CW},
+    // R_CCW_BEGIN_M
+    {R_START_M, R_CCW_BEGIN_M, R_START_M, R_START | DIR_CCW},
 };
 #else
 // Use the full-step state table (emits a code at 00 only)
@@ -56,27 +56,28 @@ const unsigned char ttable[6][4] = {
 #define R_CCW_NEXT 0x6
 
 const unsigned char ttable[7][4] = {
-  // R_START
-  {R_START,    R_CW_BEGIN,  R_CCW_BEGIN, R_START},
-  // R_CW_FINAL
-  {R_CW_NEXT,  R_START,     R_CW_FINAL,  R_START | DIR_CW},
-  // R_CW_BEGIN
-  {R_CW_NEXT,  R_CW_BEGIN,  R_START,     R_START},
-  // R_CW_NEXT
-  {R_CW_NEXT,  R_CW_BEGIN,  R_CW_FINAL,  R_START},
-  // R_CCW_BEGIN
-  {R_CCW_NEXT, R_START,     R_CCW_BEGIN, R_START},
-  // R_CCW_FINAL
-  {R_CCW_NEXT, R_CCW_FINAL, R_START,     R_START | DIR_CCW},
-  // R_CCW_NEXT
-  {R_CCW_NEXT, R_CCW_FINAL, R_CCW_BEGIN, R_START},
+    // R_START
+    {R_START, R_CW_BEGIN, R_CCW_BEGIN, R_START},
+    // R_CW_FINAL
+    {R_CW_NEXT, R_START, R_CW_FINAL, R_START | DIR_CW},
+    // R_CW_BEGIN
+    {R_CW_NEXT, R_CW_BEGIN, R_START, R_START},
+    // R_CW_NEXT
+    {R_CW_NEXT, R_CW_BEGIN, R_CW_FINAL, R_START},
+    // R_CCW_BEGIN
+    {R_CCW_NEXT, R_START, R_CCW_BEGIN, R_START},
+    // R_CCW_FINAL
+    {R_CCW_NEXT, R_CCW_FINAL, R_START, R_START | DIR_CCW},
+    // R_CCW_NEXT
+    {R_CCW_NEXT, R_CCW_FINAL, R_CCW_BEGIN, R_START},
 };
 #endif
 
 /*
  * Constructor. Each arg is the pin number for each encoder contact.
  */
-Rotary::Rotary(char _pin1, char _pin2) {
+Rotary::Rotary(char _pin1, char _pin2)
+{
   // Assign variables.
   pin1 = _pin1;
   pin2 = _pin2;
@@ -86,16 +87,20 @@ Rotary::Rotary(char _pin1, char _pin2) {
   inverter = 0;
 }
 
-void Rotary::begin(bool internalPullup, bool flipLogicForPulldown) {
+void Rotary::begin(bool internalPullup, bool flipLogicForPulldown)
+{
 
-  if (internalPullup){
+  if (internalPullup)
+  {
     gpio_set_function(pin1, GPIO_FUNC_SIO);
     gpio_set_function(pin2, GPIO_FUNC_SIO);
     gpio_set_dir(pin1, GPIO_IN);
     gpio_set_dir(pin2, GPIO_IN);
     gpio_pull_up(pin1);
     gpio_pull_up(pin2);
-  }else{
+  }
+  else
+  {
     // Set pins to input and pull up.
     gpio_set_function(pin1, GPIO_FUNC_SIO);
     gpio_set_function(pin2, GPIO_FUNC_SIO);
@@ -105,8 +110,8 @@ void Rotary::begin(bool internalPullup, bool flipLogicForPulldown) {
   inverter = flipLogicForPulldown ? 1 : 0;
 }
 
-
-unsigned char Rotary::process() {
+unsigned char Rotary::process()
+{
   // Grab state of input pins.
   unsigned char pinstate = ((inverter ^ gpio_get(pin2)) << 1) | (inverter ^ gpio_get(pin1));
   // Determine new state from the pins and state table.

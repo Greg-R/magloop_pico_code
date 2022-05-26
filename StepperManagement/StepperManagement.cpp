@@ -3,7 +3,7 @@
    "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
    Albert Peter, AC8GY" with the Raspberry Pi Pico.
    Copyright (C) 2022  Gregory Raven
-   
+
                                                     LICENSE AGREEMENT
 
   This program source code and its associated hardware design at subject to the GNU General Public License version 2,
@@ -29,11 +29,6 @@
 */
 
 #include "StepperManagement.h"
-
-// StepperManagement::StepperManagement(AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable): stepper(interface, pin1, pin2, pin3, pin4, enable) {
-// currPosition = 2500;  // Default to approximately midrange.
-// setCurrentPosition(5000);  //
-// }
 
 StepperManagement::StepperManagement(Data &data, AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable) : data(data), AccelStepper(interface, pin1, pin2)
 {
@@ -79,24 +74,25 @@ void StepperManagement::ResetStepperToZero()
   }
   // Move in negative direction until ZEROSWITCH state changes.
   moveTo(-100000);
-  while (distanceToGo() != 0) 
+  while (distanceToGo() != 0)
   {
     run();
     // Detect zero switch, protect max switch.  Note that switch closure pulls the GPI low.
     if ((gpio_get(MAXSWITCH) == false) or (gpio_get(ZEROSWITCH) == false))
-    {         
+    {
       stop(); // Properly decelerate and stop the stepper.
       runToPosition();
       break;
     }
   }
   //  If MAXSWITCH switch closed, bail out!
-  if (gpio_get(MAXSWITCH) == false) return;
+  if (gpio_get(MAXSWITCH) == false)
+    return;
   //  Set the zero calibration step.
   setCurrentPosition(0);
-  moveTo(320);  //  Move the stepper off the zero switch.  The number of steps required is dependent on the mechanics.
+  moveTo(320); //  Move the stepper off the zero switch.  The number of steps required is dependent on the mechanics.
   runToPosition();
-  setCurrentPosition(0);  //  The stepper is now calibrated!
+  setCurrentPosition(0); //  The stepper is now calibrated!
 }
 
 

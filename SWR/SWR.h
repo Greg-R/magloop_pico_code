@@ -3,7 +3,7 @@
    "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
    Albert Peter, AC8GY" with the Raspberry Pi Pico.
    Copyright (C) 2022  Gregory Raven
-   
+
                                                     LICENSE AGREEMENT
 
   This program source code and its associated hardware design at subject to the GNU General Public License version 2,
@@ -32,21 +32,19 @@
 #include "pico/stdlib.h"
 #include "hardware/adc.h"
 
-
-class SWR {
+class SWR
+{
 
 public:
+   const int MAXPOINTSPERSAMPLE = 2;
+   int forward_offset, reverse_offset, ground_offset;
+   float forward_voltage, reverse_voltage;
 
-const int MAXPOINTSPERSAMPLE = 2;
-int forward_offset, reverse_offset, ground_offset;
-float forward_voltage, reverse_voltage;
+   SWR();
 
-SWR();
+   void ReadADCoffsets();
 
-void ReadADCoffsets();
+   float ReadSWRValue();
 
-float ReadSWRValue();
-
-float ReadNewSWRValue();
-
+   float ReadNewSWRValue();
 };

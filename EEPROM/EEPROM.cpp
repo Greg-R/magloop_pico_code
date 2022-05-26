@@ -3,7 +3,7 @@
    "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
    Albert Peter, AC8GY" with the Raspberry Pi Pico.
    Copyright (C) 2022  Gregory Raven
-   
+
                                                     LICENSE AGREEMENT
 
   This program source code and its associated hardware design at subject to the GNU General Public License version 2,
@@ -66,7 +66,8 @@
 
 *****/
 
-EEPROM::EEPROM(Data & data): data(data) {
+EEPROM::EEPROM(Data &data) : data(data)
+{
   initialize();
 }
 
@@ -74,19 +75,20 @@ EEPROM::EEPROM(Data & data): data(data) {
 //  Note that this function must write in 256 byte chunks.
 //  The count parameter is the number of 256 byte chunks to be written.
 //  The data should be an array with multiples of 256 elements.
-void EEPROM::write(const uint8_t *data){
-uint32_t ints = save_and_disable_interrupts();
-flash_range_erase (FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
-flash_range_program (FLASH_TARGET_OFFSET, data, FLASH_PAGE_SIZE);
-restore_interrupts(ints);
+void EEPROM::write(const uint8_t *data)
+{
+  uint32_t ints = save_and_disable_interrupts();
+  flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+  flash_range_program(FLASH_TARGET_OFFSET, data, FLASH_PAGE_SIZE);
+  restore_interrupts(ints);
 }
 
 //  Wrap the Pi Pico SDK read function.  This reads a single uint32_t value.
-uint32_t EEPROM::read(uint32_t index){
+uint32_t EEPROM::read(uint32_t index)
+{
 
-return flash_target_contents[index];  //  Return the value at the address.
+  return flash_target_contents[index]; //  Return the value at the address.
 }
-
 
 /*****
   Purpose: The Pi Pico does not actually have any EEPROM, so we have to fake it with flash memory.
@@ -110,12 +112,13 @@ return flash_target_contents[index];  //  Return the value at the address.
 *****/
 void EEPROM::initialize()
 {
-   for(int i = 0; i < 64; i = i + 1) bufferUnion.buffer32[i] = 0x00000000;
-   //  These overwrite the first 4 values for testing purposes.
-   //bufferUnion.buffer32[0] = 0x10000000;
-   //bufferUnion.buffer32[1] = 0x00000002;
-   //bufferUnion.buffer32[2] = 0x00000003;
-   //bufferUnion.buffer32[3] = 0x00000004;
+  for (int i = 0; i < 64; i = i + 1)
+    bufferUnion.buffer32[i] = 0x00000000;
+  //  These overwrite the first 4 values for testing purposes.
+  // bufferUnion.buffer32[0] = 0x10000000;
+  // bufferUnion.buffer32[1] = 0x00000002;
+  // bufferUnion.buffer32[2] = 0x00000003;
+  // bufferUnion.buffer32[3] = 0x00000004;
 }
 
 /*****
@@ -133,7 +136,7 @@ void EEPROM::initialize()
 *****/
 void EEPROM::WriteDefaultEEPROMValues()
 {
-  //int i, j, k, status;
+  // int i, j, k, status;
   int index;
 
   //  Write the default band to the 0th element:
@@ -143,22 +146,26 @@ void EEPROM::WriteDefaultEEPROMValues()
   //  There are 3 bands, and an upper and lower limit for each band.
   //  So there are a total of 6 limits.
   index = OFFSETTOPOSITIONCOUNTS;
-  for (uint8_t i = 0; i < MAXBANDS; i++) {   // This increments the row.
-    for (uint8_t k = 0; k < 2; k++) {    //  Upper and lower limits    
+  for (uint8_t i = 0; i < MAXBANDS; i++)
+  { // This increments the row.
+    for (uint8_t k = 0; k < 2; k++)
+    { //  Upper and lower limits
       bufferUnion.buffer32[index] = data.bandLimitPositionCounts[i][k];
       index = index + 1;
     }
   }
   index = OFFSETTOPRESETS;
-//  Write the presets to the array:
-  for (uint8_t i = 0; i < MAXBANDS; i++) {
-    for (uint8_t k = 0; k < PRESETSPERBAND; k++) {
+  //  Write the presets to the array:
+  for (uint8_t i = 0; i < MAXBANDS; i++)
+  {
+    for (uint8_t k = 0; k < PRESETSPERBAND; k++)
+    {
       bufferUnion.buffer32[index] = data.presetFrequencies[i][k];
       index = index + 1;
     }
   }
-  write(bufferUnion.buffer8);  // Writing to Flash must be done with a uint8_t array.
-  }
+  write(bufferUnion.buffer8); // Writing to Flash must be done with a uint8_t array.
+}
 
 /*****
   Purpose: Show EEPROM values, mainly a debugging tool
@@ -175,24 +182,27 @@ void EEPROM::ReadEEPROMValuesToBuffer()
   //  First, make sure the buffer is initialized to zeros.
   initialize();
 
-//  Default band does in index 0 of the buffer.
+  //  Default band does in index 0 of the buffer.
   bufferUnion.buffer32[0] = read(OFFSETTODEFAULTBAND);
   index = OFFSETTOPOSITIONCOUNTS;
-  for (int i = 0; i < MAXBANDS; i++) {
-    for (int k = 0; k < 2; k++) {        
-        bufferUnion.buffer32[index] = read(index);
-        index = index + 1;
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < 2; k++)
+    {
+      bufferUnion.buffer32[index] = read(index);
+      index = index + 1;
     }
   }
-     index = OFFSETTOPRESETS;
-  for (int i = 0; i < MAXBANDS; i++) {
-    for (int k = 0; k < PRESETSPERBAND; k++) {
+  index = OFFSETTOPRESETS;
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < PRESETSPERBAND; k++)
+    {
       bufferUnion.buffer32[index] = data.presetFrequencies[i][k];
       index = index + 1;
     }
   }
 }
-
 
 /*****
   Purpose: Save band edges position counts
@@ -208,13 +218,15 @@ void EEPROM::WritePositionCounts()
 {
   uint32_t index = OFFSETTOPOSITIONCOUNTS;
 
-  for (int i = 0; i < MAXBANDS; i++) {
-    for (int k = 0; k < 2; k++) {    
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < 2; k++)
+    {
       bufferUnion.buffer32[index] = data.bandLimitPositionCounts[i][k];
       index = index + 1;
-      }
     }
   }
+}
 
 /*****
   Purpose: Read configuration data from EEPROM
@@ -230,10 +242,12 @@ void EEPROM::ReadPositionCounts()
 {
   uint16_t index;
   index = OFFSETTOPOSITIONCOUNTS;
-  for (int i = 0; i < MAXBANDS; i++) {
-    for (int k = 0; k < 2; k++) {  
-        data.bandLimitPositionCounts[i][k] = read(index);
-        index = index + 1;
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < 2; k++)
+    {
+      data.bandLimitPositionCounts[i][k] = read(index);
+      index = index + 1;
     }
   }
 }
@@ -249,9 +263,10 @@ void EEPROM::ReadPositionCounts()
 *****/
 void EEPROM::ShowSlopeCoefficients()
 {
-  
-  for (int i = 0; i < 3; i++) {
-   countPerHertzArray[i] = data.countPerHertz[i];   
+
+  for (int i = 0; i < 3; i++)
+  {
+    countPerHertzArray[i] = data.countPerHertz[i];
   }
 }
 
@@ -269,14 +284,16 @@ void EEPROM::ShowSlopeCoefficients()
 void EEPROM::WriteBandPresets()
 {
   uint16_t index;
-index = OFFSETTOPRESETS;
-  for (int i = 0; i < MAXBANDS; i++) {
-    for (int k = 0; k < PRESETSPERBAND; k++) {    
+  index = OFFSETTOPRESETS;
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < PRESETSPERBAND; k++)
+    {
       bufferUnion.buffer32[index] = data.presetFrequencies[i][k];
       index = index + 1;
-        }
-      }
     }
+  }
+}
 
 /*****
   Purpose: Read the presets for each band from EEPROM
@@ -291,13 +308,15 @@ void EEPROM::ReadBandPresets()
 {
   uint16_t index;
 
-  index = OFFSETTOPRESETS;                                       // Starting EEPROM address for Bnd presets
+  index = OFFSETTOPRESETS; // Starting EEPROM address for Bnd presets
 
-  for (int i = 0; i < MAXBANDS; i++) {
-    for (int k = 0; k < PRESETSPERBAND; k++) {
-        bufferUnion.buffer32[index] = read(index);
-        index = index + 1;
-      }
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < PRESETSPERBAND; k++)
+    {
+      bufferUnion.buffer32[index] = read(index);
+      index = index + 1;
+    }
   }
 }
 
@@ -329,13 +348,9 @@ uint32_t EEPROM::ReadCurrentBand()
 void EEPROM::WriteCurrentBand()
 {
 
-//  bufferUnion.buffer32[OFFSETTODEFAULTBAND] = read(OFFSETTODEFAULTBAND);
+  //  bufferUnion.buffer32[OFFSETTODEFAULTBAND] = read(OFFSETTODEFAULTBAND);
   bufferUnion.buffer32[OFFSETTODEFAULTBAND] = 40;
-
 }
-
-
-
 
 /*****
   Purpose: Reads all of the values stored in EEPROM
@@ -348,7 +363,7 @@ void EEPROM::WriteCurrentBand()
 *****/
 void EEPROM::ReadEEPROMData()
 {
-  ReadCurrentBand();              // Get last band used
-  ReadPositionCounts();           // Get band edge positions
-  ReadBandPresets();              // Get preset frequencies
+  ReadCurrentBand();    // Get last band used
+  ReadPositionCounts(); // Get band edge positions
+  ReadBandPresets();    // Get preset frequencies
 }

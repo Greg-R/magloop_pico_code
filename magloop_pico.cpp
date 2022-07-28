@@ -194,9 +194,6 @@ int main()
   // Power on all circuits.  This is done early to allow circuits to stabilize before calibration.
   display.Power(true);
 
-  // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
-  display.Splash(version, releaseDate);
-  busy_wait_ms(5000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 
   // Set up the Menu and Frequency encoders:
@@ -229,9 +226,7 @@ int main()
     break;
   }
 
-  //  Set stepper to zero:
-  display.updateMessageTop("                Resetting to Zero");
-  stepper.ResetStepperToZero();
+  
 
   //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
   //  Note that this should be done as late as possible for circuits to stabilize.
@@ -243,36 +238,38 @@ int main()
   display.menuIndex = FREQMENU; // Begin in Frequency menu.
   whichBandOption = 0;
 
+  float swrValue;
+  tft.setTextSize(2);
+
   // Main loop state machine:
   while (true)
   {
-    int i, submenuIndex;
-    // Turn on power.
-    // display.Power(true);
-    //  Refresh display:
-    display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
-    display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
-    display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    display.Power(false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
-    display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
+   tft.setCursor(10, 20);
+   tft.print("SWR Bridge Test");
+   tft.setCursor(10, 50);
+   tft.print("SWR = ");
+   tft.setCursor(80, 50);
+   tft.print(swr.ReadSWRValue());
+   // Read and print forward ADC integer.
+   adc_select_input(1);
+   tft.setCursor(10, 80);
+   tft.print("Forward ADC");
+   tft.setCursor(150, 80);
+   tft.print(adc_read());
 
-    switch (display.menuIndex)
-    {
-    case FREQMENU: //  Manual frequency selection selection and AutoTune.
-      display.frequencyMenuOption();
-      break;
-
-    case PRESETSMENU:           // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
-      break;
-
-    case CALIBRATEMENU: //  Run calibration routines.
-      display.CalibrationMachine();
-      break;
-
-    default:
-      break;
-    } // switch (menuIndex)
+  // Read and print reverse ADC integer.
+   adc_select_input(0);
+   tft.setCursor(10, 110);
+   tft.print("Reverse ADC");
+   tft.setCursor(150, 110);
+   tft.print(adc_read());
+   busy_wait_ms(1000);
+   // Blank out old readings
+   tft.fillRect(80, 50, 100, 20, ILI9341_BLACK);
+   tft.fillRect(150, 80, 100, 20, ILI9341_BLACK);
+   tft.fillRect(150, 110, 100, 20, ILI9341_BLACK);
+   //tft.setTextColor(ILI9341_WHITE);
+  
   }   // while(1)  (end of main loop)
 
   return 0; // Program should never reach this statement.

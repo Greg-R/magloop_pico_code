@@ -1,8 +1,6 @@
 build/
 release
-pico_sdk_import.cmake
 archive/
-.vscode/
 Calibrate
 Presets
 

@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # initalize pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
-# If you used the install script, the environment variable is set.
+# If you used the install script, the PICO_SDK_PATH environment variable is set.
 #set(PICO_SDK_PATH "/home/your_path")
 
 # Pull in Raspberry Pi Pico SDK (must be before project)

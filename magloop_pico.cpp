@@ -28,6 +28,9 @@
     GNU General Public License for more details.
 */
 
+// motor_test branch.  Used to verify stepper motor operation.
+// The stepper motor should step forward, stop, step backward, stop, and repeat.
+
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/timer.h"
@@ -171,12 +174,6 @@ int main()
 
   //  Instantiate the EEPROM object, which is actually composed of FLASH.
   EEPROM eeprom = EEPROM(data);
-  //  Read the position counts and presets into the EEPROM object's buffer.
-  eeprom.ReadEEPROMValuesToBuffer();
-  //  Overwrite the position counts and preset frequencies:
-  eeprom.ReadPositionCounts();
-  // Slopes can't be computed until the actual values are loaded from FLASH:
-  data.computeSlopes();
 
   //  Instantiate the Stepper Manager:
   StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
@@ -199,6 +196,9 @@ int main()
   busy_wait_ms(5000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 
+  
+
+
   // Set up the Menu and Frequency encoders:
   menuEncoder.begin(true, false);
   frequencyEncoder.begin(true, false);
@@ -210,69 +210,32 @@ int main()
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
-  // The default band is read from Flash.  Default band save is not currently implemented.
-  // Defaults to 40 meters.
-  currentBand = eeprom.ReadCurrentBand();
+  stepper.setCurrentPosition(0);
+  stepper.setAcceleration(2000);
+  stepper.setSpeed(500);
+  stepper.setMaxSpeed(500);
 
-  switch (currentBand)
-  { // Set the frequency default as 1st preset frequency
-  case 40:
-    currentFrequency = data.presetFrequencies[0][2];
-    break;
-  case 30:
-    currentFrequency = data.presetFrequencies[1][0];
-    break;
-  case 20:
-    currentFrequency = data.presetFrequencies[2][0];
-    break;
-  default:
-    break;
-  }
-
-  //  Set stepper to zero:
-  display.updateMessageTop("                Resetting to Zero");
-  stepper.ResetStepperToZero();
-
-  //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
-  //  Note that this should be done as late as possible for circuits to stabilize.
-  dds.SendFrequency(0); // Is this redundant?
-  swr.ReadADCoffsets();
-
-  dds.SendFrequency(currentFrequency); // Set the DDS
-
-  display.menuIndex = FREQMENU; // Begin in Frequency menu.
-  whichBandOption = 0;
+  tft.setCursor(40, 45);
+  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
+  tft.print("Motor Test Routine");
+  tft.setTextSize(2);
 
   // Main loop state machine:
   while (true)
   {
-    int i, submenuIndex;
-    // Turn on power.
-    // display.Power(true);
-    //  Refresh display:
-    display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
-    display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
-    display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    display.Power(false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
-    display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
-
-    switch (display.menuIndex)
-    {
-    case FREQMENU: //  Manual frequency selection selection and AutoTune.
-      display.frequencyMenuOption();
-      break;
-
-    case PRESETSMENU:           // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
-      break;
-
-    case CALIBRATEMENU: //  Run calibration routines.
-      display.CalibrationMachine();
-      break;
-
-    default:
-      break;
-    } // switch (menuIndex)
+  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+  tft.setCursor(10, 90);
+  tft.print("Move motor towards max");
+  stepper.moveTo(500);
+  stepper.runToPosition();
+  busy_wait_ms(3000);
+  tft.fillRect(10, 90, 320, 120, ILI9341_BLACK);
+  tft.setCursor(10, 90);
+  tft.print("Return towards zero");
+  stepper.moveTo(0);
+  stepper.runToPosition();
+  busy_wait_ms(3000);
+  tft.fillRect(10, 90, 320, 120, ILI9341_BLACK);
   }   // while(1)  (end of main loop)
 
   return 0; // Program should never reach this statement.

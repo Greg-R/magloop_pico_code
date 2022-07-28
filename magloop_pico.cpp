@@ -195,8 +195,8 @@ int main()
   display.Power(true);
 
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
-  display.Splash(version, releaseDate);
-  busy_wait_ms(5000);
+  //display.Splash(version, releaseDate);
+  //busy_wait_ms(5000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 
   // Set up the Menu and Frequency encoders:
@@ -214,65 +214,78 @@ int main()
   // Defaults to 40 meters.
   currentBand = eeprom.ReadCurrentBand();
 
-  switch (currentBand)
-  { // Set the frequency default as 1st preset frequency
-  case 40:
-    currentFrequency = data.presetFrequencies[0][2];
-    break;
-  case 30:
-    currentFrequency = data.presetFrequencies[1][0];
-    break;
-  case 20:
-    currentFrequency = data.presetFrequencies[2][0];
-    break;
-  default:
-    break;
-  }
-
-  //  Set stepper to zero:
-  display.updateMessageTop("                Resetting to Zero");
-  stepper.ResetStepperToZero();
-
   //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
   //  Note that this should be done as late as possible for circuits to stabilize.
   dds.SendFrequency(0); // Is this redundant?
   swr.ReadADCoffsets();
 
-  dds.SendFrequency(currentFrequency); // Set the DDS
+  dds.SendFrequency(7150000); // Set the DDS
 
-  display.menuIndex = FREQMENU; // Begin in Frequency menu.
-  whichBandOption = 0;
+  tft.setTextSize(2);
+
+  Button enterbutton = Button(6);
+  Button autotunebutton = Button(7);
+  Button exitbutton = Button(8);
+
+    tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+    tft.setCursor(40, 10);
+    tft.print("Input Devices Test");
+
+    int freqEncoderCount = 0;
+    int menuEncoderCount = 0;
 
   // Main loop state machine:
   while (true)
   {
-    int i, submenuIndex;
-    // Turn on power.
-    // display.Power(true);
-    //  Refresh display:
-    display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
-    display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
-    display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    display.Power(false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
-    display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
+    // Pushbuttons Test
+        tft.setCursor(10, 40);
+    tft.print("Enter Button");
+      enterbutton.buttonPushed();
+    if(enterbutton.pushed) {
+      tft.setCursor(200, 40);
+      tft.print("PUSHED");
+    } else {
+      tft.fillRect(200, 40, 150, 20, ILI9341_BLACK); 
+    }
+    tft.setCursor(10, 70);
+    tft.print("AutoTune Button");
+    autotunebutton.buttonPushed();
+    if(autotunebutton.pushed) {
+      tft.setCursor(200, 70);
+      tft.print("PUSHED");
+    } else {
+      tft.fillRect(200, 70, 150, 20, ILI9341_BLACK);
+    }
+        tft.setCursor(10, 100);
+    tft.print("Exit Button");
+       exitbutton.buttonPushed();
+    if(exitbutton.pushed) {
+      tft.setCursor(200, 100);
+      tft.print("PUSHED");
+    } else {
+      tft.fillRect(200, 100, 150, 20, ILI9341_BLACK); 
+    }
 
-    switch (display.menuIndex)
-    {
-    case FREQMENU: //  Manual frequency selection selection and AutoTune.
-      display.frequencyMenuOption();
-      break;
-
-    case PRESETSMENU:           // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
-      break;
-
-    case CALIBRATEMENU: //  Run calibration routines.
-      display.CalibrationMachine();
-      break;
-
-    default:
-      break;
-    } // switch (menuIndex)
+    // Encoders Test
+    tft.setCursor(10, 130);
+    tft.print("FREQ Encoder");
+    if(frequencyEncoderMovement2 != 0) {
+      freqEncoderCount += frequencyEncoderMovement2;
+      frequencyEncoderMovement2 = 0;
+      tft.fillRect(200, 130, 100, 20, ILI9341_BLACK); 
+    }
+    tft.setCursor(200, 130);
+    tft.print(freqEncoderCount);
+    tft.setCursor(10, 160);
+    tft.print("MENU Encoder");
+    tft.setCursor(200, 160);
+    if(menuEncoderMovement != 0) {
+      menuEncoderCount += menuEncoderMovement;
+      menuEncoderMovement = 0;
+      tft.fillRect(200, 160, 100, 20, ILI9341_BLACK); 
+    }
+    tft.print(menuEncoderCount);
+   
   }   // while(1)  (end of main loop)
 
   return 0; // Program should never reach this statement.

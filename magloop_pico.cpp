@@ -238,7 +238,7 @@ int main()
   while (true)
   {
     // Pushbuttons Test
-        tft.setCursor(10, 40);
+    tft.setCursor(10, 40);
     tft.print("Enter Button");
       enterbutton.buttonPushed();
     if(enterbutton.pushed) {
@@ -256,7 +256,7 @@ int main()
     } else {
       tft.fillRect(200, 70, 150, 20, ILI9341_BLACK);
     }
-        tft.setCursor(10, 100);
+    tft.setCursor(10, 100);
     tft.print("Exit Button");
        exitbutton.buttonPushed();
     if(exitbutton.pushed) {
@@ -285,7 +285,24 @@ int main()
       tft.fillRect(200, 160, 100, 20, ILI9341_BLACK); 
     }
     tft.print(menuEncoderCount);
-   
+
+        // Antenna switch tests
+    tft.setCursor(10, 190);
+    tft.print("Zero Switch");
+    if(gpio_get(ZEROSWITCH) == 0) {
+      tft.setCursor(200, 190);
+      tft.print("CLOSED");
+    } else {
+      tft.fillRect(200, 190, 150, 20, ILI9341_BLACK); 
+    }   
+       tft.setCursor(10, 220);
+    tft.print("Max Switch");
+    if(gpio_get(MAXSWITCH) == 0) {
+      tft.setCursor(200, 220);
+      tft.print("CLOSED");
+    } else {
+      tft.fillRect(200, 220, 150, 20, ILI9341_BLACK); 
+    }   
   }   // while(1)  (end of main loop)
 
   return 0; // Program should never reach this statement.

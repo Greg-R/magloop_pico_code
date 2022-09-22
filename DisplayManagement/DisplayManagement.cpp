@@ -130,10 +130,13 @@ void DisplayManagement::frequencyMenuOption()
       ShowSubmenuData(minSWRAuto, dds.currentFrequency);
       GraphAxis(whichBandOption);
       PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
-      updateMessageBottom("     Encoders to Adjust, Exit to Return");
+      // Manual frequency and stepper position moved to different menu!  September 2022
+      //updateMessageBottom("     Encoders to Adjust, Exit to Return");
       // Enter Manual frequency and position tune:
-      frequency = manualTune();
+      //frequency = manualTune();  // Stuck here until Exit button is pushed.
       Power(false); // Power down circuits.
+      // Pause and allow user to view plot of SWR versus frequency.
+      busy_wait_ms(5000);
       break;        //  state is not changed; should go back to state2.
     }               // end switch
   }                 // end of while loop and state machine
@@ -212,6 +215,7 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod
   defaultIncrement = 1000L;
   halfScreen = PIXELHEIGHT / 2 - 25;
   bool lastexitbuttonPushed = true;
+  bool lastautotunebuttonPushed = true;
   updateMessageTop("                 Enter Frequency");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0)
@@ -257,8 +261,10 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod
     // Poll autotunebutton and exitbutton.
     autotunebutton.buttonPushed();
     exitbutton.buttonPushed();
-    if (autotunebutton.pushed == true)
+    if (autotunebutton.pushed & not lastautotunebuttonPushed)
       break;
+    // Make sure there is a proper transition of the autotune button.
+    lastautotunebuttonPushed = autotunebutton.pushed;
     //  Exit this menu, but make sure it is a proper edge transition:
     if (exitbutton.pushed & not lastexitbuttonPushed)
     {

@@ -254,6 +254,8 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod
   tft.setFont(&FreeSerif24pt7b);
   tft.print(frequency);
   tft.setFont(&FreeSerif24pt7b);
+  // Print the SWR limit frequencies to the display.
+  PrintSWRlimits(fpair);
 
   // State Machine for frequency input with encoders.
   while (true)
@@ -1097,7 +1099,7 @@ void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBand
 }
 
 //  This is the primary auto-tuning algorithm which minimizes VSWR.
-//  The stepper should be positioned below the minimum SWR.
+//  The stepper should be positioned below the minimum SWR frequency.
 //  This is done either by starting at stepper position 0, or using a calculated estimation.
 float DisplayManagement::AutoTuneSWR()
 {
@@ -1106,7 +1108,8 @@ float DisplayManagement::AutoTuneSWR()
   minSWRAuto = 100;
   int i;
   long currPositionTemp;
-  SWRMinPosition = 4000;
+  std::pair<float, float> swrPair;
+  SWRMinPosition = 6000;
   position = stepper.currentPosition(); // Retrieve the entry position of the stepper.
   updateMessageTop("                    Auto Tuning");
   for (int i = 0; i < MAXNUMREADINGS; i++)
@@ -1165,6 +1168,8 @@ float DisplayManagement::AutoTuneSWR()
     iMax = i;                                                    // max value in array for plot
     ShowSubmenuData(minSWR, dds.currentFrequency);               // Update SWR value
     updateMessageTop("               AutoTune Success");
+    //  Compute the upper and lower frequencies at which SWR ~2:1.
+    fpair = SWRdataAnalysis(tempSWR, tempCurrentPosition, SWRMinPosition);
   }
   return minSWR;
 }
@@ -1381,4 +1386,70 @@ void DisplayManagement::PowerSWR(bool setpower)
   gpio_put(data.RFAMPPOWER, setpower);
   gpio_put(data.RFRELAYPOWER, setpower);
   busy_wait_ms(500); //  Wait for relay to switch.
+}
+
+
+/*****
+  Purpose: This function analyzes the SWR data and determines the frequency
+           limits at which SWR is approximately 2:1.
+
+  Parameter list:
+    float SWRarray[500], long position[500]
+
+  Return value:
+    void
+
+  CAUTION:
+
+*****/
+std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[500], long position[500], long SWRMinPosition)
+{
+  long flow, fhigh;
+  //float posLow = 0.0; 
+  //float posHigh = 0.0;
+  int posLowIndex = 0;
+  int posHighIndex = 0;
+  for(int i = 0; i < 500; i = i + 1) {
+   if(SWRarray[i] < 2.0) {
+    posLowIndex = i;
+    break;  // Exit, and proceed to process upper half.
+   }
+   else posLowIndex = 0;  // For case where all values < 2.0.
+   }
+  for(int i = posLowIndex + 1; i < 500; i = i + 1) {
+   if(SWRarray[i] > 2.0) {
+    posHighIndex = i;
+    break;  // Exit, found upper 2:1 position.
+  }
+  else posHighIndex = 499;  // For case where all values < 2.0.
+  }
+  // Now calculate the end frequencies over which SWR is <2.0:1.
+  // SWRMinPosition is the index the desired center frequency for AutoTune.
+  // Need the band index to retrieve the slope.
+  flow = dds.currentFrequency
+  fpair = {SWRarray[posLowIndex], SWRarray[posHighIndex]};
+  return fpair;
+}
+
+
+/*****
+  Purpose: This function analyzes the SWR data and determines the frequency
+           limits at which SWR is approximately 2:1.
+
+  Parameter list:
+    float SWRarray[500], long position[500]
+
+  Return value:
+    void
+
+  CAUTION:
+
+*****/
+void DisplayManagement::PrintSWRlimits(std::pair<float, float> fpair)
+{
+  tft.setFont(&FreeSerif9pt7b);
+  tft.setCursor(20, 130);
+  tft.print(fpair.first);
+  tft.setCursor(150, 130);
+  tft.print(fpair.second);  
 }

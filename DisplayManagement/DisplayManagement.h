@@ -31,6 +31,7 @@
 #pragma once
 #include <stdint.h>
 #include <string>
+#include <utility>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -83,8 +84,8 @@ public:
     int stepperDirectionOld;
     uint32_t stepperDistanceOld;
     int iMax;
-    float tempSWR[500];
-    long tempCurrentPosition[500];
+    float tempSWR[500];  // Array of SWR measurements used by AutoTuneSWR.
+    long tempCurrentPosition[500];  // Array of stepper positions used by AutoTuneSWR.
     long SWRMinPosition;
     float minSWRAuto;
     float minSWR;
@@ -160,4 +161,11 @@ public:
     void Power(bool setpower);
 
     void PowerSWR(bool setpower);
+
+    //  This is the return type for the SWRdataAnalysis function.
+    std::pair <float, float> fpair;
+
+    std::pair<float, float> SWRdataAnalysis(float SWRarray[500], long position[500], long SWRMinPosition);
+
+    void PrintSWRlimits(std::pair<float, float> fpair);
 };

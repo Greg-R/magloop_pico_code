@@ -1132,6 +1132,7 @@ float DisplayManagement::AutoTuneSWR()
     {                                             // Test to find minimum SWR value
       minSWRAuto = minSWR;                        // If this measurement is lower, save it.
       SWRMinPosition = stepper.currentPosition(); // Save the stepper position.
+      SWRMinIndex = i;                            // Save the array index of the minimum.
     }
     if (minSWR > 3 and whichBandOption == 0)
     {                          // Fast step for 40M band above SWR = 3
@@ -1169,7 +1170,7 @@ float DisplayManagement::AutoTuneSWR()
     ShowSubmenuData(minSWR, dds.currentFrequency);               // Update SWR value
     updateMessageTop("               AutoTune Success");
     //  Compute the upper and lower frequencies at which SWR ~2:1.
-    fpair = SWRdataAnalysis(tempSWR, tempCurrentPosition, SWRMinPosition);
+    fpair = SWRdataAnalysis(tempSWR, tempCurrentPosition, SWRMinIndex);
   }
   return minSWR;
 }
@@ -1395,29 +1396,29 @@ void DisplayManagement::PowerSWR(bool setpower)
 
   Parameter list:
     float SWRarray[500], long position[500]
-
+AutoTuneSWR
   Return value:
     void
 
   CAUTION:
 
 *****/
-std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[500], long position[500], long SWRMinPosition)
+std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[], long position[], long SWRMinPosition)
 {
-  long flow, fhigh;
-  //float posLow = 0.0; 
-  //float posHigh = 0.0;
+  //long flow, fhigh;
+  float fcenter;
+  int flow, fhigh; 
   int posLowIndex = 0;
   int posHighIndex = 0;
   for(int i = 0; i < 500; i = i + 1) {
-   if(SWRarray[i] < 2.0) {
+   if((SWRarray[i] < 2.0) and (SWRarray[i] > 0.9)) {
     posLowIndex = i;
     break;  // Exit, and proceed to process upper half.
    }
    else posLowIndex = 0;  // For case where all values < 2.0.
    }
   for(int i = posLowIndex + 1; i < 500; i = i + 1) {
-   if(SWRarray[i] > 2.0) {
+   if((SWRarray[i] > 2.0) and (SWRarray[i] > 0.9)) {
     posHighIndex = i;
     break;  // Exit, found upper 2:1 position.
   }
@@ -1426,8 +1427,11 @@ std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[500], 
   // Now calculate the end frequencies over which SWR is <2.0:1.
   // SWRMinPosition is the index the desired center frequency for AutoTune.
   // Need the band index to retrieve the slope.
-  flow = dds.currentFrequency
-  fpair = {SWRarray[posLowIndex], SWRarray[posHighIndex]};
+  fcenter = (float) dds.currentFrequency;
+  flow    = (int)(fcenter - (float)(SWRMinIndex - posLowIndex) * data.hertzPerStepperUnitVVC[whichBandOption]);
+  fhigh   = (fcenter + (float)(posHighIndex - SWRMinIndex) * data.hertzPerStepperUnitVVC[whichBandOption]);
+  //fpair = {(long)flow, (long)fhigh};
+  fpair = {flow, fhigh};
   return fpair;
 }
 
@@ -1445,7 +1449,7 @@ std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[500], 
   CAUTION:
 
 *****/
-void DisplayManagement::PrintSWRlimits(std::pair<float, float> fpair)
+void DisplayManagement::PrintSWRlimits(std::pair<int, int> fpair)
 {
   tft.setFont(&FreeSerif9pt7b);
   tft.setCursor(20, 130);

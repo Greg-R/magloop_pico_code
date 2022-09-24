@@ -69,7 +69,7 @@ public:
     StepperManagement &stepper;
     EEPROM &eeprom;
     Data &data;
-    int whichBandOption;
+    int whichBandOption;  // This indicates the current band in use.
     float SWRValue;
     float SWRcurrent;
     float readSWRValue;
@@ -79,6 +79,7 @@ public:
     int menuIndex;
     int submenuIndex;
     int SWRFinalPosition;
+    int SWRMinIndex;  // Array index for the SWR minimum.
     volatile int menuEncoderState;
     const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
     int stepperDirectionOld;
@@ -163,9 +164,9 @@ public:
     void PowerSWR(bool setpower);
 
     //  This is the return type for the SWRdataAnalysis function.
-    std::pair <float, float> fpair;
+    std::pair <int, int> fpair;
 
     std::pair<float, float> SWRdataAnalysis(float SWRarray[500], long position[500], long SWRMinPosition);
 
-    void PrintSWRlimits(std::pair<float, float> fpair);
+    void PrintSWRlimits(std::pair<int, int> fpair);
 };

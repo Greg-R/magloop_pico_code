@@ -251,8 +251,9 @@ int main()
     // display.Power(true);
     //  Refresh display:
     display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
-    display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
-    display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
+    //display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
+    //display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
+    display.ShowSubmenuData(display.minSWR, dds.currentFrequency);
     display.Power(false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 

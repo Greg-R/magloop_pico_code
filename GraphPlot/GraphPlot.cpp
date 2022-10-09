@@ -30,7 +30,11 @@
 
 #include "GraphPlot.h"
 
-GraphPlot::GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data) : tft(tft), dds(dds), data(data) {}
+//GraphPlot::GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data) : tft(tft), dds(dds), data(data) 
+GraphPlot::GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data) : tft(tft), dds(dds), data(data)
+{
+//Data data = Data();
+}
 
 /*****
   Purpose: To display the axes for a graph
@@ -200,7 +204,7 @@ void GraphPlot::PlotNewStartingFrequency(int whichBandOption)
   Return value:
     void
 *****/
-void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, long tempCurrentPosition[], float tempSWR[], long SWRMinPosition)
+void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, int32_t tempCurrentPosition[], float tempSWR[], int32_t SWRMinPosition)
 {
   float stepsPerPix;
   int pixPerSWRUnit;

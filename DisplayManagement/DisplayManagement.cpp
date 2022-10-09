@@ -35,9 +35,12 @@ int frequencyEncoderMovement;
 int frequencyEncoderMovement2;
 int digitEncoderMovement;
 
+//DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
+//                                     StepperManagement &stepper, EEPROM &eeprom, Data &data) : tft(tft), dds(dds), swr(swr),
+//                                                     stepper(stepper), eeprom(eeprom), data(data), GraphPlot(tft, dds, data)
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROM &eeprom, Data &data) : tft(tft), dds(dds), swr(swr),
-                                                                                               stepper(stepper), eeprom(eeprom), GraphPlot(tft, dds, data), data(data)
+                                     StepperManagement &stepper, EEPROM &eeprom, Data &data) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
+                                                     stepper(stepper), eeprom(eeprom), data(data)                                             
 {
   enterbutton.initialize();
   exitbutton.initialize();
@@ -98,6 +101,7 @@ void DisplayManagement::frequencyMenuOption()
       return; //  Exit frequency selection and return to top menu Freq.
     case State::state1:
       whichBandOption = SelectBand(data.bands); // state1
+      this->data.currentBand = whichBandOption;
       // If SelectBand returns 4, this means the menu was exited without selecting a band.  Move to the top level menu Freq.
       if (whichBandOption == 4)
       {
@@ -788,11 +792,12 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
   whichLine = 0;                                  // X coord for mins
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Table data
 
-  for (i = 0; i < MAXBANDS; i++)
+  for (i = 0; i < MAXBANDS; i = i + 1)
   { // For the 3 bands...
-    for (j = 0; j < 2; j++)
+    for (j = 0; j < 2; j = j + 1)
     {
-      frequency = data.bandEdges[i][j]; // Select a band edge to calibrate
+      this->data.currentBand = i;  // Used by SWRdataAnalysis()
+      frequency = this->data.bandEdges[i][j]; // Select a band edge to calibrate
       dds.SendFrequency(frequency);     // Tell the DDS the edge frequency...
       updateMessageTop("             Moving to Freq");
       while (true)
@@ -1107,8 +1112,8 @@ float DisplayManagement::AutoTuneSWR()
   oldMinSWR = 100;
   minSWRAuto = 100;
   int i;
-  long currPositionTemp;
-  std::pair<float, float> swrPair;
+  int32_t currPositionTemp;
+  //std::pair<float, float> swrPair;
   SWRMinPosition = 6000;
   position = stepper.currentPosition(); // Retrieve the entry position of the stepper.
   updateMessageTop("                    Auto Tuning");
@@ -1170,7 +1175,7 @@ float DisplayManagement::AutoTuneSWR()
     ShowSubmenuData(minSWR, dds.currentFrequency);               // Update SWR value
     updateMessageTop("               AutoTune Success");
     //  Compute the upper and lower frequencies at which SWR ~2:1.
-    fpair = SWRdataAnalysis(tempSWR, tempCurrentPosition, SWRMinIndex);
+    SWRdataAnalysis();
   }
   return minSWR;
 }
@@ -1395,31 +1400,36 @@ void DisplayManagement::PowerSWR(bool setpower)
            limits at which SWR is approximately 2:1.
 
   Parameter list:
-    float SWRarray[500], long position[500]
-AutoTuneSWR
+    float SWRarray[500], uint32_t position[500] (array of stepper positions)
+SWRdataAnalysis
   Return value:
-    void
+    std::pair<uint32_t, uint32_t>
 
   CAUTION:
 
 *****/
-std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[], long position[], long SWRMinPosition)
+void DisplayManagement::SWRdataAnalysis()
 {
   //long flow, fhigh;
-  float fcenter;
-  int flow, fhigh; 
+  int32_t fcenter;
+  int32_t flow = 0;
+  int32_t fhigh = 0; 
+  //Data data2 = Data();
+  //data2.computeSlopes();
+  float horseshit;
+  horseshit = this->data.hertzPerStepperUnitVVC[0];
   int posLowIndex = 0;
   int posHighIndex = 0;
   for(int i = 0; i < 500; i = i + 1) {
-   if((SWRarray[i] < 2.0) and (SWRarray[i] > 0.9)) {
-    posLowIndex = i;
+   if((tempSWR[i] < 2.0) and (tempSWR[i] > 0.9)) {
+    posLowIndex = i;  // This is a stepper position!
     break;  // Exit, and proceed to process upper half.
    }
    else posLowIndex = 0;  // For case where all values < 2.0.
    }
   for(int i = posLowIndex + 1; i < 500; i = i + 1) {
-   if((SWRarray[i] > 2.0) and (SWRarray[i] > 0.9)) {
-    posHighIndex = i;
+   if((tempSWR[i] > 2.0) and (tempSWR[i] > 0.9)) {
+    posHighIndex = i;  // This is a stepper position!
     break;  // Exit, found upper 2:1 position.
   }
   else posHighIndex = 499;  // For case where all values < 2.0.
@@ -1427,12 +1437,13 @@ std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[], lon
   // Now calculate the end frequencies over which SWR is <2.0:1.
   // SWRMinPosition is the index the desired center frequency for AutoTune.
   // Need the band index to retrieve the slope.
-  fcenter = (float) dds.currentFrequency;
-  flow    = (int)(fcenter - (float)(SWRMinIndex - posLowIndex) * data.hertzPerStepperUnitVVC[whichBandOption]);
-  fhigh   = (fcenter + (float)(posHighIndex - SWRMinIndex) * data.hertzPerStepperUnitVVC[whichBandOption]);
-  //fpair = {(long)flow, (long)fhigh};
+  fcenter = dds.currentFrequency;
+  flow    = fcenter - (SWRMinPosition - tempCurrentPosition[posLowIndex]) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.currentBand]);
+  fhigh   = fcenter + (tempCurrentPosition[posHighIndex] - SWRMinPosition) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.currentBand]);
+ //  flow    = SWRMinPosition - tempCurrentPosition[posLowIndex];
+ // fhigh   = tempCurrentPosition[posHighIndex] - SWRMinPosition;
   fpair = {flow, fhigh};
-  return fpair;
+//  return fpair;
 }
 
 
@@ -1449,11 +1460,11 @@ std::pair<float, float> DisplayManagement::SWRdataAnalysis(float SWRarray[], lon
   CAUTION:
 
 *****/
-void DisplayManagement::PrintSWRlimits(std::pair<int, int> fpair)
+void DisplayManagement::PrintSWRlimits(std::pair<uint32_t, uint32_t> fpair)
 {
   tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(20, 130);
+  tft.setCursor(20, 135);
   tft.print(fpair.first);
-  tft.setCursor(150, 130);
+  tft.setCursor(150, 135);
   tft.print(fpair.second);  
 }

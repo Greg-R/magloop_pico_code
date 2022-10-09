@@ -79,15 +79,15 @@ public:
     int menuIndex;
     int submenuIndex;
     int SWRFinalPosition;
-    int SWRMinIndex;  // Array index for the SWR minimum.
+    uint32_t SWRMinIndex;  // Array index for the SWR minimum.
     volatile int menuEncoderState;
     const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
     int stepperDirectionOld;
     uint32_t stepperDistanceOld;
     int iMax;
     float tempSWR[500];  // Array of SWR measurements used by AutoTuneSWR.
-    long tempCurrentPosition[500];  // Array of stepper positions used by AutoTuneSWR.
-    long SWRMinPosition;
+    int32_t tempCurrentPosition[500];  // Array of stepper positions used by AutoTuneSWR.
+    int32_t SWRMinPosition;
     float minSWRAuto;
     float minSWR;
     enum class State
@@ -164,9 +164,9 @@ public:
     void PowerSWR(bool setpower);
 
     //  This is the return type for the SWRdataAnalysis function.
-    std::pair <int, int> fpair;
+    std::pair <uint32_t, uint32_t> fpair;
 
-    std::pair<float, float> SWRdataAnalysis(float SWRarray[500], long position[500], long SWRMinPosition);
+    void SWRdataAnalysis();
 
-    void PrintSWRlimits(std::pair<int, int> fpair);
+    void PrintSWRlimits(std::pair<uint32_t, uint32_t> fpair);
 };

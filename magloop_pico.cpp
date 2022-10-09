@@ -27,7 +27,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-
+#define PICO_STACK_SIZE _u(0x1000)
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/timer.h"
@@ -196,7 +196,7 @@ int main()
 
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
   display.Splash(version, releaseDate);
-  busy_wait_ms(5000);
+  busy_wait_ms(3000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 
   // Set up the Menu and Frequency encoders:

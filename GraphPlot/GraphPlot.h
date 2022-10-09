@@ -58,11 +58,12 @@ public:
     DDS &dds;
     Data &data;
 
+  //  GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data);
     GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data);
 
     void GraphAxis(int whichBandOption);
 
     void PlotNewStartingFrequency(int whichBandOption);
 
-    void PlotSWRValueNew(int whichBandOption, int iMax, long tempCurrentPosition[], float tempSWR[], long SWRMinPosition);
+    void PlotSWRValueNew(int whichBandOption, int iMax, int32_t tempCurrentPosition[], float tempSWR[], int32_t SWRMinPosition);
 };

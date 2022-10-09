@@ -42,7 +42,7 @@ public:
    unsigned int DATA;
    unsigned int FQ_UD;
    unsigned int WCLK;
-   long currentFrequency;
+   uint32_t currentFrequency;
 
    DDS(unsigned int DDS_RST, unsigned int DDS_DATA, unsigned int DDS_FQ_UD, unsigned int DDS_WCLK);
 

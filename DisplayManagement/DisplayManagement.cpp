@@ -947,7 +947,7 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
 }
 
 /*****
-  Purpose: Select a preset frequency and AutoTune.
+  Purpose: State machine to select a preset frequency and then AutoTune to that frequency.
 
   Parameter list:
     int whichBandOption
@@ -974,6 +974,7 @@ void DisplayManagement::ProcessPresets()
       return; // Return to top level.
     case State::state1:
       whichBandOption = SelectBand(data.bands); // Select the band to be used
+      this->data.currentBand = whichBandOption;
       // If SelectBand returns 4, the user exited before selecting a band.  Return to top menu.
       if (whichBandOption == 4)
       {
@@ -999,8 +1000,9 @@ void DisplayManagement::ProcessPresets()
       ShowSubmenuData(minSWRAuto, dds.currentFrequency);
       GraphAxis(whichBandOption);
       PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
-      frequency = manualTune();
+      //frequency = manualTune();
       Power(false);          //  Power down circuits.
+      busy_wait_ms(5000);
       state = State::state2; // Move to Select Preset state.
       break;
     }

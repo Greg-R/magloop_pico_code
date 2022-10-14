@@ -32,6 +32,7 @@
 #include <stdint.h>
 #include <string>
 #include <utility>
+#include <array>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -46,6 +47,8 @@
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif24pt7b.h"
+
+//using namespace std;
 
 #define PRESETSPERBAND 6
 #define PIXELWIDTH 320
@@ -75,7 +78,7 @@ public:
     float readSWRValue;
     int position;
     int positionTemp;
-    int currentBand; // Is this used???
+    //int currentBand; // Is this used???
     int menuIndex;
     int submenuIndex;
     int SWRFinalPosition;
@@ -85,8 +88,9 @@ public:
     int stepperDirectionOld;
     uint32_t stepperDistanceOld;
     int iMax;
-    float tempSWR[500];  // Array of SWR measurements used by AutoTuneSWR.
-    int32_t tempCurrentPosition[500];  // Array of stepper positions used by AutoTuneSWR.
+    const int arraySize = 500;
+    std::array<float, 500> tempSWR;  // Array of SWR measurements used by AutoTuneSWR.
+    std::array<int32_t, 500> tempCurrentPosition;  // Array of stepper positions used by AutoTuneSWR.
     int32_t SWRMinPosition;
     float minSWRAuto;
     float minSWR;

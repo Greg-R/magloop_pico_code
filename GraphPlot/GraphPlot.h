@@ -29,6 +29,7 @@
 */
 
 #pragma once
+#include <array>
 #include <stdint.h>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
@@ -65,5 +66,5 @@ public:
 
     void PlotNewStartingFrequency(int whichBandOption);
 
-    void PlotSWRValueNew(int whichBandOption, int iMax, int32_t tempCurrentPosition[], float tempSWR[], int32_t SWRMinPosition);
+    void PlotSWRValueNew(int whichBandOption, int iMax, std::array<int32_t, 500>& tempCurrentPosition, std::array<float, 500>& tempSWR, int32_t SWRMinPosition);
 };

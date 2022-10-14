@@ -133,7 +133,7 @@ void EEPROM::initialize()
 
   Return value:
     void
-*****/
+
 void EEPROM::WriteDefaultEEPROMValues()
 {
   // int i, j, k, status;
@@ -166,6 +166,7 @@ void EEPROM::WriteDefaultEEPROMValues()
   }
   write(bufferUnion.buffer8); // Writing to Flash must be done with a uint8_t array.
 }
+*/
 
 /*****
   Purpose: Show EEPROM values, mainly a debugging tool
@@ -182,7 +183,7 @@ void EEPROM::ReadEEPROMValuesToBuffer()
   //  First, make sure the buffer is initialized to zeros.
   initialize();
 
-  //  Default band does in index 0 of the buffer.
+  //  Default band goes in index 0 of the buffer.
   bufferUnion.buffer32[0] = read(OFFSETTODEFAULTBAND);
   index = OFFSETTOPOSITIONCOUNTS;
   for (int i = 0; i < MAXBANDS; i++)
@@ -321,7 +322,10 @@ void EEPROM::ReadBandPresets()
 }
 
 /*****
-  Purpose: Read the value for currentBand
+  Purpose: Read the value for currentBand from EEPROM.  Write to the data object.
+           This function looks to see if the currentBand is either 40, 30, or 20.
+           If it is not, then it is assumed this is a first-time usage.
+           The currentBand is set to 40.
   Parameter list:
   void
 
@@ -330,7 +334,27 @@ void EEPROM::ReadBandPresets()
 *****/
 uint32_t EEPROM::ReadCurrentBand()
 {
+  // Set the band to 40M for first-time usage.
+ // if((read(0) != 40) & (read(0) != 30) & (read(0) != 20)) 
+ // else data.currentBand = read(0);  // Need to "dereference" here?
+//  this->data.currentBand = read(0);
   return read(0);
+}
+
+/*****
+  Purpose: Read the value for currentBand from EEPROM.  Write to the data object.
+           This function looks to see if the currentBand is either 40, 30, or 20.
+           If it is not, then it is assumed this is a first-time usage.
+           The currentBand is set to 40.
+  Parameter list:
+  void
+
+  Return value:
+  void
+*****/
+uint32_t EEPROM::ReadCurrentFrequency()
+{
+  return read(25);
 }
 
 /*****
@@ -345,11 +369,28 @@ uint32_t EEPROM::ReadCurrentBand()
   void
 *****/
 
-void EEPROM::WriteCurrentBand()
+void EEPROM::WriteCurrentFrequency(uint32_t frequency)
+{
+  bufferUnion.buffer32[OFFSETTOFREQUENCY] = frequency;
+}
+
+/*****
+  Purpose: Write the value for currentBand to EEPROM
+  This writes to the buffer only.
+  The functionality of this is not currently implemented.  Will default to 40M for now.
+  To save to flash, use the write function.
+  Parameter list:
+  void
+
+  Return value:
+  void
+*****/
+
+void EEPROM::WriteCurrentBand(uint32_t band)
 {
 
   //  bufferUnion.buffer32[OFFSETTODEFAULTBAND] = read(OFFSETTODEFAULTBAND);
-  bufferUnion.buffer32[OFFSETTODEFAULTBAND] = 40;
+  bufferUnion.buffer32[OFFSETTODEFAULTBAND] = band;
 }
 
 /*****

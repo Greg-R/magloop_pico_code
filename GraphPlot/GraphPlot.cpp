@@ -204,7 +204,7 @@ void GraphPlot::PlotNewStartingFrequency(int whichBandOption)
   Return value:
     void
 *****/
-void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, int32_t tempCurrentPosition[], float tempSWR[], int32_t SWRMinPosition)
+void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, std::array<int32_t, 500>& tempCurrentPosition, std::array<float, 500>& tempSWR, int32_t SWRMinPosition)
 {
   float stepsPerPix;
   int pixPerSWRUnit;

@@ -45,6 +45,8 @@ DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
   enterbutton.initialize();
   exitbutton.initialize();
   autotunebutton.initialize();
+  //tempSWR(500);
+  //tempCurrentPosition(500);
 }
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
@@ -120,6 +122,8 @@ void DisplayManagement::frequencyMenuOption()
         break;
       }
       dds.SendFrequency(frequency); // Done in ChangeFrequency???
+      eeprom.WriteCurrentFrequency(frequency);
+      eeprom.write(eeprom.bufferUnion.buffer8);
       Power(true);                  // Power up circuits.
       SWRValue = swr.ReadSWRValue();
       readSWRValue = SWRValue; // Redundant???
@@ -419,7 +423,7 @@ int DisplayManagement::SelectBand(const std::string bands[3])
 {
   updateMessageTop("       Choose using Menu Encoder");
   EraseBelowMenu();              // Redundant???
-  int currBand[] = {40, 30, 20}; // Used???
+  //int currBand[] = {40, 30, 20}; // Used???
   int i, index, where = 0;
   bool enterLastPushed = true; // Must be set to true or a false exit could occur.
   bool exitLastPushed = true;
@@ -480,7 +484,9 @@ int DisplayManagement::SelectBand(const std::string bands[3])
     exitLastPushed = exitbutton.pushed;
   } // end while
 
-  currentBand = currBand[index]; // Used???
+  //currentBand = currBand[index]; // Used???
+   eeprom.WriteCurrentBand(index);               
+   eeprom.write(eeprom.bufferUnion.buffer8);
   return index;
 }
 
@@ -844,7 +850,6 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
   } // end for (i
 
   eeprom.WritePositionCounts();             // Write values to EEPROM buffer.  Must also write them to Flash!
-  eeprom.WriteCurrentBand();                // The current band is a #define.
   eeprom.write(eeprom.bufferUnion.buffer8); // This writes a page to Flash memory.  This includes the position counts
                                             // and preset frequencies.
   //  Now get the newly written values into the current session:
@@ -993,6 +998,8 @@ void DisplayManagement::ProcessPresets()
     case State::state3: // Run AutoTuneSWR() at the selected preset frequency.
       Power(true);      // Power up circuits.
       dds.SendFrequency(frequency);
+      eeprom.WriteCurrentFrequency(frequency);
+      eeprom.write(eeprom.bufferUnion.buffer8);
       // Calculate the approximate position for the stepper and back off a bit.
       position = -25 + data.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20

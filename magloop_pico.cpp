@@ -60,9 +60,9 @@ const std::string releaseDate = "10-12-22";
 #define PRESETSPERBAND 6 // Allow this many preset frequencies on each band
 #define MAXBANDS 3       // Can only process this many frequency bands
 
-int currentBand; // Should be 40, 30, or 20
-int currentFrequency;
-int whichBandOption;
+//int currentBand; // Should be 40, 30, or 20
+//int currentFrequency;
+//int whichBandOption;
 
 volatile uint8_t result;
 volatile uint32_t countEncoder;
@@ -150,6 +150,8 @@ int main()
   gpio_pull_up(10);
   gpio_pull_up(11);
 
+  int currentFrequency;
+
   //  The data object manages constants and variables involved with frequencies, stepper motor positions,
   //  and GPIOs.
   Data data = Data();
@@ -179,6 +181,7 @@ int main()
   data.computeSlopes();
 
   //  Instantiate the Stepper Manager:
+  uint32_t position;
   StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
 
   //  Next instantiate the DDS.
@@ -210,11 +213,11 @@ int main()
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
-  // The default band is read from Flash.  Default band save is not currently implemented.
+  // The default band is read from Flash and stored in the data object.  Default band save is not currently implemented.
   // Defaults to 40 meters.
-  currentBand = eeprom.ReadCurrentBand();
-
-  switch (currentBand)
+  data.currentBand = eeprom.ReadCurrentBand();
+/*
+  switch (data.currentBand)
   { // Set the frequency default as 1st preset frequency
   case 40:
     currentFrequency = data.presetFrequencies[0][2];
@@ -228,7 +231,7 @@ int main()
   default:
     break;
   }
-
+*/
   //  Set stepper to zero:
   display.updateMessageTop("                Resetting to Zero");
   stepper.ResetStepperToZero();
@@ -238,10 +241,18 @@ int main()
   dds.SendFrequency(0); // Is this redundant?
   swr.ReadADCoffsets();
 
-  dds.SendFrequency(currentFrequency); // Set the DDS
+  //  Retrieve the last used frequency.
+  currentFrequency = eeprom.ReadCurrentFrequency();
+  if(currentFrequency != 0) {
+  dds.SendFrequency(currentFrequency); // Set the DDSs
+  // Retrieve the last used frequency and autotune.
+  position = -25 + data.bandLimitPositionCounts[data.currentBand][0] + float((dds.currentFrequency - data.bandEdges[data.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.currentBand]);
+  stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+  display.AutoTuneSWR();
+  }
 
   display.menuIndex = FREQMENU; // Begin in Frequency menu.
-  whichBandOption = 0;
+  //whichBandOption = 0;
 
   // Main loop state machine:
   while (true)

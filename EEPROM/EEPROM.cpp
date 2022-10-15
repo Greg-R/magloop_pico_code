@@ -69,32 +69,43 @@
 EEPROM::EEPROM(Data &data) : data(data)
 {
   initialize();
+  // Define the structure at the beginning of the FLASH memory.
+  //dataStruct* eepromData = flash_target_contents;
+  
+  //eepromData = flash_target_contents;
 }
 
 //  Wrap the Pi Pico SDK write function.
 //  Note that this function must write in 256 byte chunks.
 //  The count parameter is the number of 256 byte chunks to be written.
 //  The data should be an array with multiples of 256 elements.
-void EEPROM::write(const uint8_t *data)
+void EEPROM::write()
 {
+  const uint8_t* dataPointer = (const uint8_t *) eepromData;
   uint32_t ints = save_and_disable_interrupts();
-  flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
-  flash_range_program(FLASH_TARGET_OFFSET, data, FLASH_PAGE_SIZE);
+//  flash_range_erase(FLASH_TARGET_OFFSET, FLASH_SECTOR_SIZE);
+//  flash_range_program(FLASH_TARGET_OFFSET, dataPointer, FLASH_PAGE_SIZE);  // Write the data to FLASH.
   restore_interrupts(ints);
 }
 
-//  Wrap the Pi Pico SDK read function.  This reads a single uint32_t value.
-uint32_t EEPROM::read(uint32_t index)
+//  Read the entire page into the buffer, and then write specific numbers into the Data object.
+void EEPROM::read()
 {
-
-  return flash_target_contents[index]; //  Return the value at the address.
+  this->data.currentBand = eepromData->band;
+  this->data.currentFrequency = eepromData->frequency;
+ // data.bands = eepromData.
+  //this->data.presetFrequencies = eepromData->presets;
+  this->data.presetFrequencies[3][6] = eepromData->presets[3][6];
+  this->data.bandLimitPositionCounts[3][2] = eepromData->endPositions[3][2];
+  this->data.initialized = eepromData->initialized;
+  //return *flash_target_contents; //  Return the value at the address.
 }
 
 /*****
   Purpose: The Pi Pico does not actually have any EEPROM, so we have to fake it with flash memory.
            This method initializes a 256 element array which is used to temporarily store
            the default band, preset frequencies, and position counts.
-           A 32 bit elements are used, although 16 bits is used in the original STM32 project.
+           32 bit elements are used.
            The entire buffer is written to flash when using the write method.
            This is because you must write a single "page" to Flash.
            There is a Union which was both 8 and 32 bit buffers which overlap.
@@ -102,7 +113,7 @@ uint32_t EEPROM::read(uint32_t index)
            is used to write to flash.
 
            The default values should be read only once prior to initial calibration.
-           After that, the WriteDefaultEEPROMValues() should be commented out.
+           After that, the WriteDefaultEEPROMValues() should be commented out.???
 
   Parameter list:
     void
@@ -177,6 +188,7 @@ void EEPROM::WriteDefaultEEPROMValues()
   Return value:
     void
 *****/
+/*
 void EEPROM::ReadEEPROMValuesToBuffer()
 {
   int index;
@@ -204,6 +216,35 @@ void EEPROM::ReadEEPROMValuesToBuffer()
     }
   }
 }
+
+void EEPROM::ReadEEPROMValuesToBuffer2()
+{
+  int index;
+  //  First, make sure the buffer is initialized to zeros.
+  initialize();
+
+  //  Default band goes in index 0 of the buffer.
+  bufferUnion.buffer32[0] = read(OFFSETTODEFAULTBAND);
+  index = OFFSETTOPOSITIONCOUNTS;
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < 2; k++)
+    {
+      bufferUnion.buffer32[index] = read(index);
+      index = index + 1;
+    }
+  }
+  index = OFFSETTOPRESETS;
+  for (int i = 0; i < MAXBANDS; i++)
+  {
+    for (int k = 0; k < PRESETSPERBAND; k++)
+    {
+      bufferUnion.buffer32[index] = data.presetFrequencies[i][k];
+      index = index + 1;
+    }
+  }
+}
+*/
 
 /*****
   Purpose: Save band edges position counts
@@ -239,6 +280,7 @@ void EEPROM::WritePositionCounts()
   Return value:
     void
 *****/
+/*
 void EEPROM::ReadPositionCounts()
 {
   uint16_t index;
@@ -252,7 +294,7 @@ void EEPROM::ReadPositionCounts()
     }
   }
 }
-
+*/
 /*****
   Purpose: Show slope coefficients for frequency calcs
   The array is stored in the EEPROM object as countPerHertzArray.
@@ -305,6 +347,7 @@ void EEPROM::WriteBandPresets()
   Return value:
   void
 *****/
+/*
 void EEPROM::ReadBandPresets()
 {
   uint16_t index;
@@ -320,6 +363,7 @@ void EEPROM::ReadBandPresets()
     }
   }
 }
+*/
 
 /*****
   Purpose: Read the value for currentBand from EEPROM.  Write to the data object.
@@ -332,6 +376,7 @@ void EEPROM::ReadBandPresets()
   Return value:
   void
 *****/
+/*
 uint32_t EEPROM::ReadCurrentBand()
 {
   // Set the band to 40M for first-time usage.
@@ -340,7 +385,7 @@ uint32_t EEPROM::ReadCurrentBand()
 //  this->data.currentBand = read(0);
   return read(0);
 }
-
+*/
 /*****
   Purpose: Read the value for currentBand from EEPROM.  Write to the data object.
            This function looks to see if the currentBand is either 40, 30, or 20.
@@ -352,11 +397,12 @@ uint32_t EEPROM::ReadCurrentBand()
   Return value:
   void
 *****/
+/*
 uint32_t EEPROM::ReadCurrentFrequency()
 {
   return read(25);
 }
-
+*/
 /*****
   Purpose: Write the value for currentBand to EEPROM
   This writes to the buffer only.

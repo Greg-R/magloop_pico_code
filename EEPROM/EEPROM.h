@@ -59,6 +59,16 @@ public:
         ;
     } bufferUnion;
 
+    // This struct holds the useful data after being read from the FLASH.
+    // After this struct is read from FLASH, the information is used to update the Data object.
+    struct dataStruct {
+           uint32_t band = 0;
+           uint32_t frequency = 0;
+           uint32_t endPositions[3][2];
+           uint32_t presets[3][6];
+           uint32_t initialized = 0x55555555;
+    };
+
     uint32_t defaultBand;
     uint32_t countPerHertzArray[3];
 
@@ -70,20 +80,21 @@ public:
     const uint32_t MAXBANDS = 3;
     const uint32_t PRESETSPERBAND = 6;
     const uint32_t FLASH_TARGET_OFFSET = 262144;  // (256 * 1024)
-
-    const uint32_t *flash_target_contents = (const uint32_t *)(XIP_BASE + FLASH_TARGET_OFFSET);
+    // Pointer to the FLASH memory.
+    dataStruct *eepromData = (dataStruct *)(XIP_BASE + FLASH_TARGET_OFFSET);
 
     EEPROM(Data &data);
 
     void initialize();
 
-    void write(const uint8_t *data);
+    void write();
 
-    uint32_t read(uint32_t index);
+    void read();
 
     //void WriteDefaultEEPROMValues();
 
     void ReadEEPROMValuesToBuffer();
+    void ReadEEPROMValuesToBuffer2();
 
     void WritePositionCounts();
 

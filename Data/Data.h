@@ -64,14 +64,14 @@ public:
   const uint32_t HIGHEND30M = 10150000;
   const uint32_t LOWEND20M = 14000000;
   const uint32_t HIGHEND20M = 14350000;
-  const uint32_t presetFrequencies[3][6] =
+  uint32_t presetFrequencies[3][6] =
       {
           {7030000L, 7040000L, 7100000L, 7150000L, 7250000L, 7285000L},       // 40M
           {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L}, // 30M
           {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}  // 20M
   };
 
-  long bandLimitPositionCounts[3][2];
+  uint32_t bandLimitPositionCounts[3][2];
 
   const uint32_t bandEdges[3][2] = { // Band edges in Hz
       {LOWEND40M, HIGHEND40M},
@@ -81,7 +81,9 @@ public:
   //  This should be made variable length arrays.
   float countPerHertz[3];
   float hertzPerStepperUnitVVC[3]; // Voltage Variable Cap
-  int currentBand;
+  uint32_t currentBand;
+  uint32_t currentFrequency;
+  uint32_t initialized;
 
   const int STEPPERSLEEPNOT = 9;
   const int OPAMPPOWER = 3;

@@ -123,7 +123,7 @@ void DisplayManagement::frequencyMenuOption()
       }
       dds.SendFrequency(frequency); // Done in ChangeFrequency???
       eeprom.WriteCurrentFrequency(frequency);
-      eeprom.write(eeprom.bufferUnion.buffer8);
+      eeprom.write();
       Power(true);                  // Power up circuits.
       SWRValue = swr.ReadSWRValue();
       readSWRValue = SWRValue; // Redundant???
@@ -486,7 +486,7 @@ int DisplayManagement::SelectBand(const std::string bands[3])
 
   //currentBand = currBand[index]; // Used???
    eeprom.WriteCurrentBand(index);               
-   eeprom.write(eeprom.bufferUnion.buffer8);
+   eeprom.write();
   return index;
 }
 
@@ -850,13 +850,13 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
   } // end for (i
 
   eeprom.WritePositionCounts();             // Write values to EEPROM buffer.  Must also write them to Flash!
-  eeprom.write(eeprom.bufferUnion.buffer8); // This writes a page to Flash memory.  This includes the position counts
+  eeprom.write(); // This writes a page to Flash memory.  This includes the position counts
                                             // and preset frequencies.
   //  Now get the newly written values into the current session:
   //  Read the position counts and presets into the EEPROM object's buffer.
-  eeprom.ReadEEPROMValuesToBuffer();
+  eeprom.read();
   //  Overwrite the position counts and preset frequencies:
-  eeprom.ReadPositionCounts();
+  //eeprom.ReadPositionCounts();
   // Slopes can't be computed until the actual values are loaded from flash:
   data.computeSlopes();
 
@@ -999,7 +999,7 @@ void DisplayManagement::ProcessPresets()
       Power(true);      // Power up circuits.
       dds.SendFrequency(frequency);
       eeprom.WriteCurrentFrequency(frequency);
-      eeprom.write(eeprom.bufferUnion.buffer8);
+      eeprom.write();
       // Calculate the approximate position for the stepper and back off a bit.
       position = -25 + data.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20

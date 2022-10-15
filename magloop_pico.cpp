@@ -173,10 +173,17 @@ int main()
 
   //  Instantiate the EEPROM object, which is actually composed of FLASH.
   EEPROM eeprom = EEPROM(data);
-  //  Read the position counts and presets into the EEPROM object's buffer.
-  eeprom.ReadEEPROMValuesToBuffer();
+  //  Read the EEPROM and update the Data object.
+  eeprom.read();
+  //  Now examine the data in the buffer to see if the EEPROM should be initialized.
+  //  There is a specific number written to the EEPROM when it is initialized.
+  if(data.initialized != 0x55555555) {
+    data.currentFrequency = 7150000;
+    data.currentBand = 0;
+    eeprom.write();
+  }
   //  Overwrite the position counts and preset frequencies:
-  eeprom.ReadPositionCounts();
+  //eeprom.ReadPositionCounts();
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
 
@@ -215,7 +222,7 @@ int main()
 
   // The default band is read from Flash and stored in the data object.  Default band save is not currently implemented.
   // Defaults to 40 meters.
-  data.currentBand = eeprom.ReadCurrentBand();
+//  data.currentBand = eeprom.ReadCurrentBand();
 /*
   switch (data.currentBand)
   { // Set the frequency default as 1st preset frequency
@@ -242,11 +249,11 @@ int main()
   swr.ReadADCoffsets();
 
   //  Retrieve the last used frequency.
-  currentFrequency = eeprom.ReadCurrentFrequency();
+  currentFrequency = data.currentFrequency;
   if(currentFrequency != 0) {
   dds.SendFrequency(currentFrequency); // Set the DDSs
   // Retrieve the last used frequency and autotune.
-  position = -25 + data.bandLimitPositionCounts[data.currentBand][0] + float((dds.currentFrequency - data.bandEdges[data.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.currentBand]);
+  int32_t position = -25 + data.bandLimitPositionCounts[data.currentBand][0] + float((dds.currentFrequency - data.bandEdges[data.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.currentBand]);
   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
   display.AutoTuneSWR();
   }

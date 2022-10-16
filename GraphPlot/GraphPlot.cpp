@@ -236,11 +236,11 @@ void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, std::array<int32_
   {
     if (tempCurrentPosition[i] > 0 and tempSWR[i] < 3)
     {
-      HzPerStep = (freqEnd - freqStart) / (float(data.bandLimitPositionCounts[whichBandOption][1] - data.bandLimitPositionCounts[whichBandOption][0]));
+      HzPerStep = (freqEnd - freqStart) / (float(data.workingData.bandLimitPositionCounts[whichBandOption][1] - data.workingData.bandLimitPositionCounts[whichBandOption][0]));
       currentFrequencyDiff = float(tempCurrentPosition[i] - SWRMinPosition) * HzPerStep;
       plotFreq = (dds.currentFrequency + currentFrequencyDiff);
       HzPerPix = float(freqEnd - freqStart) / float(XAXISEND - XAXISSTART);
-      stepsPerPix = float(data.bandLimitPositionCounts[whichBandOption][1] - data.bandLimitPositionCounts[whichBandOption][0]) / (XAXISEND - XAXISSTART);
+      stepsPerPix = float(data.workingData.bandLimitPositionCounts[whichBandOption][1] - data.workingData.bandLimitPositionCounts[whichBandOption][0]) / (XAXISEND - XAXISSTART);
       pixPerSWRUnit = float(YAXISEND - YAXISSTART) / 3;
       int xposition = 27 + float(plotFreq - freqStart) / HzPerPix;
       int yposition = YAXISSTART + (4 - tempSWR[i]) * pixPerSWRUnit;

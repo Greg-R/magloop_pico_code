@@ -172,18 +172,20 @@ int main()
   tft.fillScreen(ILI9341_BLACK);
 
   //  Instantiate the EEPROM object, which is actually composed of FLASH.
-  EEPROM eeprom = EEPROM(data);
+  EEPROMClass eeprom = EEPROMClass();
   //  Read the EEPROM and update the Data object.
-  eeprom.read();
+  eeprom.begin(256);  //  1 FLASH page which is 256 bytes.  Not sure this is required if using get and put methods.
+ //  Now read the struct from Flash which is read into the Data object.
+  eeprom.get(0, data.workingData);  //
   //  Now examine the data in the buffer to see if the EEPROM should be initialized.
   //  There is a specific number written to the EEPROM when it is initialized.
-  if(data.initialized != 0x55555555) {
-    data.currentFrequency = 7150000;
-    data.currentBand = 0;
-    eeprom.write();
+  if(data.workingData.initialized != 0x55555555) {
+   // data.workingData.currentFrequency = 7150000;
+   // data.workingData.currentBand = 0;
+    eeprom.put(0, data.workingData);
+    eeprom.commit();
   }
-  //  Overwrite the position counts and preset frequencies:
-  //eeprom.ReadPositionCounts();
+ 
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
 
@@ -249,12 +251,12 @@ int main()
   swr.ReadADCoffsets();
 
   //  Retrieve the last used frequency.
-  currentFrequency = data.currentFrequency;
+  currentFrequency = data.workingData.currentFrequency;
   if(currentFrequency != 0) {
   dds.SendFrequency(currentFrequency); // Set the DDSs
   // Retrieve the last used frequency and autotune.
-  int32_t position = -25 + data.bandLimitPositionCounts[data.currentBand][0] + float((dds.currentFrequency - data.bandEdges[data.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.currentBand]);
-  stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+  int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + float((dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
+  stepper.MoveStepperToPositionCorrected(position);
   display.AutoTuneSWR();
   }
 

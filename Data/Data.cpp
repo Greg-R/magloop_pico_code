@@ -30,13 +30,15 @@
 
 #include "Data.h"
 
-Data::Data(){}
+Data::Data() {
+
+};
 
 void Data::computeSlopes() {
-countPerHertz[0] =  ((float) bandLimitPositionCounts[0][1] - (float) bandLimitPositionCounts[0][0]) / ((float) HIGHEND40M - (float) LOWEND40M);
-countPerHertz[1] =  ((float) bandLimitPositionCounts[1][1] - (float) bandLimitPositionCounts[1][0]) / ((float) HIGHEND30M - (float) LOWEND30M);
-countPerHertz[2] =  ((float) bandLimitPositionCounts[2][1] - (float) bandLimitPositionCounts[2][0]) / ((float) HIGHEND20M - (float) LOWEND20M);
-hertzPerStepperUnitVVC[0]= ((float) HIGHEND40M - (float) LOWEND40M)/((float) bandLimitPositionCounts[0][1] - (float) bandLimitPositionCounts[0][0]);
-hertzPerStepperUnitVVC[1]= ((float) HIGHEND30M - (float) LOWEND30M)/((float) bandLimitPositionCounts[1][1] - (float) bandLimitPositionCounts[1][0]);
-hertzPerStepperUnitVVC[2]= ((float) HIGHEND20M - (float) LOWEND20M)/((float) bandLimitPositionCounts[2][1] - (float) bandLimitPositionCounts[2][0]);
+countPerHertz[0] =  ((float) workingData.bandLimitPositionCounts[0][1] - (float) workingData.bandLimitPositionCounts[0][0]) / ((float) HIGHEND40M - (float) LOWEND40M);
+countPerHertz[1] =  ((float) workingData.bandLimitPositionCounts[1][1] - (float) workingData.bandLimitPositionCounts[1][0]) / ((float) HIGHEND30M - (float) LOWEND30M);
+countPerHertz[2] =  ((float) workingData.bandLimitPositionCounts[2][1] - (float) workingData.bandLimitPositionCounts[2][0]) / ((float) HIGHEND20M - (float) LOWEND20M);
+hertzPerStepperUnitVVC[0]= ((float) HIGHEND40M - (float) LOWEND40M)/((float) workingData.bandLimitPositionCounts[0][1] - (float) workingData.bandLimitPositionCounts[0][0]);
+hertzPerStepperUnitVVC[1]= ((float) HIGHEND30M - (float) LOWEND30M)/((float) workingData.bandLimitPositionCounts[1][1] - (float) workingData.bandLimitPositionCounts[1][0]);
+hertzPerStepperUnitVVC[2]= ((float) HIGHEND20M - (float) LOWEND20M)/((float) workingData.bandLimitPositionCounts[2][1] - (float) workingData.bandLimitPositionCounts[2][0]);
 }

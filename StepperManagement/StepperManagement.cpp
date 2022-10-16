@@ -114,15 +114,15 @@ long StepperManagement::ConvertFrequencyToStepperCount(long presentFrequency)
   switch (currentBand)
   {
   case 40: //   intercept                  + slopeCoefficient * newFrequency
-    count = data.bandLimitPositionCounts[0][0] + (long)(countPerHertz[0] * ((float)(presentFrequency - data.LOWEND40M)));
+    count = data.workingData.bandLimitPositionCounts[0][0] + (long)(countPerHertz[0] * ((float)(presentFrequency - data.LOWEND40M)));
     break;
 
   case 30:
-    count = data.bandLimitPositionCounts[1][0] + (long)(countPerHertz[1] * ((float)(presentFrequency - data.LOWEND30M)));
+    count = data.workingData.bandLimitPositionCounts[1][0] + (long)(countPerHertz[1] * ((float)(presentFrequency - data.LOWEND30M)));
     break;
 
   case 20:
-    count = data.bandLimitPositionCounts[2][0] + (long)(countPerHertz[2] * ((float)(presentFrequency - data.LOWEND20M)));
+    count = data.workingData.bandLimitPositionCounts[2][0] + (long)(countPerHertz[2] * ((float)(presentFrequency - data.LOWEND20M)));
     break;
 
   default:

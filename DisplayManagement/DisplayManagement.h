@@ -70,7 +70,7 @@ public:
     DDS &dds;
     SWR &swr;
     StepperManagement &stepper;
-    EEPROM &eeprom;
+    EEPROMClass &eeprom;
     Data &data;
     int whichBandOption;  // This indicates the current band in use.
     float SWRValue;
@@ -107,7 +107,7 @@ public:
     Button autotunebutton = Button(7);
     Button exitbutton = Button(8);
 
-    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROM &eeprom, Data &data);
+    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data);
 
     void Splash(std::string version, std::string releaseDate);
 

@@ -39,7 +39,7 @@ int digitEncoderMovement;
 //                                     StepperManagement &stepper, EEPROM &eeprom, Data &data) : tft(tft), dds(dds), swr(swr),
 //                                                     stepper(stepper), eeprom(eeprom), data(data), GraphPlot(tft, dds, data)
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROM &eeprom, Data &data) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
                                                      stepper(stepper), eeprom(eeprom), data(data)                                             
 {
   enterbutton.initialize();
@@ -103,14 +103,16 @@ void DisplayManagement::frequencyMenuOption()
       return; //  Exit frequency selection and return to top menu Freq.
     case State::state1:
       whichBandOption = SelectBand(data.bands); // state1
-      this->data.currentBand = whichBandOption;
+      
       // If SelectBand returns 4, this means the menu was exited without selecting a band.  Move to the top level menu Freq.
       if (whichBandOption == 4)
       {
         state = State::state0;
         break;
       }
-      frequency = data.presetFrequencies[whichBandOption][3]; // Set initial frequency for each band from Preset list
+      if(whichBandOption == this->data.workingData.currentBand) frequency = data.workingData.currentFrequency;
+      else frequency = data.presetFrequencies[whichBandOption][3]; // Set initial frequency for each band from Preset list
+      this->data.workingData.currentBand = whichBandOption;  //  Update the current band.   
       state = State::state2;                                  // Proceed to manual frequency adjustment state.
       break;
     case State::state2:
@@ -122,15 +124,16 @@ void DisplayManagement::frequencyMenuOption()
         break;
       }
       dds.SendFrequency(frequency); // Done in ChangeFrequency???
-      eeprom.WriteCurrentFrequency(frequency);
-      eeprom.write();
+      data.workingData.currentFrequency = frequency;
+      eeprom.put(0, data.workingData);
+      eeprom.commit();  // Write to EEPROM.
       Power(true);                  // Power up circuits.
       SWRValue = swr.ReadSWRValue();
       readSWRValue = SWRValue; // Redundant???
       ShowSubmenuData(SWRValue, frequency);
       tft.fillRect(0, 100, 311, 150, ILI9341_BLACK); // ???
       // Backup 20 counts to approach from CW direction
-      position = -50 + data.bandLimitPositionCounts[whichBandOption][0] + float((frequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+      position = -50 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((frequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       //  Move the stepper to the approximate location based on the current frequency:
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
       minSWRAuto = AutoTuneSWR();                       // Auto tune here
@@ -185,7 +188,7 @@ int DisplayManagement::manualTune()
                                    // Is this MAXSWITCH protection needed here???
     if (autotunebutton.pushed == true and (not lastautotunebutton) and gpio_get(MAXSWITCH))
     { // Redo the Autotune at new frequency/position
-      position = -80 + data.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+      position = -80 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
       minSWRAuto = AutoTuneSWR();                       // Auto tune here
       SWRMinPosition = stepper.currentPosition();       // Get the autotuned stepper position.
@@ -485,8 +488,9 @@ int DisplayManagement::SelectBand(const std::string bands[3])
   } // end while
 
   //currentBand = currBand[index]; // Used???
-   eeprom.WriteCurrentBand(index);               
-   eeprom.write();
+//   eeprom.WriteCurrentBand(index);
+ //  data.workingData.currentBand = index;               
+ //  eeprom.commit();
   return index;
 }
 
@@ -714,8 +718,8 @@ void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19.  Greg modified
   { // For the 3 bands...
     for (j = 0; j < 2; j++)
     {
-      frequency = data.bandEdges[i][j];                    // Select a band edge
-      position = data.bandLimitPositionCounts[i][j] - 200; // Set Band limit count -200 counts to approach band limit from CW direction
+      frequency = data.workingData.bandEdges[i][j];                    // Select a band edge
+      position = data.workingData.bandLimitPositionCounts[i][j] - 200; // Set Band limit count -200 counts to approach band limit from CW direction
       stepper.MoveStepperToPositionCorrected(position);    // Move to the estimated position below the target.
       dds.SendFrequency(frequency);                        // Tell the DDS the edge frequency...
       UpdateFrequency(frequency);                          // Change main display data
@@ -732,7 +736,7 @@ void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19.  Greg modified
         // UpdateFrequency(frequency);  // Is this redundant???
         if (minSWRAuto < TARGETMAXSWR)
         { // Ignore values greater than Target Max
-          data.bandLimitPositionCounts[i][j] = SWRMinPosition;
+          data.workingData.bandLimitPositionCounts[i][j] = SWRMinPosition;
           tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
           if (frequency < 10000000)
           {
@@ -752,7 +756,7 @@ void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19.  Greg modified
     position = SWRFinalPosition + 50;
   } // end for (i
 
-  eeprom.WritePositionCounts(); // Write values to EEPROM
+  eeprom.commit(); // Write values to EEPROM
   updateMessageTop("                    Press Exit");
   updateMessageBottom("         Full Calibration Complete");
   Power(false); //  Power down circuits.
@@ -802,8 +806,8 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
   { // For the 3 bands...
     for (j = 0; j < 2; j = j + 1)
     {
-      this->data.currentBand = i;  // Used by SWRdataAnalysis()
-      frequency = this->data.bandEdges[i][j]; // Select a band edge to calibrate
+      this->data.workingData.currentBand = i;  // Used by SWRdataAnalysis()
+      frequency = this->data.workingData.bandEdges[i][j]; // Select a band edge to calibrate
       dds.SendFrequency(frequency);     // Tell the DDS the edge frequency...
       updateMessageTop("             Moving to Freq");
       while (true)
@@ -829,7 +833,7 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
 
         if (minSWRAuto < TARGETMAXSWR)
         { // Ignore values greater than Target Max
-          data.bandLimitPositionCounts[i][j] = SWRMinPosition;
+          data.workingData.bandLimitPositionCounts[i][j] = SWRMinPosition;
           tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
           if (dds.currentFrequency < 10000000)
           {
@@ -848,13 +852,12 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
     } // end for (j
     position = stepper.currentPosition() - 50;
   } // end for (i
-
-  eeprom.WritePositionCounts();             // Write values to EEPROM buffer.  Must also write them to Flash!
-  eeprom.write(); // This writes a page to Flash memory.  This includes the position counts
+  eeprom.put(0, data.workingData);
+  eeprom.commit(); // This writes a page to Flash memory.  This includes the position counts
                                             // and preset frequencies.
   //  Now get the newly written values into the current session:
   //  Read the position counts and presets into the EEPROM object's buffer.
-  eeprom.read();
+  //eeprom.get(0, data.workingData);
   //  Overwrite the position counts and preset frequencies:
   //eeprom.ReadPositionCounts();
   // Slopes can't be computed until the actual values are loaded from flash:
@@ -903,8 +906,8 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
   updateMessageBottom("            Single Band Calibrate");
   for (j = 0; j < 2; j++)
   {                                                 // For each band edge...
-    frequency = data.bandEdges[whichBandOption][j]; // Select a band edge
-    position = data.bandLimitPositionCounts[whichBandOption][j] - 50;
+    frequency = data.workingData.bandEdges[whichBandOption][j]; // Select a band edge
+    position = data.workingData.bandLimitPositionCounts[whichBandOption][j] - 50;
     Power(true);                                      //  Power up circuits.
     stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
     dds.SendFrequency(frequency);                     // Tell the DDS the edge frequency...
@@ -921,7 +924,7 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
       ShowSubmenuData(minSWRAuto, dds.currentFrequency); // Update SWR value
       if (minSWRAuto < TARGETMAXSWR)
       { // Ignore values greater than Target Max
-        data.bandLimitPositionCounts[whichBandOption][j] = SWRMinPosition;
+        data.workingData.bandLimitPositionCounts[whichBandOption][j] = SWRMinPosition;
         tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
         if (dds.currentFrequency < 10000000)
         {
@@ -936,10 +939,10 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
         break;       // This sends control to next edge
       }
     }
-    position = data.bandLimitPositionCounts[whichBandOption][1] - 50;
+    position = data.workingData.bandLimitPositionCounts[whichBandOption][1] - 50;
   } // end for (j
   position = SWRFinalPosition + 50;
-  eeprom.WritePositionCounts(); // Write values to EEPROM
+  eeprom.commit(); // Write values to EEPROM
   updateMessageTop("                     Press Exit");
   updateMessageBottom("     Single Band Calibrate Complete");
   Power(false); // Power down circuits.
@@ -979,7 +982,7 @@ void DisplayManagement::ProcessPresets()
       return; // Return to top level.
     case State::state1:
       whichBandOption = SelectBand(data.bands); // Select the band to be used
-      this->data.currentBand = whichBandOption;
+      this->data.workingData.currentBand = whichBandOption;
       // If SelectBand returns 4, the user exited before selecting a band.  Return to top menu.
       if (whichBandOption == 4)
       {
@@ -998,10 +1001,11 @@ void DisplayManagement::ProcessPresets()
     case State::state3: // Run AutoTuneSWR() at the selected preset frequency.
       Power(true);      // Power up circuits.
       dds.SendFrequency(frequency);
-      eeprom.WriteCurrentFrequency(frequency);
-      eeprom.write();
+      this->data.workingData.currentFrequency = frequency;
+      eeprom.put(0, data.workingData);
+      eeprom.commit();
       // Calculate the approximate position for the stepper and back off a bit.
-      position = -25 + data.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+      position = -25 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
       minSWRAuto = AutoTuneSWR();
       ShowSubmenuData(minSWRAuto, dds.currentFrequency);
@@ -1447,8 +1451,8 @@ void DisplayManagement::SWRdataAnalysis()
   // SWRMinPosition is the index the desired center frequency for AutoTune.
   // Need the band index to retrieve the slope.
   fcenter = dds.currentFrequency;
-  flow    = fcenter - (SWRMinPosition - tempCurrentPosition[posLowIndex]) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.currentBand]);
-  fhigh   = fcenter + (tempCurrentPosition[posHighIndex] - SWRMinPosition) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.currentBand]);
+  flow    = fcenter - (SWRMinPosition - tempCurrentPosition[posLowIndex]) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.workingData.currentBand]);
+  fhigh   = fcenter + (tempCurrentPosition[posHighIndex] - SWRMinPosition) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.workingData.currentBand]);
  //  flow    = SWRMinPosition - tempCurrentPosition[posLowIndex];
  // fhigh   = tempCurrentPosition[posHighIndex] - SWRMinPosition;
   fpair = {flow, fhigh};

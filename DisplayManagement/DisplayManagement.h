@@ -163,7 +163,7 @@ public:
 
     void CalibrationMachine();
 
-    void Power(bool setpower);
+    void Power(bool setpower, bool relayPower);
 
     void PowerSWR(bool setpower);
 

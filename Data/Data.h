@@ -57,14 +57,15 @@ public:
   };
 
   struct dataStruct {
-  uint32_t bandLimitPositionCounts[3][2] = {{1,2},{3,4},{5,6}};
-  uint32_t bandEdges[3][2] = { // Band edges in Hz
-      {LOWEND40M, HIGHEND40M},
-      {LOWEND30M, HIGHEND30M},
-      {LOWEND20M, HIGHEND20M}};
+  uint32_t bandLimitPositionCounts[3][2];
+  uint32_t bandEdges[3][2]; // = { // Band edges in Hz
+   //   {LOWEND40M, HIGHEND40M},
+   //   {LOWEND30M, HIGHEND30M},
+   //   {LOWEND20M, HIGHEND20M}};
   uint32_t currentBand = 0;
   uint32_t currentFrequency = 7150000;
   uint32_t initialized = 0x55555555;
+  uint32_t calibrated;
   } workingData;
 
   //  This should be made variable length arrays.
@@ -80,4 +81,6 @@ public:
   Data();
 
   void computeSlopes();
+
+  void writeDefaultValues();
 };

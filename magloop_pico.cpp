@@ -176,15 +176,8 @@ int main()
   //  Read the EEPROM and update the Data object.
   eeprom.begin(256);  //  1 FLASH page which is 256 bytes.  Not sure this is required if using get and put methods.
  //  Now read the struct from Flash which is read into the Data object.
-  eeprom.get(0, data.workingData);  //
-  //  Now examine the data in the buffer to see if the EEPROM should be initialized.
-  //  There is a specific number written to the EEPROM when it is initialized.
-  if(data.workingData.initialized != 0x55555555) {
-   // data.workingData.currentFrequency = 7150000;
-   // data.workingData.currentBand = 0;
-    eeprom.put(0, data.workingData);
-    eeprom.commit();
-  }
+  eeprom.get(0, data.workingData);  // Read the workingData struct from EEPROM.
+  
  
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
@@ -203,8 +196,8 @@ int main()
   // Instantiate the DisplayManagement object.  This object has many important methods.
   DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
 
-  // Power on all circuits.  This is done early to allow circuits to stabilize before calibration.
-  display.Power(true);
+  // Power on all circuits except relay.  This is done early to allow circuits to stabilize before calibration.
+  display.Power(true, false);
 
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
   display.Splash(version, releaseDate);
@@ -222,25 +215,6 @@ int main()
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
-  // The default band is read from Flash and stored in the data object.  Default band save is not currently implemented.
-  // Defaults to 40 meters.
-//  data.currentBand = eeprom.ReadCurrentBand();
-/*
-  switch (data.currentBand)
-  { // Set the frequency default as 1st preset frequency
-  case 40:
-    currentFrequency = data.presetFrequencies[0][2];
-    break;
-  case 30:
-    currentFrequency = data.presetFrequencies[1][0];
-    break;
-  case 20:
-    currentFrequency = data.presetFrequencies[2][0];
-    break;
-  default:
-    break;
-  }
-*/
   //  Set stepper to zero:
   display.updateMessageTop("                Resetting to Zero");
   stepper.ResetStepperToZero();
@@ -250,15 +224,34 @@ int main()
   dds.SendFrequency(0); // Is this redundant?
   swr.ReadADCoffsets();
 
-  //  Retrieve the last used frequency.
+  //  Now examine the data in the buffer to see if the EEPROM should be initialized.
+  //  There is a specific number written to the EEPROM when it is initialized.
+  if(data.workingData.initialized != 0x55555555) {
+    data.writeDefaultValues();  //  Writes default values in to the dataStruct in the Data object.
+    eeprom.put(0, data.workingData);
+    eeprom.commit();
+  }
+  // Check if initial calibration has been run.  Inform user if not.
+  if(data.workingData.calibrated == 0) {
+   //  Inform user to run Initial Calibration.
+          tft.setCursor(30, 140);
+          tft.print("Please run Initial Calibration");
+          busy_wait_ms(5000);
+  }
+  else {
+  //  Retrieve the last used frequency and autotune.
   currentFrequency = data.workingData.currentFrequency;
   if(currentFrequency != 0) {
   dds.SendFrequency(currentFrequency); // Set the DDSs
   // Retrieve the last used frequency and autotune.
   int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + float((dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
   stepper.MoveStepperToPositionCorrected(position);
+  display.Power(true, true);
   display.AutoTuneSWR();
+  display.Power(false, false);
   }
+  }
+  
 
   display.menuIndex = FREQMENU; // Begin in Frequency menu.
   //whichBandOption = 0;
@@ -274,7 +267,7 @@ int main()
     //display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
     //display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
     display.ShowSubmenuData(display.minSWR, dds.currentFrequency);
-    display.Power(false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
+    display.Power(false, false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)

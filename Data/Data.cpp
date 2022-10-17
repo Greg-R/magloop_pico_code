@@ -42,3 +42,26 @@ hertzPerStepperUnitVVC[0]= ((float) HIGHEND40M - (float) LOWEND40M)/((float) wor
 hertzPerStepperUnitVVC[1]= ((float) HIGHEND30M - (float) LOWEND30M)/((float) workingData.bandLimitPositionCounts[1][1] - (float) workingData.bandLimitPositionCounts[1][0]);
 hertzPerStepperUnitVVC[2]= ((float) HIGHEND20M - (float) LOWEND20M)/((float) workingData.bandLimitPositionCounts[2][1] - (float) workingData.bandLimitPositionCounts[2][0]);
 }
+
+void Data::writeDefaultValues(){
+workingData.bandLimitPositionCounts[0][0] = 0;
+workingData.bandLimitPositionCounts[0][1] = 0;
+workingData.bandLimitPositionCounts[1][0] = 0;
+workingData.bandLimitPositionCounts[1][1] = 0;
+workingData.bandLimitPositionCounts[2][0] = 0;
+workingData.bandLimitPositionCounts[2][1] = 0;
+workingData.bandEdges[0][0] = LOWEND40M;
+workingData.bandEdges[0][1] = HIGHEND40M;
+workingData.bandEdges[1][0] = LOWEND30M;
+workingData.bandEdges[1][1] = HIGHEND30M;
+workingData.bandEdges[2][0] = LOWEND20M;
+workingData.bandEdges[2][1] = HIGHEND20M;
+ // workingData.bandEdges[0][0] = 
+ //     {LOWEND40M, HIGHEND40M},
+ //     {LOWEND30M, HIGHEND30M},
+ //     {LOWEND20M, HIGHEND20M}};
+  workingData.currentBand = 0;
+  workingData.currentFrequency = 7150000;
+  workingData.initialized = 0x55555555;
+  workingData.calibrated = 0;
+}

@@ -40,14 +40,14 @@ int digitEncoderMovement;
 //                                                     stepper(stepper), eeprom(eeprom), data(data), GraphPlot(tft, dds, data)
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
                                      StepperManagement &stepper, EEPROMClass &eeprom, Data &data) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
-                                                     stepper(stepper), eeprom(eeprom), data(data)                                             
+                                                     stepper(stepper), eeprom(eeprom), data(data)                                            
 {
+  enterbutton = Button(data.enterButton);
+  autotunebutton = Button(data.autotuneButton);
+  exitbutton = Button(data.exitButton);
   enterbutton.initialize();
   exitbutton.initialize();
   autotunebutton.initialize();
-  //tempSWR(500);
-  //tempCurrentPosition(500);
- // mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
 }
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)

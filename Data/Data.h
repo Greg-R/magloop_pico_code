@@ -30,6 +30,7 @@
 
 #pragma once
 #include <stdint.h>
+#include "pico/stdlib.h"
 #include <string>
 
 //  This class is intended to manage various frequency and position related constants and variables.
@@ -79,6 +80,10 @@ const int MAXBANDS = 3;       // Can only process this many frequency bands
   float hertzPerStepperUnitVVC[3]; // Voltage Variable Cap
   
   // GPIO assignments.
+  //  Buttons
+  uint enterButton = 6;
+  uint autotuneButton = 7;
+  uint exitButton = 8;
   //  Power controls
   const int STEPPERSLEEPNOT = 9;
   const int OPAMPPOWER = 3;

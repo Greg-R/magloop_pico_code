@@ -48,6 +48,7 @@ class Button {
     uint64_t debounceInterval = 50000;  // 50 milliseconds
 
     Button(uint gpio);
+    Button();
 
     void initialize();
 

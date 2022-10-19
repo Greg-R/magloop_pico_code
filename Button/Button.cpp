@@ -38,6 +38,9 @@ Button::Button(uint gpio): gpio(gpio) {
   state = State::state0;
 }
 
+// Default constructor.
+Button::Button() {}
+
 /*****
   Purpose: Initialize a GPIO to be used as a pushbutton input.
   A pull-up will be used.  The input is true when the button is not pushed.
@@ -49,7 +52,7 @@ Button::Button(uint gpio): gpio(gpio) {
     void
 *****/
 void Button::initialize() {
-gpio_set_function( gpio, GPIO_FUNC_SIO);
+gpio_set_function(gpio, GPIO_FUNC_SIO);
 gpio_set_dir(gpio, GPIO_IN);
 gpio_pull_up(gpio);
 }

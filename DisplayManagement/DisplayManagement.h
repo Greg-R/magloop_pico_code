@@ -109,10 +109,10 @@ public:
         state3
     }; // Used to move between states in state machines.
     State state;
-    // Instantiate 3 pushbuttons.  This Class does de-bouncing.  The GPIs need to be moved to the Data object.
-    Button enterbutton = Button(6);
-    Button autotunebutton = Button(7);
-    Button exitbutton = Button(8);
+    // Declare 3 pushbuttons.  This Class does de-bouncing.
+    Button enterbutton; //= Button(6);
+    Button autotunebutton; //= Button(7);
+    Button exitbutton; //= Button(8);
 
     DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data);
 

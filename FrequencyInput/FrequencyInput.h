@@ -48,11 +48,6 @@
 #include "FreeSerif12pt7b.h"
 #include "FreeSerif24pt7b.h"
 
-extern int menuEncoderMovement;
-extern int frequencyEncoderMovement;
-extern int frequencyEncoderMovement2;
-extern int digitEncoderMovement;
-
 #define PRESETSPERBAND 6
 #define PIXELWIDTH 320
 #define INCREMENTPAD 22 // Used to display increment cursor
@@ -60,19 +55,20 @@ extern int digitEncoderMovement;
 #define MAXBANDS 3
 #define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
-//#define FREQMENU 0 // Menuing indexes
 #define MAXNUMREADINGS 500
 #define PIXELHEIGHT 240
 
+extern int menuEncoderMovement;
+extern int frequencyEncoderMovement;
+extern int frequencyEncoderMovement2;
+extern int digitEncoderMovement;
+
 //  DisplayManagement inherits from class GraphPlot.
-class DisplayManagement : public GraphPlot
+class FrequencyInput
 {
 
 public:
     Adafruit_ILI9341 &tft;
-    DDS &dds;
-    SWR &swr;
-    StepperManagement &stepper;
     EEPROMClass &eeprom;
     Data &data;
     int whichBandOption;  // This indicates the current band in use.
@@ -116,7 +112,7 @@ public:
     Button autotunebutton; //= Button(7);
     Button exitbutton; //= Button(8);
 
-    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data);
+    FrequencyInput(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data);
 
     void Splash(std::string version, std::string releaseDate);
 
@@ -146,13 +142,6 @@ public:
 
     void updateMessageBottom(std::string messageToPrint);
 
-    // The following 3 methods were consolidated from "Calibrate".
-    void DoNewCalibrate2();
-
-    void DoFirstCalibrate();
-
-    void DoSingleBandCalibrate(int whichBandOption);
-
     // The following 3 methods were consolidated from "Presets":
     void ProcessPresets();
 
@@ -162,8 +151,6 @@ public:
 
     void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
 
-    float AutoTuneSWR();
-
     void ManualFrequencyControl(int whichBandOption);
 
     void ManualStepperControl();
@@ -172,14 +159,4 @@ public:
 
     void CalibrationMachine();
 
-    void Power(bool setpower, bool relayPower);
-
-    void PowerSWR(bool setpower);
-
-    //  This is the return type for the SWRdataAnalysis function.
-    std::pair <uint32_t, uint32_t> fpair;
-
-    void SWRdataAnalysis();
-
-    void PrintSWRlimits(std::pair<uint32_t, uint32_t> fpair);
 };

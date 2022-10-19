@@ -28,11 +28,10 @@
     GNU General Public License for more details.
 */
 
-#include "DisplayManagement.h"
+#include "FrequencyInput.h"
 
-DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
-                                                     stepper(stepper), eeprom(eeprom), data(data)                                            
+FrequencyInput::FrequencyInput(Adafruit_ILI9341 &tft,
+                               EEPROMClass &eeprom, Data &data) : tft(tft), eeprom(eeprom), data(data)
 {
   enterbutton = Button(data.enterButton);
   autotunebutton = Button(data.autotuneButton);
@@ -42,7 +41,7 @@ DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
   autotunebutton.initialize();
 }
 
-void DisplayManagement::Splash(std::string version, std::string releaseDate)
+void FrequencyInput::Splash(std::string version, std::string releaseDate)
 {
   tft.fillScreen(ILI9341_BLACK);
   tft.setTextSize(2);
@@ -79,7 +78,7 @@ void DisplayManagement::Splash(std::string version, std::string releaseDate)
   Return value:
     void
 *****/
-void DisplayManagement::frequencyMenuOption()
+void FrequencyInput::frequencyMenuOption()
 {
   int SWRFlag1;
   int backCount = 0;
@@ -116,29 +115,29 @@ void DisplayManagement::frequencyMenuOption()
         state = State::state1;
         break;
       }
-      dds.SendFrequency(frequency); // Done in ChangeFrequency???
+      //dds.SendFrequency(frequency); // Done in ChangeFrequency???
       data.workingData.currentFrequency = frequency;
       eeprom.put(0, data.workingData);
       eeprom.commit();  // Write to EEPROM.
-      Power(true, true);                  // Power up circuits.
-      SWRValue = swr.ReadSWRValue();
-      readSWRValue = SWRValue; // Redundant???
+      //Power(true, true);                  // Power up circuits.
+      //SWRValue = swr.ReadSWRValue();
+      //readSWRValue = SWRValue; // Redundant???
       ShowSubmenuData(SWRValue, frequency);
       tft.fillRect(0, 100, 311, 150, ILI9341_BLACK); // ???
       // Backup 20 counts to approach from CW direction
       position = -50 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((frequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
       //  Move the stepper to the approximate location based on the current frequency:
-      stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-      minSWRAuto = AutoTuneSWR();                       // Auto tune here
+      //stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+      //minSWRAuto = AutoTuneSWR();                       // Auto tune here
       // After AutoTune, do full update of display with SWR vs. frequency plot:
-      ShowSubmenuData(minSWRAuto, dds.currentFrequency);
-      GraphAxis(whichBandOption);
-      PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
+      //ShowSubmenuData(minSWRAuto, dds.currentFrequency);
+      //GraphAxis(whichBandOption);
+      //PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
       // Manual frequency and stepper position moved to different menu!  September 2022
       //updateMessageBottom("     Encoders to Adjust, Exit to Return");
       // Enter Manual frequency and position tune:
       //frequency = manualTune();  // Stuck here until Exit button is pushed.
-      Power(false, false); // Power down circuits.
+      //Power(false, false); // Power down circuits.
       // Pause and allow user to view plot of SWR versus frequency.
       busy_wait_ms(5000);
       break;        //  state is not changed; should go back to state2.
@@ -154,7 +153,7 @@ void DisplayManagement::frequencyMenuOption()
   Return value:
     int frequency
 *****/
-int DisplayManagement::manualTune()
+int FrequencyInput::manualTune()
 {
   bool lastautotunebutton = true;
   bool lastexitbutton = true;
@@ -166,27 +165,27 @@ int DisplayManagement::manualTune()
     if (exitbutton.pushed and not lastexitbutton)
     {
       //  Power(false);
-      return dds.currentFrequency; // Exit manual tuning.
+    //  return dds.currentFrequency; // Exit manual tuning.
     }
     if (menuEncoderMovement != 0)
     { // Allow stepper to be moved maually
-      ManualStepperControl();
+    //  ManualStepperControl();
     }
     if (frequencyEncoderMovement != 0)
     { // Allow frequency to be changed maually.
-      ManualFrequencyControl(whichBandOption);
+    //  ManualFrequencyControl(whichBandOption);
       frequencyEncoderMovement = 0; // Doesn't reset to 0???
     }
     autotunebutton.buttonPushed(); // Poll autotunebutton.
                                    // Is this MAXSWITCH protection needed here???
     if (autotunebutton.pushed == true and (not lastautotunebutton) and gpio_get(MAXSWITCH))
     { // Redo the Autotune at new frequency/position
-      position = -80 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
-      stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-      minSWRAuto = AutoTuneSWR();                       // Auto tune here
-      SWRMinPosition = stepper.currentPosition();       // Get the autotuned stepper position.
-      GraphAxis(whichBandOption);
-      PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
+    //  position = -80 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+   //   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+   //   minSWRAuto = AutoTuneSWR();                       // Auto tune here
+   //   SWRMinPosition = stepper.currentPosition();       // Get the autotuned stepper position.
+   //   GraphAxis(whichBandOption);
+   //   PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
       updateMessageTop("    Freq: Adjust - AutoTune: Refine");
       updateMessageBottom("                  Exit to Return");
     }
@@ -208,7 +207,7 @@ int DisplayManagement::manualTune()
 
   Dependencies:  DDS, SWR, Adafruit_ILI9341
 *****/
-long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-8-19
+long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-8-19
 {
   int i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad;
   long defaultIncrement;
@@ -258,8 +257,6 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod
   tft.setFont(&FreeSerif24pt7b);
   tft.print(frequency);
   tft.setFont(&FreeSerif24pt7b);
-  // Print the SWR limit frequencies to the display.
-  PrintSWRlimits(fpair);
 
   // State Machine for frequency input with encoders.
   while (true)
@@ -327,7 +324,7 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod
     if (frequencyEncoderMovement)
     { // Change digit value
       frequency += (long)(frequencyEncoderMovement * defaultIncrement);
-      position = stepper.ConvertFrequencyToStepperCount(frequency);
+     // position = stepper.ConvertFrequencyToStepperCount(frequency);
       tft.fillRect(insetMargin, halfScreen - 35, PIXELWIDTH * .80, 40, ILI9341_BLACK);
       tft.setCursor(insetMargin, halfScreen);
       tft.setTextSize(1);
@@ -351,7 +348,7 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod
 
   Dependencies:  Adafruit_ILI9341
 *****/
-int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
+int FrequencyInput::MakeMenuSelection(int index) // Al Mod 9-8-19
 {
   tft.setFont();
   tft.setTextSize(2);
@@ -415,7 +412,7 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
 
   Dependencies:  Adafruit_ILI9341 tft
 *****/
-int DisplayManagement::SelectBand(const std::string bands[3])
+int FrequencyInput::SelectBand(const std::string bands[3])
 {
   updateMessageTop("       Choose using Menu Encoder");
   EraseBelowMenu();              // Redundant???
@@ -494,7 +491,7 @@ int DisplayManagement::SelectBand(const std::string bands[3])
   Return value:
     void
 *****/
-void DisplayManagement::EraseBelowMenu() // al mod 9-8-19
+void FrequencyInput::EraseBelowMenu() // al mod 9-8-19
 {
   tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
   tft.drawFastHLine(0, 45, 320, ILI9341_RED);
@@ -507,7 +504,7 @@ void DisplayManagement::EraseBelowMenu() // al mod 9-8-19
   Return value:
     void
 *****/
-void DisplayManagement::ErasePage()
+void FrequencyInput::ErasePage()
 {
   tft.fillScreen(ILI9341_BLACK);
 }
@@ -521,7 +518,7 @@ void DisplayManagement::ErasePage()
   Return value:
     void
 *****/
-void DisplayManagement::ShowMainDisplay(int whichMenuPage)
+void FrequencyInput::ShowMainDisplay(int whichMenuPage)
 {
   int lastMenuPage = 0;
   int i;
@@ -551,7 +548,7 @@ void DisplayManagement::ShowMainDisplay(int whichMenuPage)
   Return value:
     void
 *****/
-void DisplayManagement::ShowSubmenuData(float SWR, int currentFrequency) // al mod 9-8-19
+void FrequencyInput::ShowSubmenuData(float SWR, int currentFrequency) // al mod 9-8-19
 {
   tft.setTextSize(1);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
@@ -589,7 +586,7 @@ void DisplayManagement::ShowSubmenuData(float SWR, int currentFrequency) // al m
   Return value:
     void
 *****/
-void DisplayManagement::UpdateFrequency(int frequency)
+void FrequencyInput::UpdateFrequency(int frequency)
 {
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
@@ -604,7 +601,7 @@ void DisplayManagement::UpdateFrequency(int frequency)
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.print("  p ");
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.print(stepper.currentPosition());
+ // tft.print(stepper.currentPosition());
 }
 
 /*****
@@ -616,7 +613,7 @@ void DisplayManagement::UpdateFrequency(int frequency)
   Return value:
     void
 *****/
-void DisplayManagement::UpdateSWR(float SWR, std::string msg)
+void FrequencyInput::UpdateSWR(float SWR, std::string msg)
 {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   tft.setCursor(60, 30);
@@ -646,7 +643,7 @@ void DisplayManagement::UpdateSWR(float SWR, std::string msg)
   Return value:
     void
 *****/
-void DisplayManagement::updateMessageTop(std::string messageToPrint)
+void FrequencyInput::updateMessageTop(std::string messageToPrint)
 {
   tft.fillRect(0, 0, 320, 20, ILI9341_BLACK); // Erase top line.
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
@@ -666,7 +663,7 @@ void DisplayManagement::updateMessageTop(std::string messageToPrint)
   Return value:
     void
 *****/
-void DisplayManagement::updateMessageBottom(std::string messageToPrint)
+void FrequencyInput::updateMessageBottom(std::string messageToPrint)
 {
   tft.fillRect(0, 200, 319, 240, ILI9341_BLACK); // Erase previous message.
   tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
@@ -676,279 +673,6 @@ void DisplayManagement::updateMessageBottom(std::string messageToPrint)
   tft.print(messageToPrint.c_str());
 }
 
-/*****
-  Purpose: To set the band end point counts
-           Uses initial Band Edge counts for rapid re-calibrate.
-  Argument list:
-    void
-
-  Return value:
-    void
-*****/
-void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19.  Greg modified May 2022.
-{
-  int bandBeingCalculated;
-  int i, j, whichLine;
-  long localPosition, minCount, frequency;
-  float currentSWR;
-  updateMessageTop("            Full Calibrate");
-  bandBeingCalculated = 0;
-  Power(true, true);                  //  Power up circuits.
-  stepper.ResetStepperToZero(); // Start off at zero
-  tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
-  updateMessageBottom("          Full Calibration in Progress");
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.setCursor(0, 65);
-  tft.print("Frequency               SWR       Count"); // Table header
-  tft.setCursor(0, 90);                                 // Read to show mins...
-
-  whichLine = 0;                                  // X coord for mins
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Table data
-
-  for (i = 0; i < MAXBANDS; i++)
-  { // For the 3 bands...
-    for (j = 0; j < 2; j++)
-    {
-      frequency = data.workingData.bandEdges[i][j];                    // Select a band edge
-      position = data.workingData.bandLimitPositionCounts[i][j] - 200; // Set Band limit count -200 counts to approach band limit from CW direction
-      stepper.MoveStepperToPositionCorrected(position);    // Move to the estimated position below the target.
-      dds.SendFrequency(frequency);                        // Tell the DDS the edge frequency...
-      UpdateFrequency(frequency);                          // Change main display data
-
-      while (true)
-      {
-        if (gpio_get(MAXSWITCH) != HIGH)
-        {                               // At the end stop switch?
-          stepper.ResetStepperToZero(); // Reset back to zero
-          return;
-        }
-        minSWRAuto = AutoTuneSWR();
-        ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-        // UpdateFrequency(frequency);  // Is this redundant???
-        if (minSWRAuto < TARGETMAXSWR)
-        { // Ignore values greater than Target Max
-          data.workingData.bandLimitPositionCounts[i][j] = SWRMinPosition;
-          tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
-          if (frequency < 10000000)
-          {
-            tft.print(" ");
-          }
-          tft.print(dds.currentFrequency);
-          tft.setCursor(150, 90 + whichLine * TEXTLINESPACING);
-          tft.print(minSWRAuto);
-          tft.setCursor(230, 90 + whichLine * TEXTLINESPACING);
-          tft.print(SWRMinPosition);
-          whichLine++; // Ready for next line of output
-          break;       // This sends control to next edge
-        }
-      }
-      position = SWRFinalPosition + 50;
-    } // end for (j
-    position = SWRFinalPosition + 50;
-  } // end for (i
-
-  eeprom.commit(); // Write values to EEPROM
-  updateMessageTop("                    Press Exit");
-  updateMessageBottom("         Full Calibration Complete");
-  Power(false, false); //  Power down circuits.
-  while (true)
-  {
-    exitbutton.buttonPushed(); // Poll exitbutton
-    if (exitbutton.pushed)
-      break;
-  } // Wait until exit button is pressed
-}
-
-/*****
-  Purpose: Do initial Calibrate.  Does not assume band edge counts to begin
-
-  Argument list:
-    void
-
-  Return value:
-    void
-*****/
-
-void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
-{
-  int bandBeingCalculated;
-  int i, j, whichLine;
-  float autotune;
-  long localPosition, minCount, frequency;
-  float currentSWR;
-  bool lastexitbutton = true;
-  EraseBelowMenu();
-  updateMessageBottom("                 Initial Calibration");
-  bandBeingCalculated = 0;
-  Power(true, true); //  Power up circuits.
-  stepper.ResetStepperToZero();
-  position = 0;
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setTextSize(1);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.setCursor(0, 65);
-  tft.print("Frequency               SWR       Count"); // Table header
-  tft.setCursor(0, 90);                                 // Read to show mins...
-
-  whichLine = 0;                                  // X coord for mins
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Table data
-
-  for (i = 0; i < MAXBANDS; i = i + 1)
-  { // For the 3 bands...
-    for (j = 0; j < 2; j = j + 1)
-    {
-      this->data.workingData.currentBand = i;  // Used by SWRdataAnalysis()
-      frequency = this->data.workingData.bandEdges[i][j]; // Select a band edge to calibrate
-      this->data.workingData.currentFrequency = frequency;
-      dds.SendFrequency(frequency);     // Tell the DDS the edge frequency...
-      updateMessageTop("             Moving to Freq");
-      while (true)
-      {
-
-        if (DetectMaxSwitch())
-          return;
-
-        position = stepper.currentPosition();
-        while (swr.ReadSWRValue() > 5)
-        {                           // Move stepper in CW direction in larger steps for SWR>5
-          position = position + 20; // Reduced from 40 due to butterfly capacitor.
-          ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-          stepper.MoveStepperToPositionCorrected(position);
-          if (DetectMaxSwitch())
-            return;
-        }
-
-        autotune = AutoTuneSWR(); // AutoTuneSWR() returns 0 if failure.
-        if (autotune == 0)
-          return;
-        minSWRAuto = autotune; // Minimum SWR is returned if success.
-
-        if (minSWRAuto < TARGETMAXSWR)
-        { // Ignore values greater than Target Max
-          data.workingData.bandLimitPositionCounts[i][j] = SWRMinPosition;
-          tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
-          if (dds.currentFrequency < 10000000)
-          {
-            tft.print(" ");
-          }
-          tft.print(dds.currentFrequency);
-          tft.setCursor(150, 90 + whichLine * TEXTLINESPACING);
-          tft.print(minSWRAuto);
-          tft.setCursor(230, 90 + whichLine * TEXTLINESPACING);
-          tft.print(SWRMinPosition);
-          whichLine++; // Ready for next line of output
-          break;       // This sends control to next edge
-        }
-      }
-      position = stepper.currentPosition() - 50;
-    } // end for (j
-    position = stepper.currentPosition() - 50;
-  } // end for (i
-  //  Set the calibrated flag in workingData.
-  data.workingData.calibrated = 1;
-  eeprom.put(0, data.workingData);
-  eeprom.commit(); // This writes a page to Flash memory.  This includes the position counts
-                                            // and preset frequencies.
-  //  Now get the newly written values into the current session:
-  //  Read the position counts and presets into the EEPROM object's buffer.
-  //eeprom.get(0, data.workingData);
-  //  Overwrite the position counts and preset frequencies:
-  //eeprom.ReadPositionCounts();
-  // Slopes can't be computed until the actual values are loaded from flash:
-  data.computeSlopes();
-
-  updateMessageBottom("        Initial Calibration Complete");
-  updateMessageTop("                    Press Exit");
-  Power(false, false); //  Power down circuits.
-  while (true)
-  {
-    exitbutton.buttonPushed(); // Poll exitbutton.
-    if (exitbutton.pushed and not lastexitbutton)
-      break; // Check for positive edge.
-    lastexitbutton = exitbutton.pushed;
-  }
-}
-
-/*****
-  Purpose: To set the band end point counts for a single band for intermediate calibration
-  Does not reset the stepper.
-
-  Argument list:
-    void
-
-  Return value:
-    void
-*****/
-void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
-{ // Al Added 4-18-20
-  int bandBeingCalculated;
-  int i, j, whichLine;
-  long localPosition, minCount, frequency;
-  float currentSWR;
-  bandBeingCalculated = 0;
-  tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(0, 65);
-  tft.print("Frequency               SWR       Count"); // Table header
-  tft.setCursor(0, 90);                                 // Read to show mins...
-
-  whichLine = 0;                                  // X coord for mins
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Table data
-  updateMessageBottom("            Single Band Calibrate");
-  for (j = 0; j < 2; j++)
-  {                                                 // For each band edge...
-    frequency = data.workingData.bandEdges[whichBandOption][j]; // Select a band edge
-    position = data.workingData.bandLimitPositionCounts[whichBandOption][j] - 50;
-    Power(true, true);                              //  Power up circuits.
-    stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-    dds.SendFrequency(frequency);                     // Tell the DDS the edge frequency...
-    while (true)
-    {
-      if (gpio_get(MAXSWITCH) != HIGH)
-      {                               // At the end stop switch?
-        stepper.ResetStepperToZero(); // Yep, so leave.
-        return;
-      }
-      currentSWR = swr.ReadSWRValue();
-      updateMessageTop("Auto Tuning");
-      minSWRAuto = AutoTuneSWR();
-      ShowSubmenuData(minSWRAuto, dds.currentFrequency); // Update SWR value
-      if (minSWRAuto < TARGETMAXSWR)
-      { // Ignore values greater than Target Max
-        data.workingData.bandLimitPositionCounts[whichBandOption][j] = SWRMinPosition;
-        tft.setCursor(0, 90 + whichLine * TEXTLINESPACING);
-        if (dds.currentFrequency < 10000000)
-        {
-          tft.print(" ");
-        }
-        tft.print(dds.currentFrequency);
-        tft.setCursor(150, 90 + whichLine * TEXTLINESPACING);
-        tft.print(minSWRAuto);
-        tft.setCursor(230, 90 + whichLine * TEXTLINESPACING);
-        tft.print(SWRMinPosition);
-        whichLine++; // Ready for next line of output
-        break;       // This sends control to next edge
-      }
-    }
-    position = data.workingData.bandLimitPositionCounts[whichBandOption][1] - 50;
-  } // end for (j
-  position = SWRFinalPosition + 50;
-  eeprom.commit(); // Write values to EEPROM
-  updateMessageTop("                     Press Exit");
-  updateMessageBottom("     Single Band Calibrate Complete");
-  Power(false, false); // Power down circuits.
-  while (exitbutton.pushed == false)
-  {
-    exitbutton.buttonPushed(); // Poll exitbutton.
-    if (exitbutton.pushed)
-      break;
-  }
-}
 
 /*****
   Purpose: State machine to select a preset frequency and then AutoTune to that frequency.
@@ -963,7 +687,7 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
   CAUTION:
 
 *****/
-void DisplayManagement::ProcessPresets()
+void FrequencyInput::ProcessPresets()
 {
   int i;
   int backCount = 0;
@@ -995,20 +719,20 @@ void DisplayManagement::ProcessPresets()
         state = State::state1; // User pushed exit, return to band select.
       break;
     case State::state3: // Run AutoTuneSWR() at the selected preset frequency.
-      Power(true, true);      // Power up circuits.
-      dds.SendFrequency(frequency);
+      //Power(true, true);      // Power up circuits.
+   //   dds.SendFrequency(frequency);
       this->data.workingData.currentFrequency = frequency;
       eeprom.put(0, data.workingData);
       eeprom.commit();
       // Calculate the approximate position for the stepper and back off a bit.
-      position = -25 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
-      stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-      minSWRAuto = AutoTuneSWR();
-      ShowSubmenuData(minSWRAuto, dds.currentFrequency);
-      GraphAxis(whichBandOption);
-      PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
+  //    position = -25 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+  //    stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+   //   minSWRAuto = AutoTuneSWR();
+  //    ShowSubmenuData(minSWRAuto, dds.currentFrequency);
+      //GraphAxis(whichBandOption);
+      //PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
       //frequency = manualTune();
-      Power(false, false);          //  Power down circuits.
+      //Power(false, false);          //  Power down circuits.
       busy_wait_ms(5000);
       state = State::state2; // Move to Select Preset state.
       break;
@@ -1016,7 +740,7 @@ void DisplayManagement::ProcessPresets()
   }
 }
 
-int DisplayManagement::SelectPreset()
+int FrequencyInput::SelectPreset()
 {
   int frequency;
   bool lastexitbutton = true;
@@ -1087,7 +811,7 @@ int DisplayManagement::SelectPreset()
   Return value:
     void
 *****/
-void DisplayManagement::RestorePreviousPresetChoice(int submenuIndex, int whichBandOption)
+void FrequencyInput::RestorePreviousPresetChoice(int submenuIndex, int whichBandOption)
 {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // restore old background
   tft.setCursor(65, 70 + submenuIndex * 30);
@@ -1105,93 +829,13 @@ void DisplayManagement::RestorePreviousPresetChoice(int submenuIndex, int whichB
   Return value:
     void
 *****/
-void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBandOption)
+void FrequencyInput::HighlightNewPresetChoice(int submenuIndex, int whichBandOption)
 {
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_WHITE); // HIghlight new preset choice
   tft.setCursor(65, 70 + submenuIndex * 30);
   tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
 }
 
-//  This is the primary auto-tuning algorithm which minimizes VSWR.
-//  The stepper should be positioned below the minimum SWR frequency.
-//  This is done either by starting at stepper position 0, or using a calculated estimation.
-float DisplayManagement::AutoTuneSWR()
-{
-  float oldMinSWR;
-  oldMinSWR = 100;
-  minSWRAuto = 100;
-  int i;
-  int32_t currPositionTemp;
-  //  Store the band and frequency in the dataStruct:
-  //data.workingData.currentBand = whichBandOption;
-  //data.workingData.currentFrequency = dds.currentFrequency;
-  //eeprom.put(0, data.workingData);
-  //eeprom.commit();
-  SWRMinPosition = 6000;
-  position = stepper.currentPosition(); // Retrieve the entry position of the stepper.
-  updateMessageTop("                    Auto Tuning");
-  for (int i = 0; i < MAXNUMREADINGS; i++)
-  {                             // reset temp arrays - used to plot SWR vs frequency
-    tempSWR[i] = 0.0;           // Class member
-    tempCurrentPosition[i] = 0; // Class member
-  }
-  // Main loop to sweep for minimum SWR and save data for plotting.
-  for (i = 0; i < MAXNUMREADINGS; i++)
-  {
-
-    if (gpio_get(MAXSWITCH) == LOW)
-      break; // Break from this for loop due to limit switch closure.
-
-    minSWR = swr.ReadSWRValue();                        // Save SWR value
-    ShowSubmenuData(minSWR, dds.currentFrequency);      // Update display during sweep.
-    tempSWR[i] = minSWR;                                // Array of SWR values saved for plotting.
-    tempCurrentPosition[i] = stepper.currentPosition(); // Array of Count position values saved for plotting.
-    if (minSWR < minSWRAuto)
-    {                                             // Test to find minimum SWR value
-      minSWRAuto = minSWR;                        // If this measurement is lower, save it.
-      SWRMinPosition = stepper.currentPosition(); // Save the stepper position.
-      SWRMinIndex = i;                            // Save the array index of the minimum.
-    }
-    if (minSWR > 3 and whichBandOption == 0)
-    {                          // Fast step for 40M band above SWR = 3
-      position = position + 5; // This was reduced from 10 due to butterfly capacitor.
-      i = i + 5;               // Skip forward by 10.
-    }
-    else
-    {
-      position = position + 1; // Increment forward by 1 step.
-    }
-    stepper.MoveStepperToPositionCorrected(position);
-    if (stepper.currentPosition() > (SWRMinPosition + 10) and minSWR > (minSWRAuto + 1.5) and minSWRAuto < 3.5)
-    {        // Test to find if position is after minimum
-      break; // if after minimum break out of for loop
-    }
-    SWRFinalPosition = stepper.currentPosition(); // Save final value for calibrate to continue to find band end positions.  Needed???
-    if (i > 498)
-    { // Repeat loop if minimum is not found
-      i = 1;
-      position = stepper.currentPosition() - 50;
-    }
-  } // end of min SWR search loop.
-
-  // Break to here if MAXSWITCH state change detected.
-  if (DetectMaxSwitch())
-    return 0; // 0 indicates failed AutoTune.
-
-  // To this else if AutoTune is successful.
-  else
-  {
-    stepper.MoveStepperToPositionCorrected(SWRMinPosition - 50); // back up position to take out backlash
-    stepper.MoveStepperToPositionCorrected(SWRMinPosition);      // Move to final position in CW direction
-    minSWR = swr.ReadSWRValue();                                 //  Measure VSWR in the final position.
-    iMax = i;                                                    // max value in array for plot
-    ShowSubmenuData(minSWR, dds.currentFrequency);               // Update SWR value
-    updateMessageTop("               AutoTune Success");
-    //  Compute the upper and lower frequencies at which SWR ~2:1.
-    SWRdataAnalysis();
-  }
-  return minSWR;
-}
 
 // Manual control functions were moved from SWR.
 /*****
@@ -1202,13 +846,13 @@ float DisplayManagement::AutoTuneSWR()
   Return value:
     void
 *****/
-void DisplayManagement::ManualFrequencyControl(int whichBandOption)
+void FrequencyInput::ManualFrequencyControl(int whichBandOption)
 {
   updateMessageTop("     Press Enter: Move to Freq");
   int i, k, yIncrement, xIncrement;
   int stepIncr;
-  int frequency = dds.currentFrequency;
-  int frequencyOld = frequency;
+//  int frequency = dds.currentFrequency;
+ // int frequencyOld = frequency;
   long tempTime; // Used???
   xIncrement = (XAXISEND - XAXISSTART) / 3;
   yIncrement = (YAXISEND - YAXISSTART) / 3;
@@ -1216,10 +860,10 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption)
   int yTick = YAXISSTART + 5;
   bool lastenterbutton = true;
   frequencyEncoderMovement = 0;
-  GraphAxis(whichBandOption);
+ // GraphAxis(whichBandOption);
   if (frequencyEncoderMovement2 != 0)
   {
-    frequencyOld = dds.currentFrequency;
+//    frequencyOld = dds.currentFrequency;
     // Enter this loop until enterbutton is pushed.
     while (true)
     {
@@ -1229,23 +873,23 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption)
       lastenterbutton = enterbutton.pushed; // Used to make sure enterbutton uses edge.
       if (frequencyEncoderMovement2 != 0)
       {
-        frequency = dds.currentFrequency + frequencyEncoderMovement2 * 1000;
-        dds.SendFrequency(frequency);
-        ShowSubmenuData(swr.ReadSWRValue(), frequency); // Updates display only.
+     //   frequency = dds.currentFrequency + frequencyEncoderMovement2 * 1000;
+     //   dds.SendFrequency(frequency);
+   //     ShowSubmenuData(swr.ReadSWRValue(), frequency); // Updates display only.
         frequencyEncoderMovement2 = 0;
       }
     }
     updateMessageTop("                  Exit to Return");
     updateMessageBottom("     Freq: Adjust - AutoTune: Refine");
-    dds.SendFrequency(frequency); // Redundant???
-    position = stepper.currentPosition() + ((frequency - frequencyOld) / (data.hertzPerStepperUnitVVC[whichBandOption]));
-    stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+ //   dds.SendFrequency(frequency); // Redundant???
+ //   position = stepper.currentPosition() + ((frequency - frequencyOld) / (data.hertzPerStepperUnitVVC[whichBandOption]));
+ //   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
     int k = 0;
     frequencyEncoderMovement = 0;
     frequencyEncoderMovement2 = 0;
   }
-  PlotNewStartingFrequency(whichBandOption);
-  ShowSubmenuData(swr.ReadSWRValue(), frequency);
+//  PlotNewStartingFrequency(whichBandOption);
+//  ShowSubmenuData(swr.ReadSWRValue(), frequency);
 }
 
 /*****
@@ -1256,44 +900,13 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption)
   Return value:
     void
 *****/
-void DisplayManagement::ManualStepperControl()
+void FrequencyInput::ManualStepperControl()
 {
   long position;
-  position = stepper.currentPosition() + menuEncoderMovement;
-  stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-  ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
+//  position = stepper.currentPosition() + menuEncoderMovement;
+//  stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+//  ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
   menuEncoderMovement = 0;
-}
-
-/*****
-  Purpose: Detect state change of MAXSWITCH.  Warn the user.
-           Back the stepper off the switch so that it goes back to normal state.
-
-  Parameter list:
-
-
-  Return value:
-    int
-
-  CAUTION:
-
-*****/
-int DisplayManagement::DetectMaxSwitch()
-{
-  if (gpio_get(MAXSWITCH) == LOW)
-  {
-    stepper.move(-300);
-    stepper.runToPosition();
-    for (int i = 0; i < 10; i++)
-    {
-      updateMessageTop("                  Upper Limit Hit!");
-      busy_wait_ms(1000);
-      tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);
-      busy_wait_ms(1000);
-    }
-    return 1;
-  }
-  return 0;
 }
 
 /*****
@@ -1309,7 +922,7 @@ int DisplayManagement::DetectMaxSwitch()
   CAUTION:
 
 *****/
-void DisplayManagement::CalibrationMachine()
+void FrequencyInput::CalibrationMachine()
 {
   int i;
   bool lastexitbutton = true;
@@ -1328,7 +941,7 @@ void DisplayManagement::CalibrationMachine()
       state = (State)i; // Cast i to State enum type.
       break;
     case State::state1: // Full Calibration
-      DoNewCalibrate2();
+   //   DoNewCalibrate2();
       state = State::state0;
       lastexitbutton = true; // Must set true here, or will jump to top level.
       break;
@@ -1336,12 +949,12 @@ void DisplayManagement::CalibrationMachine()
       i = SelectBand(data.bands); // Select band
       if (i == 4)
         break;                  // No selection in Band menu; return to Calibration select without calibrating.
-      DoSingleBandCalibrate(i); // Band Calibration
+   //   DoSingleBandCalibrate(i); // Band Calibration
       state = State::state0;    // Return to Calibration select after exiting state2.
       lastexitbutton = true;    // Must set true here, or will jump to top level.
       break;
     case State::state3: // Initial Calibration
-      DoFirstCalibrate();
+   //   DoFirstCalibrate();
       state = State::state0;
       lastexitbutton = true; // Must set true here, or will jump to top level.
       break;
@@ -1353,131 +966,3 @@ void DisplayManagement::CalibrationMachine()
   }                                     // end while
 }
 
-/*****
-  Purpose: This function sets power on or off to all circuits, including the DDS.
-
-  Parameter list:
-    bool setpower
-
-  Return value:
-    void
-
-  CAUTION:
-
-*****/
-void DisplayManagement::Power(bool setpower,bool relayPower)
-{
-  gpio_put(data.STEPPERSLEEPNOT, setpower); //  Deactivating the stepper driver is important to reduce RFI.
-  // Power down the DDS or set frequency.
-  if (setpower)
-    dds.SendFrequency(dds.currentFrequency); // Redundant?
-  else
-    dds.SendFrequency(0);
-  // Power down RF amplifier and SWR circuits.
-  gpio_put(data.OPAMPPOWER, setpower);
-  gpio_put(data.RFAMPPOWER, setpower);
-  gpio_put(data.RFRELAYPOWER, relayPower);
-  busy_wait_ms(500); //  Wait for relay to switch.
-}
-
-/*****
-  Purpose: This function sets power on or off to only SWR measuring circuits, including the DDS.
-           It does not affect the stepper driver sleep.
-
-  Parameter list:
-    bool setpower
-
-  Return value:
-    void
-
-  CAUTION:
-
-*****/
-void DisplayManagement::PowerSWR(bool setpower)
-{
-  // Power down the DDS or set frequency.
-  if (setpower)
-    dds.SendFrequency(dds.currentFrequency); // Redundant?
-  else
-    dds.SendFrequency(0);
-  // Power down RF amplifier and SWR circuits.
-  gpio_put(data.OPAMPPOWER, setpower);
-  gpio_put(data.RFAMPPOWER, setpower);
-  gpio_put(data.RFRELAYPOWER, setpower);
-  busy_wait_ms(500); //  Wait for relay to switch.
-}
-
-
-/*****
-  Purpose: This function analyzes the SWR data and determines the frequency
-           limits at which SWR is approximately 2:1.
-
-  Parameter list:
-    float SWRarray[500], uint32_t position[500] (array of stepper positions)
-SWRdataAnalysis
-  Return value:
-    std::pair<uint32_t, uint32_t>
-
-  CAUTION:
-
-*****/
-void DisplayManagement::SWRdataAnalysis()
-{
-  //long flow, fhigh;
-  int32_t fcenter;
-  int32_t flow = 0;
-  int32_t fhigh = 0; 
-  //Data data2 = Data();
-  //data2.computeSlopes();
-  float horseshit;
-  horseshit = this->data.hertzPerStepperUnitVVC[0];
-  int posLowIndex = 0;
-  int posHighIndex = 0;
-  for(int i = 0; i < 500; i = i + 1) {
-   if((tempSWR[i] < 2.0) and (tempSWR[i] > 0.9)) {
-    posLowIndex = i;  // This is a stepper position!
-    break;  // Exit, and proceed to process upper half.
-   }
-   else posLowIndex = 0;  // For case where all values < 2.0.
-   }
-  for(int i = posLowIndex + 1; i < 500; i = i + 1) {
-   if((tempSWR[i] > 2.0) and (tempSWR[i] > 0.9)) {
-    posHighIndex = i;  // This is a stepper position!
-    break;  // Exit, found upper 2:1 position.
-  }
-  else posHighIndex = 499;  // For case where all values < 2.0.
-  }
-  // Now calculate the end frequencies over which SWR is <2.0:1.
-  // SWRMinPosition is the index the desired center frequency for AutoTune.
-  // Need the band index to retrieve the slope.
-  fcenter = dds.currentFrequency;
-  flow    = fcenter - (SWRMinPosition - tempCurrentPosition[posLowIndex]) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.workingData.currentBand]);
-  fhigh   = fcenter + (tempCurrentPosition[posHighIndex] - SWRMinPosition) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.workingData.currentBand]);
- //  flow    = SWRMinPosition - tempCurrentPosition[posLowIndex];
- // fhigh   = tempCurrentPosition[posHighIndex] - SWRMinPosition;
-  fpair = {flow, fhigh};
-//  return fpair;
-}
-
-
-/*****
-  Purpose: This function analyzes the SWR data and determines the frequency
-           limits at which SWR is approximately 2:1.
-
-  Parameter list:
-    float SWRarray[500], long position[500]
-
-  Return value:
-    void
-
-  CAUTION:
-
-*****/
-void DisplayManagement::PrintSWRlimits(std::pair<uint32_t, uint32_t> fpair)
-{
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(20, 135);
-  tft.print(fpair.first);
-  tft.setCursor(150, 135);
-  tft.print(fpair.second);  
-}

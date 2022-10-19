@@ -27,7 +27,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-//#define PICO_STACK_SIZE _u(0x1000)  // Uncomment if stack gets blown.  This doubles stack size.
+//#define PICO_STACK_SIZE _u(0x1000)  // Uncomment if stack gets blown.  This doubles stack size.//
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/timer.h"
@@ -42,18 +42,13 @@
 #include "EEPROM/EEPROM.h"
 #include "Data/Data.h"
 #include "Button/Button.h"
+#include "FrequencyInput/FrequencyInput.h"
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 
 const std::string version = "main";
 const std::string releaseDate = "10-12-22";
-
-//  Interface for the DDS object.  MOVED TO DATA OBJECT
-//#define DDS_RST 4
-//#define DDS_DATA 5
-//#define DDS_FQ_UD 12
-//#define WLCK 22
 
 //#define PRESETSMENU 1
 //#define CALIBRATEMENU 2
@@ -65,10 +60,11 @@ volatile uint32_t countEncoder;
 //  Instantiate the rotary encoder objects.
 Rotary menuEncoder = Rotary(20, 18); // Swap if encoder works in wrong direction.
 Rotary frequencyEncoder = Rotary(21, 17);
-extern int menuEncoderMovement;
-extern int frequencyEncoderMovement;
-extern int frequencyEncoderMovement2;
-extern int digitEncoderMovement;
+//  These variables should be extern in other files.
+int menuEncoderMovement;
+int frequencyEncoderMovement;
+int frequencyEncoderMovement2;
+int digitEncoderMovement;
 
 void encoderCallback(uint gpio, uint32_t events)
 {
@@ -190,6 +186,10 @@ int main()
 
   // Instantiate the DisplayManagement object.  This object has many important methods.
   DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
+
+  FrequencyInput freqInput = FrequencyInput(tft, eeprom, data);
+
+//  freqInput.ChangeFrequency(0, 7150000);
 
   // Power on all circuits except relay.  This is done early to allow circuits to stabilize before calibration.
   display.Power(true, false);

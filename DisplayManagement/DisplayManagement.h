@@ -33,6 +33,7 @@
 #include <string>
 #include <utility>
 #include <array>
+#include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -57,7 +58,7 @@
 #define MAXBANDS 3
 #define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
-#define FREQMENU 0 // Menuing indexes
+//#define FREQMENU 0 // Menuing indexes
 #define MAXNUMREADINGS 500
 #define PIXELHEIGHT 240
 
@@ -79,7 +80,13 @@ public:
     int position;
     int positionTemp;
     //int currentBand; // Is this used???
+    // Attempt to use an enum here totally failed.
+    //enum mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
+    //std::vector<mode> modes = {FREQMENU, PRESETSMENU, CALIBRATEMENU};
     int menuIndex;
+    static constexpr int FREQMENU = 0;
+    static constexpr int PRESETMENU = 1;
+    static constexpr int CALIBRATEMENU = 2;
     int submenuIndex;
     int SWRFinalPosition;
     uint32_t SWRMinIndex;  // Array index for the SWR minimum.

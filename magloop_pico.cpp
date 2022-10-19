@@ -27,7 +27,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-#define PICO_STACK_SIZE _u(0x1000)
+//#define PICO_STACK_SIZE _u(0x1000)  // Uncomment if stack gets blown.  This doubles stack size.
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/timer.h"
@@ -49,20 +49,16 @@
 const std::string version = "main";
 const std::string releaseDate = "10-12-22";
 
-//  Interface for the DDS object.
-#define DDS_RST 4
-#define DDS_DATA 5
-#define DDS_FQ_UD 12
-#define WLCK 22
+//  Interface for the DDS object.  MOVED TO DATA OBJECT
+//#define DDS_RST 4
+//#define DDS_DATA 5
+//#define DDS_FQ_UD 12
+//#define WLCK 22
 
-#define PRESETSMENU 1
-#define CALIBRATEMENU 2
+//#define PRESETSMENU 1
+//#define CALIBRATEMENU 2
 #define PRESETSPERBAND 6 // Allow this many preset frequencies on each band
 #define MAXBANDS 3       // Can only process this many frequency bands
-
-//int currentBand; // Should be 40, 30, or 20
-//int currentFrequency;
-//int whichBandOption;
 
 volatile uint8_t result;
 volatile uint32_t countEncoder;
@@ -178,7 +174,6 @@ int main()
  //  Now read the struct from Flash which is read into the Data object.
   eeprom.get(0, data.workingData);  // Read the workingData struct from EEPROM.
   
- 
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
 
@@ -187,7 +182,7 @@ int main()
   StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
 
   //  Next instantiate the DDS.
-  DDS dds = DDS(DDS_RST, DDS_DATA, DDS_FQ_UD, WLCK);
+  DDS dds = DDS(data.DDS_RST, data.DDS_DATA, data.DDS_FQ_UD, data.WLCK);
   dds.DDSWakeUp(); // This resets the DDS, and it will have no output.
 
   // Instantiate SWR object.  Read bridge offsets later when other circuits are active.
@@ -252,9 +247,9 @@ int main()
   }
   }
   
+  //enum class mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
 
-  display.menuIndex = FREQMENU; // Begin in Frequency menu.
-  //whichBandOption = 0;
+  display.menuIndex = display.FREQMENU; // Begin in Frequency menu.
 
   // Main loop state machine:
   while (true)
@@ -272,15 +267,15 @@ int main()
 
     switch (display.menuIndex)
     {
-    case FREQMENU: //  Manual frequency selection selection and AutoTune.
+    case display.FREQMENU:         // Manual frequency selection selection and AutoTune.
       display.frequencyMenuOption();
       break;
 
-    case PRESETSMENU:           // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
+    case display.PRESETMENU:      // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
+      display.ProcessPresets();  // Select a preselected frequency.  This should return a frequency???
       break;
 
-    case CALIBRATEMENU: //  Run calibration routines.
+    case display.CALIBRATEMENU:    // Run calibration routines.
       display.CalibrationMachine();
       break;
 

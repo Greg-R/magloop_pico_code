@@ -39,6 +39,12 @@ class Data
 {
 
 public:
+
+//  These are fundamental size definitions used throughout the project.
+//const int PRESETSMENU = 1;
+//const int CALIBRATEMENU = 2;
+const int PRESETSPERBAND = 6; // Allow this many preset frequencies on each band
+const int MAXBANDS = 3;       // Can only process this many frequency bands
  
   // Bands used:
 
@@ -72,11 +78,17 @@ public:
   float countPerHertz[3];
   float hertzPerStepperUnitVVC[3]; // Voltage Variable Cap
   
-
+  // GPIO assignments.
+  //  Power controls
   const int STEPPERSLEEPNOT = 9;
   const int OPAMPPOWER = 3;
   const int RFAMPPOWER = 2;
   const int RFRELAYPOWER = 19;
+  //  Interface for the DDS object.
+  const int DDS_RST = 4;
+  const int DDS_DATA = 5;
+  const int DDS_FQ_UD = 12;
+  const int WLCK = 22;
 
   Data();
 

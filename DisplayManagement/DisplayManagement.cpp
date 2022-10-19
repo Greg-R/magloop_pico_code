@@ -47,6 +47,7 @@ DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
   autotunebutton.initialize();
   //tempSWR(500);
   //tempCurrentPosition(500);
+ // mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
 }
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
@@ -1323,7 +1324,7 @@ void DisplayManagement::CalibrationMachine()
   std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
   EraseBelowMenu();
   state = State::state0; // Enter state0.
-  menuIndex = 2;         // Superfluous???
+  //menuIndex = mode::PRESETSMENU;         // Superfluous???
   while (true)
   {
     switch (state)

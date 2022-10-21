@@ -33,7 +33,7 @@
 #include <string>
 #include <utility>
 #include <array>
-#include <vector>
+//#include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -44,6 +44,7 @@
 #include "GraphPlot.h"
 #include "Data.h"
 #include "Button.h"
+#include "FrequencyInput.h"
 #include "FreeSerif9pt7b.h"
 #include "FreeSerif12pt7b.h"
 #include "FreeSerif24pt7b.h"
@@ -75,6 +76,7 @@ public:
     StepperManagement &stepper;
     EEPROMClass &eeprom;
     Data &data;
+    FrequencyInput &freqInput;
     int whichBandOption;  // This indicates the current band in use.
     float SWRValue;
     float SWRcurrent;
@@ -89,7 +91,7 @@ public:
     static constexpr int FREQMENU = 0;
     static constexpr int PRESETMENU = 1;
     static constexpr int CALIBRATEMENU = 2;
-    int submenuIndex;
+    int submenuIndex;  // Does this really need to be a member?
     int SWRFinalPosition;
     uint32_t SWRMinIndex;  // Array index for the SWR minimum.
     volatile int menuEncoderState;
@@ -116,7 +118,7 @@ public:
     Button autotunebutton; //= Button(7);
     Button exitbutton; //= Button(8);
 
-    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data);
+    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data, FrequencyInput &freqInput);
 
     void Splash(std::string version, std::string releaseDate);
 

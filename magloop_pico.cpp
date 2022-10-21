@@ -148,6 +148,11 @@ int main()
   //  and GPIOs.
   Data data = Data();
 
+  //  Construct buttons.
+  Button enterbutton(data.enterButton);
+  Button autotunebutton(data.autotuneButton);
+  Button exitbutton(data.exitButton);
+
   // The stepper drive generates pulses unless put in sleep mode.
   // The pulses will cause HF RF interference.  Therefore, the sleep mode must be used.
   // Subsequent power control will be done with the Power method in the DisplayManagement class.
@@ -184,12 +189,11 @@ int main()
   // Instantiate SWR object.  Read bridge offsets later when other circuits are active.
   SWR swr = SWR();
 
+  // Create a new experimental FrequencyInput object.
+  FrequencyInput freqInput = FrequencyInput(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
+
   // Instantiate the DisplayManagement object.  This object has many important methods.
-  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
-
-  FrequencyInput freqInput = FrequencyInput(tft, eeprom, data);
-
-//  freqInput.ChangeFrequency(0, 7150000);
+  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, freqInput);
 
   // Power on all circuits except relay.  This is done early to allow circuits to stabilize before calibration.
   display.Power(true, false);
@@ -209,6 +213,10 @@ int main()
   gpio_set_irq_enabled_with_callback(18, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
+
+  
+  // Use the object to input a frequency:
+  //freqInput.ChangeFrequency(0, 7150000);
 
   //  Set stepper to zero:
   display.updateMessageTop("                Resetting to Zero");

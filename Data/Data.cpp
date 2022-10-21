@@ -44,24 +44,44 @@ hertzPerStepperUnitVVC[2]= ((float) HIGHEND20M - (float) LOWEND20M)/((float) wor
 }
 
 void Data::writeDefaultValues(){
+workingData.presetFrequencies[0][0] = 7030000L;
+workingData.presetFrequencies[0][1] = 7040000L;
+workingData.presetFrequencies[0][2] = 7100000L;
+workingData.presetFrequencies[0][3] = 7150000L;
+workingData.presetFrequencies[0][4] = 7250000L;
+workingData.presetFrequencies[0][5] = 7285000L;
+
+workingData.presetFrequencies[1][0] = 10106000L;
+workingData.presetFrequencies[1][1] = 7040000L;
+workingData.presetFrequencies[1][2] = 7100000L;
+workingData.presetFrequencies[1][3] = 7150000L;
+workingData.presetFrequencies[1][4] = 7250000L;
+workingData.presetFrequencies[1][5] = 7285000L;
+
+workingData.presetFrequencies[2][0] = 7030000L;
+workingData.presetFrequencies[2][1] = 7040000L;
+workingData.presetFrequencies[2][2] = 7100000L;
+workingData.presetFrequencies[2][3] = 7150000L;
+workingData.presetFrequencies[2][4] = 7250000L;
+workingData.presetFrequencies[2][5] = 7285000L;
+
+
 workingData.bandLimitPositionCounts[0][0] = 0;
 workingData.bandLimitPositionCounts[0][1] = 0;
 workingData.bandLimitPositionCounts[1][0] = 0;
 workingData.bandLimitPositionCounts[1][1] = 0;
 workingData.bandLimitPositionCounts[2][0] = 0;
 workingData.bandLimitPositionCounts[2][1] = 0;
+
 workingData.bandEdges[0][0] = LOWEND40M;
 workingData.bandEdges[0][1] = HIGHEND40M;
 workingData.bandEdges[1][0] = LOWEND30M;
 workingData.bandEdges[1][1] = HIGHEND30M;
 workingData.bandEdges[2][0] = LOWEND20M;
 workingData.bandEdges[2][1] = HIGHEND20M;
- // workingData.bandEdges[0][0] = 
- //     {LOWEND40M, HIGHEND40M},
- //     {LOWEND30M, HIGHEND30M},
- //     {LOWEND20M, HIGHEND20M}};
-  workingData.currentBand = 0;
-  workingData.currentFrequency = 7150000;
-  workingData.initialized = 0x55555555;
-  workingData.calibrated = 0;
+
+workingData.currentBand = 0;
+workingData.currentFrequency = 7150000;
+workingData.initialized = 0x55555555;
+workingData.calibrated = 0;
 }

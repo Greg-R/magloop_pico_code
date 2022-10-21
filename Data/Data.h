@@ -56,14 +56,17 @@ const int MAXBANDS = 3;       // Can only process this many frequency bands
   static const uint32_t HIGHEND30M = 10150000;
   static const uint32_t LOWEND20M = 14000000;
   static const uint32_t HIGHEND20M = 14350000;
+
+  // Preset frequency constants in the dataStruct are initial defaults; these defaults are saved to the
+  // EEPROM initially, but they can be overwritten later if the user desires.  The presets will always
+  // be read from the EEPROM.
+  struct dataStruct {
   uint32_t presetFrequencies[3][6] =
       {
           {7030000L, 7040000L, 7100000L, 7150000L, 7250000L, 7285000L},       // 40M
           {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L}, // 30M
           {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}  // 20M
   };
-
-  struct dataStruct {
   uint32_t bandLimitPositionCounts[3][2];
   uint32_t bandEdges[3][2]; // = { // Band edges in Hz
    //   {LOWEND40M, HIGHEND40M},

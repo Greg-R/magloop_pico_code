@@ -71,6 +71,9 @@ public:
     Adafruit_ILI9341 &tft;
     EEPROMClass &eeprom;
     Data &data;
+    Button &enterbutton;
+    Button &autotunebutton;
+    Button &exitbutton;
     int whichBandOption;  // This indicates the current band in use.
     float SWRValue;
     float SWRcurrent;
@@ -108,17 +111,11 @@ public:
     }; // Used to move between states in state machines.
     State state;
     // Declare 3 pushbuttons.  This Class does de-bouncing.
-    Button enterbutton; //= Button(6);
-    Button autotunebutton; //= Button(7);
-    Button exitbutton; //= Button(8);
+    //Button enterbutton; //= Button(6);
+    //Button autotunebutton; //= Button(7);
+    //Button exitbutton; //= Button(8);
 
-    FrequencyInput(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data);
-
-    void Splash(std::string version, std::string releaseDate);
-
-    void frequencyMenuOption();
-
-    int manualTune();
+    FrequencyInput(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton);
 
     long ChangeFrequency(int bandIndex, long frequency);
 
@@ -132,31 +129,14 @@ public:
 
     void ShowMainDisplay(int whichMenuPage);
 
-    void ShowSubmenuData(float SWR, int currentFrequency);
-
-    void UpdateFrequency(int frequency);
-
-    void UpdateSWR(float SWR, std::string msg);
-
     void updateMessageTop(std::string messageToPrint);
 
     void updateMessageBottom(std::string messageToPrint);
-
-    // The following 3 methods were consolidated from "Presets":
-    void ProcessPresets();
 
     int SelectPreset();
 
     void RestorePreviousPresetChoice(int submenuIndex, int whichBandOption);
 
     void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
-
-    void ManualFrequencyControl(int whichBandOption);
-
-    void ManualStepperControl();
-
-    int DetectMaxSwitch();
-
-    void CalibrationMachine();
 
 };

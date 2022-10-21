@@ -31,8 +31,8 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
-                                                     stepper(stepper), eeprom(eeprom), data(data)                                            
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, FrequencyInput &freqInput) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
+                                                     stepper(stepper), eeprom(eeprom), data(data), freqInput(freqInput)                                           
 {
   enterbutton = Button(data.enterButton);
   autotunebutton = Button(data.autotuneButton);
@@ -104,7 +104,7 @@ void DisplayManagement::frequencyMenuOption()
         break;
       }
       if(whichBandOption == this->data.workingData.currentBand) frequency = data.workingData.currentFrequency;
-      else frequency = data.presetFrequencies[whichBandOption][3]; // Set initial frequency for each band from Preset list
+      else frequency = data.workingData.presetFrequencies[whichBandOption][3]; // Set initial frequency for each band from Preset list
       this->data.workingData.currentBand = whichBandOption;  //  Update the current band.   
       state = State::state2;                                  // Proceed to manual frequency adjustment state.
       break;
@@ -989,8 +989,8 @@ void DisplayManagement::ProcessPresets()
       state = State::state2;
       break;
     case State::state2:
-      frequency = SelectPreset();
-      state = State::state3;
+      frequency = SelectPreset();  // This method contains code to modify and save the presets.
+      state = State::state3;       // Return to this point and you MUST go to state3 (autotune)!
       if (frequency == 0)
         state = State::state1; // User pushed exit, return to band select.
       break;
@@ -1012,15 +1012,36 @@ void DisplayManagement::ProcessPresets()
       busy_wait_ms(5000);
       state = State::state2; // Move to Select Preset state.
       break;
+ //     case State::state4:  // This state adjusts and saves the preset frequency.
+
+      default:  // Should never go here!
+      return;   // Return nothing.  Should break things.
     }
   }
 }
 
+// Used in ProcessPreset to select a particular preset frequency.
+// If the Enter button is pressed, the preset frequency can be changed and saved.
+// This must be translated into a state machine!
 int DisplayManagement::SelectPreset()
 {
   int frequency;
   bool lastexitbutton = true;
+  bool lastenterbutton = true;
   bool lastautotunebutton = true;
+  menuEncoderState = 0;
+  state = State::state0;  // Enter state0 which does graphics.
+  
+//  Preset state selection machine
+  while (true)
+  { 
+    // Poll 3 buttons:
+    autotunebutton.buttonPushed();
+    enterbutton.buttonPushed();
+    exitbutton.buttonPushed();
+
+  switch(state) {
+  case State::state0:    // This state does the graphics.
   updateMessageTop("Menu Encoder to select, push AutoTune");
   EraseBelowMenu();
   tft.setTextSize(1);
@@ -1034,25 +1055,15 @@ int DisplayManagement::SelectPreset()
     tft.print(".");
     tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
     tft.setCursor(65, 70 + i * 30);
-    tft.print(data.presetFrequencies[whichBandOption][i]);
+    tft.print(data.workingData.presetFrequencies[whichBandOption][i]);
   }
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_WHITE);
   tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
-  menuEncoderState = 0;
-  //  Preset state selection machine
-  while (true)
-  { // Why 2 buttons???
-    // Poll 3 buttons:
-    autotunebutton.buttonPushed();
-    enterbutton.buttonPushed();
-    exitbutton.buttonPushed();
-    if (exitbutton.pushed & not lastexitbutton)
-      return frequency = 0; // Exit Preset Select if requested by user.
-    lastexitbutton = exitbutton.pushed;
-    if (autotunebutton.pushed & not lastautotunebutton)
-      break; // Exit preset select and AutoTune.
-    lastautotunebutton = autotunebutton.pushed;
+  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
+  state = State::state1;
+  break;
+
+      case State::state1:  // This state reads the encoders and button pushes.
     if (menuEncoderMovement == 1)
     { // Turning clockwise
       RestorePreviousPresetChoice(submenuIndex, whichBandOption);
@@ -1071,8 +1082,33 @@ int DisplayManagement::SelectPreset()
       HighlightNewPresetChoice(submenuIndex, whichBandOption);
       menuEncoderMovement = 0;
     }
-  }                                                                  // end while Preset state selection machine
-  frequency = data.presetFrequencies[whichBandOption][submenuIndex]; //  Retrieve the selected frequency.
+        if (exitbutton.pushed & not lastexitbutton)
+      return frequency = 0; // Exit Preset Select if requested by user.
+      lastexitbutton = exitbutton.pushed;
+    if (enterbutton.pushed & not lastenterbutton) {
+      frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex];
+      frequency = freqInput.ChangeFrequency(data.workingData.currentBand, frequency); // This will return the current or modified preset frequency.
+      // Save the preset to the EEPROM.
+      data.workingData.presetFrequencies[whichBandOption][submenuIndex] = frequency;
+      eeprom.put(0, data.workingData);
+      eeprom.commit();
+      //break;  // Want to stay within SelectPreset; do not leave this method!  Already within while loop here.
+      // Need to refresh graphics, because they were changed by ChangeFrequency!  
+      state = State::state0;  // Refresh the graphics.
+      
+    //  lastenterbutton = enterbutton.pushed;
+    }
+    lastenterbutton = enterbutton.pushed;
+    if (autotunebutton.pushed & not lastautotunebutton)
+      break; // Exit preset select, return the frequency and proceed to AutoTune.
+      lastautotunebutton = autotunebutton.pushed;
+    //  state = State::state1;
+    break;
+    default:
+    break;
+  }     // end switch of state machine
+  }     // end while Preset state selection machine
+  frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex]; //  Retrieve the selected frequency.
   return frequency;
 }
 
@@ -1091,7 +1127,7 @@ void DisplayManagement::RestorePreviousPresetChoice(int submenuIndex, int whichB
 {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // restore old background
   tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
+  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
 }
 
 /*****
@@ -1109,7 +1145,7 @@ void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBand
 {
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_WHITE); // HIghlight new preset choice
   tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
+  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
 }
 
 //  This is the primary auto-tuning algorithm which minimizes VSWR.

@@ -31,169 +31,17 @@
 #include "FrequencyInput.h"
 
 FrequencyInput::FrequencyInput(Adafruit_ILI9341 &tft,
-                               EEPROMClass &eeprom, Data &data) : tft(tft), eeprom(eeprom), data(data)
+                               EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
+                                : tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
-  enterbutton = Button(data.enterButton);
-  autotunebutton = Button(data.autotuneButton);
-  exitbutton = Button(data.exitButton);
-  enterbutton.initialize();
-  exitbutton.initialize();
-  autotunebutton.initialize();
+  //enterbutton = Button(data.enterButton);
+  //autotunebutton = Button(data.autotuneButton);
+  //exitbutton = Button(data.exitButton);
+  //enterbutton.initialize();
+  //exitbutton.initialize();
+  //autotunebutton.initialize();
 }
 
-void FrequencyInput::Splash(std::string version, std::string releaseDate)
-{
-  tft.fillScreen(ILI9341_BLACK);
-  tft.setTextSize(2);
-  tft.setTextColor(ILI9341_MAGENTA, ILI9341_BLACK);
-  tft.setCursor(22, 20);
-  tft.print("Loop Antenna Controller");
-  tft.setCursor(37, 45);
-  tft.print("by Gregory Raven KF5N");
-  tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
-  tft.setCursor(25, 73);
-  tft.print("based on a project from");
-  tft.setCursor(15, 93);
-  tft.print("Microcontroller Projects");
-  tft.setCursor(30, 110);
-  tft.print("for Amateur Radio by");
-  tft.setCursor(65, 142);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.println("Al Peter  AC8GY");
-  tft.setCursor(45, 168);
-  tft.print("Jack Purdum  W8TEE");
-  tft.setCursor(75, 200);
-  tft.print("Version ");
-  tft.print(version.c_str());
-  tft.setCursor(35, 220);
-  tft.print("Release Date ");
-  tft.print(releaseDate.c_str());
-  tft.setTextSize(2);
-}
-
-/*****
-  Purpose: To execute the FREQ menu option
-  Argument list:
-    void
-  Return value:
-    void
-*****/
-void FrequencyInput::frequencyMenuOption()
-{
-  int SWRFlag1;
-  int backCount = 0;
-  long aveMinPosition;
-  long frequency;
-  State state;           // State machine next state.
-  state = State::state1; // Begin with Select Band state.
-                         // A state machine follows.  Run AutoTune when AutoTune button pushed.  Exit switch leaves while loop.
-  while (true)
-  {
-    switch (state)
-    {
-    case State::state0:
-      return; //  Exit frequency selection and return to top menu Freq.
-    case State::state1:
-      whichBandOption = SelectBand(data.bands); // state1
-      
-      // If SelectBand returns 4, this means the menu was exited without selecting a band.  Move to the top level menu Freq.
-      if (whichBandOption == 4)
-      {
-        state = State::state0;
-        break;
-      }
-      if(whichBandOption == this->data.workingData.currentBand) frequency = data.workingData.currentFrequency;
-      else frequency = data.presetFrequencies[whichBandOption][3]; // Set initial frequency for each band from Preset list
-      this->data.workingData.currentBand = whichBandOption;  //  Update the current band.   
-      state = State::state2;                                  // Proceed to manual frequency adjustment state.
-      break;
-    case State::state2:
-      frequency = ChangeFrequency(whichBandOption, frequency); // Alter the frequency using encoders.  Enter button returns frequency.
-      // Exit frequency change if a zero is returned.  The user pushed Exit.
-      if (frequency == 0)
-      {
-        state = State::state1;
-        break;
-      }
-      //dds.SendFrequency(frequency); // Done in ChangeFrequency???
-      data.workingData.currentFrequency = frequency;
-      eeprom.put(0, data.workingData);
-      eeprom.commit();  // Write to EEPROM.
-      //Power(true, true);                  // Power up circuits.
-      //SWRValue = swr.ReadSWRValue();
-      //readSWRValue = SWRValue; // Redundant???
-      ShowSubmenuData(SWRValue, frequency);
-      tft.fillRect(0, 100, 311, 150, ILI9341_BLACK); // ???
-      // Backup 20 counts to approach from CW direction
-      position = -50 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((frequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
-      //  Move the stepper to the approximate location based on the current frequency:
-      //stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-      //minSWRAuto = AutoTuneSWR();                       // Auto tune here
-      // After AutoTune, do full update of display with SWR vs. frequency plot:
-      //ShowSubmenuData(minSWRAuto, dds.currentFrequency);
-      //GraphAxis(whichBandOption);
-      //PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
-      // Manual frequency and stepper position moved to different menu!  September 2022
-      //updateMessageBottom("     Encoders to Adjust, Exit to Return");
-      // Enter Manual frequency and position tune:
-      //frequency = manualTune();  // Stuck here until Exit button is pushed.
-      //Power(false, false); // Power down circuits.
-      // Pause and allow user to view plot of SWR versus frequency.
-      busy_wait_ms(5000);
-      break;        //  state is not changed; should go back to state2.
-    }               // end switch
-  }                 // end of while loop and state machine
-  return;
-}
-
-/*****
-  Purpose: Manage the manual frequency and stepper functions.
-  Argument list:
-    void
-  Return value:
-    int frequency
-*****/
-int FrequencyInput::manualTune()
-{
-  bool lastautotunebutton = true;
-  bool lastexitbutton = true;
-  // Power(true);
-  while (true)
-  {
-    exitbutton.buttonPushed(); // Poll exitbutton.
-
-    if (exitbutton.pushed and not lastexitbutton)
-    {
-      //  Power(false);
-    //  return dds.currentFrequency; // Exit manual tuning.
-    }
-    if (menuEncoderMovement != 0)
-    { // Allow stepper to be moved maually
-    //  ManualStepperControl();
-    }
-    if (frequencyEncoderMovement != 0)
-    { // Allow frequency to be changed maually.
-    //  ManualFrequencyControl(whichBandOption);
-      frequencyEncoderMovement = 0; // Doesn't reset to 0???
-    }
-    autotunebutton.buttonPushed(); // Poll autotunebutton.
-                                   // Is this MAXSWITCH protection needed here???
-    if (autotunebutton.pushed == true and (not lastautotunebutton) and gpio_get(MAXSWITCH))
-    { // Redo the Autotune at new frequency/position
-    //  position = -80 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
-   //   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-   //   minSWRAuto = AutoTuneSWR();                       // Auto tune here
-   //   SWRMinPosition = stepper.currentPosition();       // Get the autotuned stepper position.
-   //   GraphAxis(whichBandOption);
-   //   PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
-      updateMessageTop("    Freq: Adjust - AutoTune: Refine");
-      updateMessageBottom("                  Exit to Return");
-    }
-    lastautotunebutton = autotunebutton.pushed;
-    lastexitbutton = exitbutton.pushed;
-
-  } // end while
-}
 
 /*****
   Purpose: Set new frequency
@@ -217,9 +65,9 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
   insetMargin = 20;
   defaultIncrement = 1000L;
   halfScreen = PIXELHEIGHT / 2 - 25;
-  bool lastexitbuttonPushed = true;
-  bool lastautotunebuttonPushed = true;
-  updateMessageTop("                 Enter Frequency");
+  bool lastexitbutton = true;
+  bool lastenterbutton = true;
+  updateMessageTop("          Enter New Preset Frequency");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0)
   {                // 40M
@@ -239,9 +87,9 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
   tft.setCursor(insetMargin + 90, halfScreen + 80);
   tft.print("Frequency Encoder");
   tft.setCursor(insetMargin, halfScreen + 100);
-  tft.print("Tune:");
+  //tft.print("Tune:");
   tft.setCursor(insetMargin + 90, halfScreen + 100);
-  tft.print("AutoTune Button");
+  //tft.print("AutoTune Button");
   tft.setCursor(insetMargin, halfScreen + 120);
   tft.print("Exit:");
   tft.setCursor(insetMargin + 90, halfScreen + 120);
@@ -262,19 +110,21 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
   while (true)
   { // Update frequency until user pushes AutoTune button.
     // Poll autotunebutton and exitbutton.
-    autotunebutton.buttonPushed();
+    enterbutton.buttonPushed();
     exitbutton.buttonPushed();
-    if (autotunebutton.pushed & not lastautotunebuttonPushed)
-      break;
-    // Make sure there is a proper transition of the autotune button.
-    lastautotunebuttonPushed = autotunebutton.pushed;
+    if (enterbutton.pushed & not lastenterbutton) {
+      lastenterbutton = enterbutton.pushed;
+      break;  // Break out of the while loop.
+    }
+    // Make sure there is a proper transition of the enter button.
+      lastenterbutton = enterbutton.pushed;
     //  Exit this menu, but make sure it is a proper edge transition:
-    if (exitbutton.pushed & not lastexitbuttonPushed)
+    if (exitbutton.pushed & not lastexitbutton)
     {
       frequency = 0;
       return frequency;
     }
-    lastexitbuttonPushed = exitbutton.pushed;
+    lastexitbutton = exitbutton.pushed;
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(1);
     tft.setFont(&FreeSerif24pt7b);
@@ -403,86 +253,6 @@ int FrequencyInput::MakeMenuSelection(int index) // Al Mod 9-8-19
   return index;
 }
 
-/*****
-  Purpose: To get a band menu choice
-  Argument list:
-    const std::string bands[3].  Example: {"40M", "30M", "20M"}
-  Return value:
-    int                       the menu selected
-
-  Dependencies:  Adafruit_ILI9341 tft
-*****/
-int FrequencyInput::SelectBand(const std::string bands[3])
-{
-  updateMessageTop("       Choose using Menu Encoder");
-  EraseBelowMenu();              // Redundant???
-  //int currBand[] = {40, 30, 20}; // Used???
-  int i, index, where = 0;
-  bool enterLastPushed = true; // Must be set to true or a false exit could occur.
-  bool exitLastPushed = true;
-  updateMessageBottom("             Press Enter to Select");
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif12pt7b);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  for (int i = 0; i < 3; i++)
-  {
-    tft.setCursor(110, 110 + i * 30);
-    tft.print(bands[i].c_str());
-  }
-  tft.setCursor(110, 110);
-  tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-  tft.print(bands[0].c_str());
-  index = 0;
-
-  // State Machine.  Calling this function enters this loop and stays until Enter or Exit is pressed.
-  while (true)
-  {
-    if (menuEncoderMovement)
-    {
-      if (menuEncoderMovement == 1)
-      {
-        index++;
-        if (index == 3)
-        { // wrap to first index
-          index = 0;
-        }
-      }
-      if (menuEncoderMovement == -1)
-      {
-        index--;
-        if (index < 0)
-        { // wrap to last index
-          index = 2;
-        }
-      }
-      menuEncoderMovement = 0;
-      tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-      for (int i = 0; i < 3; i++)
-      {
-        tft.setCursor(110, 110 + i * 30);
-        tft.print(bands[i].c_str());
-      }
-      tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-      tft.setCursor(110, 110 + index * 30);
-      tft.print(bands[index].c_str());
-    }
-    // Poll buttons.
-    enterbutton.buttonPushed();
-    exitbutton.buttonPushed();
-    if (enterbutton.pushed & not enterLastPushed)
-      break; // Exit the state machine if there was a false to true transition, return selected index.
-    enterLastPushed = enterbutton.pushed;
-    if (exitbutton.pushed & not exitLastPushed)
-      return index = 4; // 4 is a signal that the menu was exited from without making a selection.
-    exitLastPushed = exitbutton.pushed;
-  } // end while
-
-  //currentBand = currBand[index]; // Used???
-//   eeprom.WriteCurrentBand(index);
- //  data.workingData.currentBand = index;               
- //  eeprom.commit();
-  return index;
-}
 
 /*****
   Purpose: To erase the display below the top two menu lines
@@ -540,99 +310,8 @@ void FrequencyInput::ShowMainDisplay(int whichMenuPage)
   }
 }
 
-/*****
-  Purpose: To display the SWR and frequency data
-  Argument list:
-    float SWR, the current SWR value to be displayed
-    int currentFrequency, the frequency to be displayed
-  Return value:
-    void
-*****/
-void FrequencyInput::ShowSubmenuData(float SWR, int currentFrequency) // al mod 9-8-19
-{
-  tft.setTextSize(1);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.fillRect(0, 23, PIXELWIDTH, 20, ILI9341_BLACK);
-  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-  tft.setCursor(0, 40);
-  tft.print("SWR ");
-  tft.setFont(&FreeSerif12pt7b);
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  if (SWR > 50.0 || SWR < .5)
-  {                  // Real or bogus SWR?
-    tft.print("??"); //...bogus
-  }
-  else
-  {
-    if (SWR > 9.9999)
-    {
-      tft.print(SWR, 2);
-    }
-    else
-    {
-      tft.print(SWR, 2); // real
-    }
-  }
-  UpdateFrequency(currentFrequency);
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-}
 
-/*****
-  Purpose: To rewrite the frequency display
-  Does not reset DDS to new frequency!
-  Argument list:
 
-  Return value:
-    void
-*****/
-void FrequencyInput::UpdateFrequency(int frequency)
-{
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.fillRect(140, 25, PIXELWIDTH, 20, ILI9341_BLACK);
-  tft.setCursor(100, 40);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.print("FREQ ");
-  tft.setFont(&FreeSerif12pt7b);
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.print(frequency);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.print("  p ");
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
- // tft.print(stepper.currentPosition());
-}
-
-/*****
-  Purpose: Update the SWR value
-
-  Argument list:
-    float SWR                 the current SWR value
-
-  Return value:
-    void
-*****/
-void FrequencyInput::UpdateSWR(float SWR, std::string msg)
-{
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.setCursor(60, 30);
-  if (msg.size() > 0)
-  {
-    tft.print(msg.c_str());
-  }
-  else
-  {
-    if (SWR > .5 && SWR < 50.0)
-    {
-      tft.print(SWR);
-    }
-    else
-    {
-      tft.print("> 50");
-    }
-  }
-}
 
 /*****
   Purpose: Update Top Message Area
@@ -674,76 +353,11 @@ void FrequencyInput::updateMessageBottom(std::string messageToPrint)
 }
 
 
-/*****
-  Purpose: State machine to select a preset frequency and then AutoTune to that frequency.
-
-  Parameter list:
-    int whichBandOption
-    int submenuIndex          which of presets
-
-  Return value:
-    void
-
-  CAUTION:
-
-*****/
-void FrequencyInput::ProcessPresets()
-{
-  int i;
-  int backCount = 0;
-  long frequency;
-  State state = State::state0;
-  state = State::state1; // Begin with Select Band state.
-  while (true)
-  {
-    switch (state)
-    {
-    case State::state0:
-      return; // Return to top level.
-    case State::state1:
-      whichBandOption = SelectBand(data.bands); // Select the band to be used
-      this->data.workingData.currentBand = whichBandOption;
-      // If SelectBand returns 4, the user exited before selecting a band.  Return to top menu.
-      if (whichBandOption == 4)
-      {
-        state = State::state0;
-        break;
-      }
-      submenuIndex = 0;
-      state = State::state2;
-      break;
-    case State::state2:
-      frequency = SelectPreset();
-      state = State::state3;
-      if (frequency == 0)
-        state = State::state1; // User pushed exit, return to band select.
-      break;
-    case State::state3: // Run AutoTuneSWR() at the selected preset frequency.
-      //Power(true, true);      // Power up circuits.
-   //   dds.SendFrequency(frequency);
-      this->data.workingData.currentFrequency = frequency;
-      eeprom.put(0, data.workingData);
-      eeprom.commit();
-      // Calculate the approximate position for the stepper and back off a bit.
-  //    position = -25 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
-  //    stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-   //   minSWRAuto = AutoTuneSWR();
-  //    ShowSubmenuData(minSWRAuto, dds.currentFrequency);
-      //GraphAxis(whichBandOption);
-      //PlotSWRValueNew(whichBandOption, iMax, tempCurrentPosition, tempSWR, SWRMinPosition);
-      //frequency = manualTune();
-      //Power(false, false);          //  Power down circuits.
-      busy_wait_ms(5000);
-      state = State::state2; // Move to Select Preset state.
-      break;
-    }
-  }
-}
-
 int FrequencyInput::SelectPreset()
 {
   int frequency;
   bool lastexitbutton = true;
+  bool lastenterbutton = true;
   bool lastautotunebutton = true;
   updateMessageTop("Menu Encoder to select, push AutoTune");
   EraseBelowMenu();
@@ -758,25 +372,31 @@ int FrequencyInput::SelectPreset()
     tft.print(".");
     tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
     tft.setCursor(65, 70 + i * 30);
-    tft.print(data.presetFrequencies[whichBandOption][i]);
+    tft.print(data.workingData.presetFrequencies[whichBandOption][i]);
   }
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_WHITE);
   tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
+  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
   menuEncoderState = 0;
   //  Preset state selection machine
   while (true)
   { // Why 2 buttons???
     // Poll 3 buttons:
     autotunebutton.buttonPushed();
-    enterbutton.buttonPushed();
+    enterbutton.buttonPushed();  // Use the Enter button to change and save the Preset frequency.
     exitbutton.buttonPushed();
     if (exitbutton.pushed & not lastexitbutton)
       return frequency = 0; // Exit Preset Select if requested by user.
-    lastexitbutton = exitbutton.pushed;
+      lastexitbutton = exitbutton.pushed;
+    // Use the Enter button to change and save the Preset frequency.
+    // A FrequencyInput object is used for this task.
+    if (enterbutton.pushed & not lastenterbutton)
+
+      lastenterbutton = enterbutton.pushed;
+
     if (autotunebutton.pushed & not lastautotunebutton)
       break; // Exit preset select and AutoTune.
-    lastautotunebutton = autotunebutton.pushed;
+      lastautotunebutton = autotunebutton.pushed;
     if (menuEncoderMovement == 1)
     { // Turning clockwise
       RestorePreviousPresetChoice(submenuIndex, whichBandOption);
@@ -796,7 +416,7 @@ int FrequencyInput::SelectPreset()
       menuEncoderMovement = 0;
     }
   }                                                                  // end while Preset state selection machine
-  frequency = data.presetFrequencies[whichBandOption][submenuIndex]; //  Retrieve the selected frequency.
+  frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex]; //  Retrieve the selected frequency.
   return frequency;
 }
 
@@ -815,7 +435,7 @@ void FrequencyInput::RestorePreviousPresetChoice(int submenuIndex, int whichBand
 {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // restore old background
   tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
+  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
 }
 
 /*****
@@ -833,136 +453,5 @@ void FrequencyInput::HighlightNewPresetChoice(int submenuIndex, int whichBandOpt
 {
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_WHITE); // HIghlight new preset choice
   tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.presetFrequencies[whichBandOption][submenuIndex]);
+  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
 }
-
-
-// Manual control functions were moved from SWR.
-/*****
-  Purpose: Manual Setting the Frequency
-
-  Parameter list:
-
-  Return value:
-    void
-*****/
-void FrequencyInput::ManualFrequencyControl(int whichBandOption)
-{
-  updateMessageTop("     Press Enter: Move to Freq");
-  int i, k, yIncrement, xIncrement;
-  int stepIncr;
-//  int frequency = dds.currentFrequency;
- // int frequencyOld = frequency;
-  long tempTime; // Used???
-  xIncrement = (XAXISEND - XAXISSTART) / 3;
-  yIncrement = (YAXISEND - YAXISSTART) / 3;
-  int xDotIncrement = 10;
-  int yTick = YAXISSTART + 5;
-  bool lastenterbutton = true;
-  frequencyEncoderMovement = 0;
- // GraphAxis(whichBandOption);
-  if (frequencyEncoderMovement2 != 0)
-  {
-//    frequencyOld = dds.currentFrequency;
-    // Enter this loop until enterbutton is pushed.
-    while (true)
-    {
-      enterbutton.buttonPushed(); // Poll enterbutton.
-      if (enterbutton.pushed and not lastenterbutton)
-        break;
-      lastenterbutton = enterbutton.pushed; // Used to make sure enterbutton uses edge.
-      if (frequencyEncoderMovement2 != 0)
-      {
-     //   frequency = dds.currentFrequency + frequencyEncoderMovement2 * 1000;
-     //   dds.SendFrequency(frequency);
-   //     ShowSubmenuData(swr.ReadSWRValue(), frequency); // Updates display only.
-        frequencyEncoderMovement2 = 0;
-      }
-    }
-    updateMessageTop("                  Exit to Return");
-    updateMessageBottom("     Freq: Adjust - AutoTune: Refine");
- //   dds.SendFrequency(frequency); // Redundant???
- //   position = stepper.currentPosition() + ((frequency - frequencyOld) / (data.hertzPerStepperUnitVVC[whichBandOption]));
- //   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-    int k = 0;
-    frequencyEncoderMovement = 0;
-    frequencyEncoderMovement2 = 0;
-  }
-//  PlotNewStartingFrequency(whichBandOption);
-//  ShowSubmenuData(swr.ReadSWRValue(), frequency);
-}
-
-/*****
-  Purpose: Manual Setting the Stepper
-
-  Parameter list:
-
-  Return value:
-    void
-*****/
-void FrequencyInput::ManualStepperControl()
-{
-  long position;
-//  position = stepper.currentPosition() + menuEncoderMovement;
-//  stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-//  ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-  menuEncoderMovement = 0;
-}
-
-/*****
-  Purpose: Select and execute user selected Calibration algorithm.
-           Manage the display, Enter and Exit buttons
-
-  Parameter list:
-
-
-  Return value:
-    void
-
-  CAUTION:
-
-*****/
-void FrequencyInput::CalibrationMachine()
-{
-  int i;
-  bool lastexitbutton = true;
-  std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
-  EraseBelowMenu();
-  state = State::state0; // Enter state0.
-  //menuIndex = mode::PRESETSMENU;         // Superfluous???
-  while (true)
-  {
-    switch (state)
-    {
-    case State::state0:         // Select Calibration algorithm.
-      i = SelectBand(cals) + 1; // Calibration states are 1,2,3.
-      if (i == 5)
-        return;         // No selection in Calibrate menu; exit machine and return to top level.
-      state = (State)i; // Cast i to State enum type.
-      break;
-    case State::state1: // Full Calibration
-   //   DoNewCalibrate2();
-      state = State::state0;
-      lastexitbutton = true; // Must set true here, or will jump to top level.
-      break;
-    case State::state2:           // Band Calibration
-      i = SelectBand(data.bands); // Select band
-      if (i == 4)
-        break;                  // No selection in Band menu; return to Calibration select without calibrating.
-   //   DoSingleBandCalibrate(i); // Band Calibration
-      state = State::state0;    // Return to Calibration select after exiting state2.
-      lastexitbutton = true;    // Must set true here, or will jump to top level.
-      break;
-    case State::state3: // Initial Calibration
-   //   DoFirstCalibrate();
-      state = State::state0;
-      lastexitbutton = true; // Must set true here, or will jump to top level.
-      break;
-    }                          // end switch
-    exitbutton.buttonPushed(); // Poll exitbutton.
-    if (exitbutton.pushed and not lastexitbutton)
-      break;                            // Break from while if exit button is pushed.
-    lastexitbutton = exitbutton.pushed; // Make sure exit happens on edge.
-  }                                     // end while
-}
-

@@ -148,10 +148,13 @@ int main()
   //  and GPIOs.
   Data data = Data();
 
-  //  Construct buttons.
+  //  Construct and initialize buttons.
   Button enterbutton(data.enterButton);
   Button autotunebutton(data.autotuneButton);
   Button exitbutton(data.exitButton);
+  enterbutton.initialize();
+  exitbutton.initialize();
+  autotunebutton.initialize();
 
   // The stepper drive generates pulses unless put in sleep mode.
   // The pulses will cause HF RF interference.  Therefore, the sleep mode must be used.
@@ -193,7 +196,7 @@ int main()
   FrequencyInput freqInput = FrequencyInput(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
 
   // Instantiate the DisplayManagement object.  This object has many important methods.
-  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, freqInput);
+  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput);
 
   // Power on all circuits except relay.  This is done early to allow circuits to stabilize before calibration.
   display.Power(true, false);

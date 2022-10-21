@@ -76,6 +76,9 @@ public:
     StepperManagement &stepper;
     EEPROMClass &eeprom;
     Data &data;
+    Button &enterbutton;
+    Button &autotunebutton;
+    Button &exitbutton;
     FrequencyInput &freqInput;
     int whichBandOption;  // This indicates the current band in use.
     float SWRValue;
@@ -114,11 +117,12 @@ public:
     }; // Used to move between states in state machines.
     State state;
     // Declare 3 pushbuttons.  This Class does de-bouncing.
-    Button enterbutton; //= Button(6);
-    Button autotunebutton; //= Button(7);
-    Button exitbutton; //= Button(8);
+    //Button enterbutton; //= Button(6);
+    //Button autotunebutton; //= Button(7);
+    //Button exitbutton; //= Button(8);
 
-    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data, FrequencyInput &freqInput);
+    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data, 
+                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput);
 
     void Splash(std::string version, std::string releaseDate);
 

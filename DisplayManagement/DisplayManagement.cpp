@@ -31,15 +31,15 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, FrequencyInput &freqInput) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
-                                                     stepper(stepper), eeprom(eeprom), data(data), freqInput(freqInput)                                           
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
+                                                     stepper(stepper), eeprom(eeprom), data(data),enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput)                                           
 {
-  enterbutton = Button(data.enterButton);
-  autotunebutton = Button(data.autotuneButton);
-  exitbutton = Button(data.exitButton);
-  enterbutton.initialize();
-  exitbutton.initialize();
-  autotunebutton.initialize();
+ // enterbutton = Button(data.enterButton);
+ // autotunebutton = Button(data.autotuneButton);
+ // exitbutton = Button(data.exitButton);
+ // enterbutton.initialize();
+ // exitbutton.initialize();
+ // autotunebutton.initialize();
 }
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
@@ -1099,14 +1099,17 @@ int DisplayManagement::SelectPreset()
     //  lastenterbutton = enterbutton.pushed;
     }
     lastenterbutton = enterbutton.pushed;
-    if (autotunebutton.pushed & not lastautotunebutton)
-      break; // Exit preset select, return the frequency and proceed to AutoTune.
-      lastautotunebutton = autotunebutton.pushed;
-    //  state = State::state1;
+
     break;
     default:
     break;
   }     // end switch of state machine
+  // Process button pushes after switch statement, but before end of while block.
+    if (autotunebutton.pushed & not lastautotunebutton)
+      break; // Exit preset select, return the frequency and proceed to AutoTune.
+      lastautotunebutton = autotunebutton.pushed;
+
+
   }     // end while Preset state selection machine
   frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex]; //  Retrieve the selected frequency.
   return frequency;

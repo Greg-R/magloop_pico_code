@@ -52,18 +52,18 @@ workingData.presetFrequencies[0][4] = 7250000L;
 workingData.presetFrequencies[0][5] = 7285000L;
 
 workingData.presetFrequencies[1][0] = 10106000L;
-workingData.presetFrequencies[1][1] = 7040000L;
-workingData.presetFrequencies[1][2] = 7100000L;
-workingData.presetFrequencies[1][3] = 7150000L;
-workingData.presetFrequencies[1][4] = 7250000L;
-workingData.presetFrequencies[1][5] = 7285000L;
+workingData.presetFrequencies[1][1] = 10116000L;
+workingData.presetFrequencies[1][2] = 10120000L;
+workingData.presetFrequencies[1][3] = 10130000L;
+workingData.presetFrequencies[1][4] = 10140000L;
+workingData.presetFrequencies[1][5] = 10145000L;
 
-workingData.presetFrequencies[2][0] = 7030000L;
-workingData.presetFrequencies[2][1] = 7040000L;
-workingData.presetFrequencies[2][2] = 7100000L;
-workingData.presetFrequencies[2][3] = 7150000L;
-workingData.presetFrequencies[2][4] = 7250000L;
-workingData.presetFrequencies[2][5] = 7285000L;
+workingData.presetFrequencies[2][0] = 14030000L;
+workingData.presetFrequencies[2][1] = 14060000L;
+workingData.presetFrequencies[2][2] = 14100000L;
+workingData.presetFrequencies[2][3] = 14200000L;
+workingData.presetFrequencies[2][4] = 14250000L;
+workingData.presetFrequencies[2][5] = 14285000L;
 
 
 workingData.bandLimitPositionCounts[0][0] = 0;

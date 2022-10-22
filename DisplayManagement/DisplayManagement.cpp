@@ -40,6 +40,7 @@ DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
  // enterbutton.initialize();
  // exitbutton.initialize();
  // autotunebutton.initialize();
+ startUpFlag = false;
 }
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
@@ -353,16 +354,48 @@ long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod
 *****/
 int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
 {
+  int currentFrequency;
   tft.setFont();
   tft.setTextSize(2);
+  //tft.setFont(&FreeSerif9pt7b);
+  //tft.setTextSize(1);
   int i;
-  bool lastPushed;
-
+  bool lastPushed; 
+  bool autotuneLastPushed = true;
+  // Display a message to the user that the AutoTune button will tune to the
+  // last used frequency prior to power-off.  This is a one-time event at power-up.
+  if(startUpFlag == false) {
+    tft.setCursor(15, 135);
+    tft.setFont(&FreeSerif9pt7b);
+    tft.setTextSize(1);
+    tft.print("Press AutoTune for last used frequency.");
+    tft.setFont();
+    tft.setTextSize(2);
+  }
+   
   // State Machine:
   while (true)
   {
     // Poll enterbutton.
     enterbutton.buttonPushed();
+    autotunebutton.buttonPushed();
+  if(autotunebutton.pushed & not autotuneLastPushed & not startUpFlag) {
+    currentFrequency = data.workingData.currentFrequency;
+  
+  if(currentFrequency != 0) {
+
+    dds.SendFrequency(currentFrequency); // Set the DDSs
+  // Retrieve the last used frequency and autotune.
+    int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + float((dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
+    Power(true, true);
+    stepper.MoveStepperToPositionCorrected(position);
+    AutoTuneSWR();
+    // Set startUpFlag to true.  This is used to skip this process after one-time use.
+    startUpFlag = true;
+    return 3;  // This will go to default in the state machine, causing a refresh of the main display.
+    }
+    }
+    autotuneLastPushed = autotunebutton.pushed;
     //   if(enterbutton.pushed & not enterbutton.lastPushed) break;  // Looking for a low to high transition here!
     if (enterbutton.pushed)
       break; // Looking for a low to high transition here!
@@ -402,7 +435,7 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
   tft.setCursor(index * 100, 0);
   tft.print(menuOptions[index].c_str());
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-
+  startUpFlag = true;  // Set this flag on first time use and exit from this function.
   return index;
 }
 
@@ -1108,7 +1141,6 @@ int DisplayManagement::SelectPreset()
     if (autotunebutton.pushed & not lastautotunebutton)
       break; // Exit preset select, return the frequency and proceed to AutoTune.
       lastautotunebutton = autotunebutton.pushed;
-
 
   }     // end while Preset state selection machine
   frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex]; //  Retrieve the selected frequency.

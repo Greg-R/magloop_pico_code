@@ -217,10 +217,6 @@ int main()
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
-  
-  // Use the object to input a frequency:
-  //freqInput.ChangeFrequency(0, 7150000);
-
   //  Set stepper to zero:
   display.updateMessageTop("                Resetting to Zero");
   stepper.ResetStepperToZero();
@@ -244,21 +240,11 @@ int main()
           tft.print("Please run Initial Calibration");
           busy_wait_ms(5000);
   }
-  else {
-  //  Retrieve the last used frequency and autotune.
-  currentFrequency = data.workingData.currentFrequency;
-  if(currentFrequency != 0) {
-  dds.SendFrequency(currentFrequency); // Set the DDSs
-  // Retrieve the last used frequency and autotune.
-  int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + float((dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
-  stepper.MoveStepperToPositionCorrected(position);
-  display.Power(true, true);
-  display.AutoTuneSWR();
-  display.Power(false, false);
-  }
-  }
   
-  //enum class mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
+  else {
+  //  Retrieve the last used frequency and autotune if the user pushes the AutoTune button.
+  currentFrequency = data.workingData.currentFrequency;
+  }
 
   display.menuIndex = display.FREQMENU; // Begin in Frequency menu.
 
@@ -266,13 +252,9 @@ int main()
   while (true)
   {
     int i, submenuIndex;
-    // Turn on power.
-    // display.Power(true);
     //  Refresh display:
     display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
-    //display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
-    //display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    display.ShowSubmenuData(display.minSWR, dds.currentFrequency);
+    display.ShowSubmenuData(display.minSWR, data.workingData.currentFrequency);
     display.Power(false, false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
@@ -291,6 +273,7 @@ int main()
       break;
 
     default:
+      display.menuIndex = 0;
       break;
     } // switch (menuIndex)
   }   // while(1)  (end of main loop)

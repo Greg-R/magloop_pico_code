@@ -31,9 +31,7 @@
 #pragma once
 #include <stdint.h>
 #include <string>
-#include <utility>
 #include <array>
-#include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -48,8 +46,6 @@
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
 #include "../Adafruit-GFX-Library/Fonts/FreeSerif24pt7b.h"
-
-//using namespace std;
 
 #define PRESETSPERBAND 6
 #define PIXELWIDTH 320

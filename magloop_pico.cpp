@@ -48,7 +48,7 @@
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 
 const std::string version = "main";
-const std::string releaseDate = "10-12-22";
+const std::string releaseDate = "10-22-22";
 
 //#define PRESETSMENU 1
 //#define CALIBRATEMENU 2
@@ -240,7 +240,6 @@ int main()
           tft.print("Please run Initial Calibration");
           busy_wait_ms(5000);
   }
-  
   else {
   //  Retrieve the last used frequency and autotune if the user pushes the AutoTune button.
   currentFrequency = data.workingData.currentFrequency;

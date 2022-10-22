@@ -34,12 +34,6 @@ FrequencyInput::FrequencyInput(Adafruit_ILI9341 &tft,
                                EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
                                 : tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
-  //enterbutton = Button(data.enterButton);
-  //autotunebutton = Button(data.autotuneButton);
-  //exitbutton = Button(data.exitButton);
-  //enterbutton.initialize();
-  //exitbutton.initialize();
-  //autotunebutton.initialize();
 }
 
 

@@ -127,7 +127,8 @@ void DisplayManagement::frequencyMenuOption()
       ShowSubmenuData(SWRValue, frequency);
       tft.fillRect(0, 100, 311, 150, ILI9341_BLACK); // ???
       // Backup 20 counts to approach from CW direction
-      position = -50 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((frequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+      position = -50 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + static_cast<int> (static_cast<float>(frequency - data.workingData.bandEdges[whichBandOption][0]) / data.hertzPerStepperUnitVVC[whichBandOption]);
+      //position = -50 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + 403;
       //  Move the stepper to the approximate location based on the current frequency:
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
       minSWRAuto = AutoTuneSWR();                       // Auto tune here
@@ -182,7 +183,7 @@ int DisplayManagement::manualTune()
                                    // Is this MAXSWITCH protection needed here???
     if (autotunebutton.pushed == true and (not lastautotunebutton) and gpio_get(MAXSWITCH))
     { // Redo the Autotune at new frequency/position
-      position = -80 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+      position = -80 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + static_cast<int>(static_cast<float>(dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0]) / data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
       minSWRAuto = AutoTuneSWR();                       // Auto tune here
       SWRMinPosition = stepper.currentPosition();       // Get the autotuned stepper position.
@@ -386,7 +387,7 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
 
     dds.SendFrequency(currentFrequency); // Set the DDSs
   // Retrieve the last used frequency and autotune.
-    int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + float((dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
+    int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + static_cast<int>(static_cast<float>(dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0]) / data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
     Power(true, true);
     stepper.MoveStepperToPositionCorrected(position);
     AutoTuneSWR();
@@ -1034,7 +1035,7 @@ void DisplayManagement::ProcessPresets()
       eeprom.put(0, data.workingData);
       eeprom.commit();
       // Calculate the approximate position for the stepper and back off a bit.
-      position = -25 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + float((dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0])) / float(data.hertzPerStepperUnitVVC[whichBandOption]);
+      position = -25 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + static_cast<int>(static_cast<float>(dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0]) / data.hertzPerStepperUnitVVC[whichBandOption]);
       stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
       minSWRAuto = AutoTuneSWR();
       ShowSubmenuData(minSWRAuto, dds.currentFrequency);
@@ -1498,10 +1499,6 @@ void DisplayManagement::SWRdataAnalysis()
   int32_t fcenter;
   int32_t flow = 0;
   int32_t fhigh = 0; 
-  //Data data2 = Data();
-  //data2.computeSlopes();
-  float horseshit;
-  horseshit = this->data.hertzPerStepperUnitVVC[0];
   int posLowIndex = 0;
   int posHighIndex = 0;
   for(int i = 0; i < 500; i = i + 1) {

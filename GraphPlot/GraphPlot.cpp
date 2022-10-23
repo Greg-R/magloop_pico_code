@@ -30,15 +30,14 @@
 
 #include "GraphPlot.h"
 
-//GraphPlot::GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data) : tft(tft), dds(dds), data(data) 
 GraphPlot::GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data) : tft(tft), dds(dds), data(data)
 {
-//Data data = Data();
 }
 
 /*****
-  Purpose: To display the axes for a graph
-  Paramter list:
+  Purpose: To display the axes for a graph.
+           The axes are drawn from the top down per display convention.
+  Parameter list:
     int whichBandOption     // The band being used
   Return value:
     void
@@ -94,11 +93,14 @@ void GraphPlot::GraphAxis(int whichBandOption) // al modified 9-8-19
   yIncrement = (YAXISEND - YAXISSTART) / 3; // Spacing for graph tick marks
   yTick = YAXISSTART + 5;                   // on Y axis
   tft.setTextColor(ILI9341_YELLOW, ILI9341_BLACK);
+  // Draw Y axis features.
   for (i = YAXISSTART; i < YAXISEND; i += yIncrement, yTick += yIncrement)
   {
     for (k = XAXISSTART + 10; k < XAXISEND; k += xDotIncrement)
     {
-      tft.drawPixel(k, yTick, ILI9341_DARKGREY); // Horizontal dotted axis OK 9-8-19
+      // Draw a solid red line at SWR = 2.0.
+      if(i == 131) tft.drawLine(XAXISSTART, 131, XAXISEND, 131, ILI9341_RED);
+      else tft.drawPixel(k, yTick, ILI9341_DARKGREY); // Horizontal dotted axis OK 9-8-19 ILI9341_DARKGREY
     }
     tft.setCursor(0, yTick - 1); // Print y axis SWR labels
     tft.print(tickCount--);
@@ -107,7 +109,7 @@ void GraphPlot::GraphAxis(int whichBandOption) // al modified 9-8-19
 
   xIncrement = (XAXISEND - XAXISSTART) / chunks; // Spacing for graph tick marks
   xTick = XAXISSTART - 10;                       // on X axis
-
+  // Draw X axis features.
   for (i = 0; i < chunks + 1; i++, xTick += xIncrement)
   {
     tft.setCursor(XAXISSTART - 25 + i * xIncrement, YAXISEND + 20);

@@ -79,29 +79,10 @@ public:
     float SWRcurrent;
     float readSWRValue;
     int position;
-    int positionTemp;
-    //int currentBand; // Is this used???
-    // Attempt to use an enum here totally failed.
-    //enum mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
-    //std::vector<mode> modes = {FREQMENU, PRESETSMENU, CALIBRATEMENU};
     int menuIndex;
-    static constexpr int FREQMENU = 0;
-    static constexpr int PRESETMENU = 1;
-    static constexpr int CALIBRATEMENU = 2;
     int submenuIndex;
-    int SWRFinalPosition;
-    uint32_t SWRMinIndex;  // Array index for the SWR minimum.
     volatile int menuEncoderState;
-    const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
-    int stepperDirectionOld;
-    uint32_t stepperDistanceOld;
-    int iMax;
     const int arraySize = 500;
-    std::array<float, 500> tempSWR;  // Array of SWR measurements used by AutoTuneSWR.
-    std::array<int32_t, 500> tempCurrentPosition;  // Array of stepper positions used by AutoTuneSWR.
-    int32_t SWRMinPosition;
-    float minSWRAuto;
-    float minSWR;
     enum class State
     {
         state0,
@@ -110,33 +91,15 @@ public:
         state3
     }; // Used to move between states in state machines.
     State state;
-    // Declare 3 pushbuttons.  This Class does de-bouncing.
-    //Button enterbutton; //= Button(6);
-    //Button autotunebutton; //= Button(7);
-    //Button exitbutton; //= Button(8);
 
     FrequencyInput(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton);
 
     long ChangeFrequency(int bandIndex, long frequency);
 
-    int MakeMenuSelection(int index);
-
-    int SelectBand(const std::string bands[3]);
-
     void EraseBelowMenu();
-
-    void ErasePage();
-
-    void ShowMainDisplay(int whichMenuPage);
 
     void updateMessageTop(std::string messageToPrint);
 
     void updateMessageBottom(std::string messageToPrint);
-
-    int SelectPreset();
-
-    void RestorePreviousPresetChoice(int submenuIndex, int whichBandOption);
-
-    void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
 
 };

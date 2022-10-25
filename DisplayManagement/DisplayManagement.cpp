@@ -358,11 +358,31 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
   int currentFrequency;
   tft.setFont();
   tft.setTextSize(2);
-  //tft.setFont(&FreeSerif9pt7b);
-  //tft.setTextSize(1);
   int i;
   bool lastPushed; 
   bool autotuneLastPushed = true;
+
+  // Check if initial calibration has been run.  Inform user if not.
+  if(data.workingData.calibrated == 0) {
+   //  Inform user to run Initial Calibration.
+          tft.setCursor(55, 75);
+          tft.setFont(&FreeSerif9pt7b);
+          tft.setTextSize(1);
+          tft.setTextColor(ILI9341_RED);
+          tft.print("Please run Initial Calibration!");
+          tft.setTextColor(ILI9341_WHITE);
+          tft.setCursor(20, 125);
+          tft.print("Use the Menu encoder to highlight");
+          tft.setCursor(20, 150);
+          tft.print("Calibrate and push Enter. Using the");          
+          tft.setCursor(20, 175);
+          tft.print("menu encoder again, highlight Initial");
+          tft.setCursor(20, 200);
+          tft.print("Cal, and push Enter.");                
+  }
+  else {
+  //  Retrieve the last used frequency and autotune if the user pushes the AutoTune button.
+  currentFrequency = data.workingData.currentFrequency;
   // Display a message to the user that the AutoTune button will tune to the
   // last used frequency prior to power-off.  This is a one-time event at power-up.
   if(startUpFlag == false) {
@@ -370,10 +390,10 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
     tft.setFont(&FreeSerif9pt7b);
     tft.setTextSize(1);
     tft.print("Press AutoTune for last used frequency.");
+  }
+  }
     tft.setFont();
     tft.setTextSize(2);
-  }
-   
   // State Machine:
   while (true)
   {

@@ -233,17 +233,6 @@ int main()
     eeprom.put(0, data.workingData);
     eeprom.commit();
   }
-  // Check if initial calibration has been run.  Inform user if not.
-  if(data.workingData.calibrated == 0) {
-   //  Inform user to run Initial Calibration.
-          tft.setCursor(30, 140);
-          tft.print("Please run Initial Calibration");
-          busy_wait_ms(5000);
-  }
-  else {
-  //  Retrieve the last used frequency and autotune if the user pushes the AutoTune button.
-  currentFrequency = data.workingData.currentFrequency;
-  }
 
   display.menuIndex = display.FREQMENU; // Begin in Frequency menu.
 

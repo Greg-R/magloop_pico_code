@@ -1218,9 +1218,11 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   else position = -50 + data.workingData.bandLimitPositionCounts[band][0]
                  + static_cast<int> (static_cast<float>(frequency - data.workingData.bandEdges[band][0])/data.hertzPerStepperUnitVVC[band]);
   // Power to the stepper only.  Calibration routine will control power.  This causes the stepper to move backwards about 25 steps.
-  if(calFlag == false) PowerStepDdsCirRelay(true, 0, false, false);
+  if(calFlag == false) { 
+    PowerStepDdsCirRelay(true, 0, false, false);
   // Compensate for the power-up stepper movement.
-  stepper.setCurrentPosition(stepper.currentPosition() - 27);
+  stepper.setCurrentPosition(stepper.currentPosition() - 14); }
+  //stepper.ResetStepperToZero();
   //  Move the stepper to the approximate location based on the current frequency:
   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
   SWRMinPosition = 6000;

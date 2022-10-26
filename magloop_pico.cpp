@@ -161,7 +161,7 @@ int main()
   // Subsequent power control will be done with the Power method in the DisplayManagement class.
   gpio_set_function(data.STEPPERSLEEPNOT, GPIO_FUNC_SIO);
   gpio_set_dir(data.STEPPERSLEEPNOT, GPIO_OUT);
-  gpio_put(data.STEPPERSLEEPNOT, true); // Stepper set to active to allow reset to zero.
+  //gpio_put(data.STEPPERSLEEPNOT, true); // Stepper set to active to allow reset to zero.
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -198,8 +198,8 @@ int main()
   // Instantiate the DisplayManagement object.  This object has many important methods.
   DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput);
 
-  // Power on all circuits except relay.  This is done early to allow circuits to stabilize before calibration.
-  display.Power(true, false);
+  // Power on all circuits except stepper and relay.  This is done early to allow circuits to stabilize before calibration.
+  display.PowerStepDdsCirRelay(false, data.workingData.currentFrequency, true, false);
 
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
   display.Splash(version, releaseDate);
@@ -218,12 +218,13 @@ int main()
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
   //  Set stepper to zero:
+  display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);
   display.updateMessageTop("                Resetting to Zero");
   stepper.ResetStepperToZero();
 
   //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
   //  Note that this should be done as late as possible for circuits to stabilize.
-  dds.SendFrequency(0); // Is this redundant?
+  display.PowerStepDdsCirRelay(true, 0, true, false);
   swr.ReadADCoffsets();
 
   //  Now examine the data in the buffer to see if the EEPROM should be initialized.
@@ -243,7 +244,7 @@ int main()
     //  Refresh display:
     display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
     display.ShowSubmenuData(display.minSWR, data.workingData.currentFrequency);
-    display.Power(false, false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
+    display.PowerStepDdsCirRelay(false, 0, false, false);                //  Power down all circuits.  This function is used since stepper will be active at start-up.
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)

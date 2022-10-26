@@ -117,10 +117,7 @@ public:
     }; // Used to move between states in state machines.
     State state;
     bool startUpFlag;
-    // Declare 3 pushbuttons.  This Class does de-bouncing.
-    //Button enterbutton; //= Button(6);
-    //Button autotunebutton; //= Button(7);
-    //Button exitbutton; //= Button(8);
+    bool calFlag;
 
     DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data, 
                       Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput);
@@ -169,7 +166,7 @@ public:
 
     void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
 
-    float AutoTuneSWR();
+    float AutoTuneSWR(uint32_t band, uint32_t frequency);
 
     void ManualFrequencyControl(int whichBandOption);
 
@@ -179,9 +176,9 @@ public:
 
     void CalibrationMachine();
 
-    void Power(bool setpower, bool relayPower);
+    void PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower);
 
-    void PowerSWR(bool setpower);
+    //void PowerSWR(bool setpower);
 
     //  This is the return type for the SWRdataAnalysis function.
     std::pair <uint32_t, uint32_t> fpair;

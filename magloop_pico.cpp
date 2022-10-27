@@ -226,7 +226,7 @@ int main()
   //  Note that this should be done as late as possible for circuits to stabilize.
   display.PowerStepDdsCirRelay(true, 0, true, false);
   swr.ReadADCoffsets();
-
+  display.PowerStepDdsCirRelay(false, 0, false, false); //  Power down all circuits.
   //  Now examine the data in the buffer to see if the EEPROM should be initialized.
   //  There is a specific number written to the EEPROM when it is initialized.
   if(data.workingData.initialized != 0x55555555) {
@@ -244,7 +244,7 @@ int main()
     //  Refresh display:
     display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
     display.ShowSubmenuData(display.minSWR, data.workingData.currentFrequency);
-    display.PowerStepDdsCirRelay(false, 0, false, false);                //  Power down all circuits.  This function is used since stepper will be active at start-up.
+    
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)

@@ -34,13 +34,8 @@ DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
                                      StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
                                                      stepper(stepper), eeprom(eeprom), data(data),enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput)                                           
 {
- // enterbutton = Button(data.enterButton);
- // autotunebutton = Button(data.autotuneButton);
- // exitbutton = Button(data.exitButton);
- // enterbutton.initialize();
- // exitbutton.initialize();
- // autotunebutton.initialize();
  startUpFlag = false;
+ calFlag = false;
 }
 
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
@@ -857,7 +852,7 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
       frequency = this->data.workingData.bandEdges[i][j]; // Select a band edge to calibrate
       this->data.workingData.currentFrequency = frequency;
       PowerStepDdsCirRelay(true, frequency, true, true); //  Power up circuits, close relay.  Leave on until cal complete.
-      updateMessageTop("             Moving to Freq");
+      updateMessageTop("                  Moving to Freq");
       while (true)
       {
 
@@ -1213,6 +1208,7 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   minSWRAuto = 100;
   int i;
   int32_t currPositionTemp;
+  updateMessageTop("                    Auto Tuning");
   if(calFlag == true) position = stepper.currentPosition();
   // Backup 20 counts to approach from CW direction
   else position = -50 + data.workingData.bandLimitPositionCounts[band][0]
@@ -1220,17 +1216,16 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   // Power to the stepper only.  Calibration routine will control power.  This causes the stepper to move backwards about 25 steps.
   if(calFlag == false) { 
     PowerStepDdsCirRelay(true, 0, false, false);
+  }
   // Compensate for the power-up stepper movement.
-  stepper.setCurrentPosition(stepper.currentPosition() - 14); }
+  //stepper.setCurrentPosition(stepper.currentPosition() - 14); }
   //stepper.ResetStepperToZero();
   //  Move the stepper to the approximate location based on the current frequency:
   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-  SWRMinPosition = 6000;
+  SWRMinPosition = 10000;
   //position = stepper.currentPosition(); // Retrieve the entry position of the stepper.
-  // Power to all circuits.
+  // Power to all circuits for duration of AutoTune.
   PowerStepDdsCirRelay(true, frequency, true, true);
-  //dds.SendFrequency(frequency);
-  updateMessageTop("                    Auto Tuning");
   for (int i = 0; i < MAXNUMREADINGS; i++)
   {                             // reset temp arrays - used to plot SWR vs frequency
     tempSWR[i] = 0.0;           // Class member

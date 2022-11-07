@@ -90,7 +90,7 @@ void StepperManagement::ResetStepperToZero()
     return;
   //  Set the zero calibration step.
   setCurrentPosition(0);
-  moveTo(320); //  Move the stepper off the zero switch.  The number of steps required is dependent on the mechanics.
+  moveTo(400); //  Move the stepper off the zero switch.  The number of steps required is dependent on the mechanics.
   runToPosition();
   setCurrentPosition(0); //  The stepper is now calibrated!
 }

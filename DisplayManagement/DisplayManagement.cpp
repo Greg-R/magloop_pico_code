@@ -1215,7 +1215,7 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
                  + static_cast<int> (static_cast<float>(frequency - data.workingData.bandEdges[band][0])/data.hertzPerStepperUnitVVC[band]);
   // Power to the stepper only.  Calibration routine will control power.  This causes the stepper to move backwards about 25 steps.
   if(calFlag == false) { 
-    PowerStepDdsCirRelay(true, 0, false, false);
+    PowerStepDdsCirRelay(true, 0, false, true);
   }
   // Compensate for the power-up stepper movement.
   //stepper.setCurrentPosition(stepper.currentPosition() - 14); }

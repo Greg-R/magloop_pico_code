@@ -207,9 +207,13 @@ int main()
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
   stepper.setCurrentPosition(0);
-  stepper.setAcceleration(2000);
-  stepper.setSpeed(500);
-  stepper.setMaxSpeed(500);
+  //stepper.setAcceleration(2000);
+  //stepper.setSpeed(500);
+  //stepper.setMaxSpeed(500);
+
+  stepper.setAcceleration(20000);
+  stepper.setSpeed(7000);
+  stepper.setMaxSpeed(7000);
 
   tft.setCursor(40, 45);
   tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
@@ -222,19 +226,19 @@ int main()
   //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
   //tft.setCursor(10, 90);
   //tft.print("Move motor towards max");
-  stepper.moveTo(500);
+  stepper.moveTo(300);
   stepper.runToPosition();
   //gpio_put(data.STEPPERSLEEPNOT, false);
-  busy_wait_ms(1000);
+  //busy_wait_ms(1000);
   tft.fillRect(10, 90, 320, 120, ILI9341_BLACK);
   tft.setCursor(10, 90);
   //gpio_put(data.STEPPERSLEEPNOT, true);
   tft.print("Return towards zero");
   stepper.moveTo(0);
   stepper.runToPosition();
-  gpio_put(data.STEPPERSLEEPNOT, false);
-  busy_wait_ms(1000);
-  gpio_put(data.STEPPERSLEEPNOT, true);
+  //gpio_put(data.STEPPERSLEEPNOT, false);
+  //busy_wait_ms(1000);
+  //gpio_put(data.STEPPERSLEEPNOT, true);
   //busy_wait_ms(1000);
   //tft.fillRect(10, 90, 320, 120, ILI9341_BLACK);
   }   // while(1)  (end of main loop)

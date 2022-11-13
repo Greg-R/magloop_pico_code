@@ -162,7 +162,7 @@ int main()
   // Subsequent power control will be done with the Power method in the DisplayManagement class.
   gpio_set_function(data.STEPPERSLEEPNOT, GPIO_FUNC_SIO);
   gpio_set_dir(data.STEPPERSLEEPNOT, GPIO_OUT);
-  gpio_put(data.STEPPERSLEEPNOT, true); // Stepper set to active to allow reset to zero.
+  gpio_put(data.STEPPERSLEEPNOT, false); // Stepper set to active to allow reset to zero.
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -188,16 +188,12 @@ int main()
   // Instantiate the DisplayManagement object.  This object has many important methods.
   DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
 
-  // Power on all circuits.  This is done early to allow circuits to stabilize before calibration.
-  display.Power(true);
-
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
   display.Splash(version, releaseDate);
   busy_wait_ms(5000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 
-  
-
+  display.Power(true);
 
   // Set up the Menu and Frequency encoders:
   menuEncoder.begin(true, false);
@@ -223,19 +219,24 @@ int main()
   // Main loop state machine:
   while (true)
   {
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.setCursor(10, 90);
-  tft.print("Move motor towards max");
+  //tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+  //tft.setCursor(10, 90);
+  //tft.print("Move motor towards max");
   stepper.moveTo(500);
   stepper.runToPosition();
-  busy_wait_ms(3000);
+  //gpio_put(data.STEPPERSLEEPNOT, false);
+  busy_wait_ms(1000);
   tft.fillRect(10, 90, 320, 120, ILI9341_BLACK);
   tft.setCursor(10, 90);
+  //gpio_put(data.STEPPERSLEEPNOT, true);
   tft.print("Return towards zero");
   stepper.moveTo(0);
   stepper.runToPosition();
-  busy_wait_ms(3000);
-  tft.fillRect(10, 90, 320, 120, ILI9341_BLACK);
+  gpio_put(data.STEPPERSLEEPNOT, false);
+  busy_wait_ms(1000);
+  gpio_put(data.STEPPERSLEEPNOT, true);
+  //busy_wait_ms(1000);
+  //tft.fillRect(10, 90, 320, 120, ILI9341_BLACK);
   }   // while(1)  (end of main loop)
 
   return 0; // Program should never reach this statement.

@@ -819,7 +819,7 @@ void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19.  Greg modified
     void
 *****/
 
-void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
+void DisplayManagement::DoFirstCalibrate()
 {
   int bandBeingCalculated;
   int i, j, whichLine;
@@ -872,7 +872,6 @@ void DisplayManagement::DoFirstCalibrate() // Al modified 9-14-19
         minSWRAuto = AutoTuneSWR(i, frequency); // AutoTuneSWR() returns 0 if failure.
         if (minSWRAuto == 0.0)
           return;
-        //minSWRAuto = autotune; // Minimum SWR is returned if success.
 
         if (minSWRAuto < TARGETMAXSWR)
         { // Ignore values greater than Target Max
@@ -1198,7 +1197,7 @@ void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBand
   tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
 }
 
-//  This is the primary auto-tuning algorithm which minimizes VSWR.
+//  This is the primary auto-tuning state-machine which minimizes SWR.
 //  The stepper should be positioned below the minimum SWR frequency.
 //  This is done either by starting at stepper position 0, or using a calculated estimation.
 float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
@@ -1210,12 +1209,13 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   int32_t currPositionTemp;
   updateMessageTop("                    Auto Tuning");
   if(calFlag == true) position = stepper.currentPosition();
-  // Backup 20 counts to approach from CW direction
-  else position = -50 + data.workingData.bandLimitPositionCounts[band][0]
+  // Backup 50 counts to approach from CW direction
+  // This is an estimation of the position based on results from the initial calibration band ends positions.
+  else position = -100 + data.workingData.bandLimitPositionCounts[band][0]
                  + static_cast<int> (static_cast<float>(frequency - data.workingData.bandEdges[band][0])/data.hertzPerStepperUnitVVC[band]);
-  // Power to the stepper only.  Calibration routine will control power.  This causes the stepper to move backwards about 25 steps.
+  // Power to the stepper, bridge, and relay, unless calibrating.  If calibrating, calibration routine will control power.
   if(calFlag == false) { 
-    PowerStepDdsCirRelay(true, 0, false, true);
+    PowerStepDdsCirRelay(true, frequency, true, true);
   }
   // Compensate for the power-up stepper movement.
   //stepper.setCurrentPosition(stepper.currentPosition() - 14); }
@@ -1225,7 +1225,7 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   SWRMinPosition = 10000;
   //position = stepper.currentPosition(); // Retrieve the entry position of the stepper.
   // Power to all circuits for duration of AutoTune.
-  PowerStepDdsCirRelay(true, frequency, true, true);
+  //PowerStepDdsCirRelay(true, frequency, true, true);
   for (int i = 0; i < MAXNUMREADINGS; i++)
   {                             // reset temp arrays - used to plot SWR vs frequency
     tempSWR[i] = 0.0;           // Class member
@@ -1248,17 +1248,20 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
       SWRMinPosition = stepper.currentPosition(); // Save the stepper position.
       SWRMinIndex = i;                            // Save the array index of the minimum.
     }
-    if (minSWR > 3 and whichBandOption == 0)
+    /*  This is for 40M only!
+    if (minSWR > 3 and band == 0)
     {                          // Fast step for 40M band above SWR = 3
       position = position + 5; // This was reduced from 10 due to butterfly capacitor.
-      i = i + 5;               // Skip forward by 10.
+      i = i + 5;               // Skip forward by 5.
     }
     else
     {
+      */
       position = position + 1; // Increment forward by 1 step.
-    }
+    //}
     stepper.MoveStepperToPositionCorrected(position);
-    if (stepper.currentPosition() > (SWRMinPosition + 10) and minSWR > (minSWRAuto + 1.5) and minSWRAuto < 3.5)
+//    if (stepper.currentPosition() > (SWRMinPosition + 10) and minSWR > (minSWRAuto + 1.5) and minSWRAuto < 3.5)
+      if (stepper.currentPosition() > (SWRMinPosition + 10) and minSWR > (minSWRAuto + 1.5))
     {        // Test to find if position is after minimum
       break; // if after minimum break out of for loop
     }

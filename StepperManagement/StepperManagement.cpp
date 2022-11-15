@@ -58,6 +58,15 @@ void StepperManagement::MoveStepperToPositionCorrected(uint32_t position)
   }
 }
 
+// A method to set the 0 position of the stepper motor.
+// The stepper is rotated towards the zero switch until it closes.
+// The stepper is properly decelerated and stopped, and then
+// moved away from the switch such that it is open plus enough
+// distance to clear the leaf switch, so that there is no pressure
+// applied to it.
+// Note the parameter data.zero_offset.  This is set for the particular
+// mechanics used and must be determined empirically.
+// This parameter is located in the file Data.h.
 
 void StepperManagement::ResetStepperToZero()
 {
@@ -90,11 +99,10 @@ void StepperManagement::ResetStepperToZero()
     return;
   //  Set the zero calibration step.
   setCurrentPosition(0);
-  moveTo(400); //  Move the stepper off the zero switch.  The number of steps required is dependent on the mechanics.
+  moveTo(data.zero_offset); //  Move the stepper off the zero switch.  The number of steps required is dependent on the mechanics.
   runToPosition();
   setCurrentPosition(0); //  The stepper is now calibrated!
 }
-
 
 /*****
   Purpose: Allow the user to change frequency and have the stepper automatically follow frequency change

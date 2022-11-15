@@ -161,7 +161,7 @@ int main()
   // Subsequent power control will be done with the Power method in the DisplayManagement class.
   gpio_set_function(data.STEPPERSLEEPNOT, GPIO_FUNC_SIO);
   gpio_set_dir(data.STEPPERSLEEPNOT, GPIO_OUT);
-  //gpio_put(data.STEPPERSLEEPNOT, true); // Stepper set to active to allow reset to zero.
+  // gpio_put(data.STEPPERSLEEPNOT, true); // Stepper set to active to allow reset to zero.
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -174,10 +174,10 @@ int main()
   //  Instantiate the EEPROM object, which is actually composed of FLASH.
   EEPROMClass eeprom = EEPROMClass();
   //  Read the EEPROM and update the Data object.
-  eeprom.begin(256);  //  1 FLASH page which is 256 bytes.  Not sure this is required if using get and put methods.
- //  Now read the struct from Flash which is read into the Data object.
-  eeprom.get(0, data.workingData);  // Read the workingData struct from EEPROM.
-  
+  eeprom.begin(256);               //  1 FLASH page which is 256 bytes.  Not sure this is required if using get and put methods.
+                                   //  Now read the struct from Flash which is read into the Data object.
+  eeprom.get(0, data.workingData); // Read the workingData struct from EEPROM.
+
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
 
@@ -219,7 +219,7 @@ int main()
 
   //  Set stepper to zero:
   display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);
-  display.updateMessageTop("                Resetting to Zero");
+  display.updateMessageTop("                   Setting to Zero");
   stepper.ResetStepperToZero();
 
   //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
@@ -229,8 +229,9 @@ int main()
   display.PowerStepDdsCirRelay(false, 0, false, false); //  Power down all circuits.
   //  Now examine the data in the buffer to see if the EEPROM should be initialized.
   //  There is a specific number written to the EEPROM when it is initialized.
-  if(data.workingData.initialized != 0x55555555) {
-    data.writeDefaultValues();  //  Writes default values in to the dataStruct in the Data object.
+  if (data.workingData.initialized != 0x55555555)
+  {
+    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
     eeprom.put(0, data.workingData);
     eeprom.commit();
   }
@@ -244,20 +245,20 @@ int main()
     //  Refresh display:
     display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
     display.ShowSubmenuData(display.minSWR, data.workingData.currentFrequency);
-    
+
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)
     {
-    case display.FREQMENU:         // Manual frequency selection selection and AutoTune.
+    case display.FREQMENU: // Manual frequency selection selection and AutoTune.
       display.frequencyMenuOption();
       break;
 
-    case display.PRESETMENU:      // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.ProcessPresets();  // Select a preselected frequency.  This should return a frequency???
+    case display.PRESETMENU:    // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
+      display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
       break;
 
-    case display.CALIBRATEMENU:    // Run calibration routines.
+    case display.CALIBRATEMENU: // Run calibration routines.
       display.CalibrationMachine();
       break;
 

@@ -33,7 +33,7 @@
 #include <string>
 //#include <utility>
 #include <array>
-//#include <vector>
+#include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -103,8 +103,11 @@ public:
     uint32_t stepperDistanceOld;
     int iMax;
     const int arraySize = 500;
-    std::array<float, 500> tempSWR;  // Array of SWR measurements used by AutoTuneSWR.
-    std::array<int32_t, 500> tempCurrentPosition;  // Array of stepper positions used by AutoTuneSWR.
+   // std::array<float, 500> tempSWR;  // Array of SWR measurements used by AutoTuneSWR.
+   // std::array<int32_t, 500> tempCurrentPosition;  // Array of stepper positions used by AutoTuneSWR.
+    const size_t arg = 500;
+    std::vector<float> tempSWR; // Vector of SWR measurements used by AutoTuneSWR.
+    std::vector<int32_t> tempCurrentPosition;  // Vector of stepper positions used by AutoTuneSWR.
     int32_t SWRMinPosition;
     float minSWRAuto;
     float minSWR;

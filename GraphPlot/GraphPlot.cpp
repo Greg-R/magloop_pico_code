@@ -206,7 +206,7 @@ void GraphPlot::PlotNewStartingFrequency(int whichBandOption)
   Return value:
     void
 *****/
-void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, std::array<int32_t, 500>& tempCurrentPosition, std::array<float, 500>& tempSWR, int32_t SWRMinPosition)
+void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, std::vector<int32_t>& tempCurrentPosition, std::vector<float>& tempSWR, int32_t SWRMinPosition)
 {
   float stepsPerPix;
   int pixPerSWRUnit;
@@ -234,7 +234,7 @@ void GraphPlot::PlotSWRValueNew(int whichBandOption, int iMax, std::array<int32_
     break;
   }
   // This for loop plots the data to the axes.  The data is in the array tempSWR[i].
-  for (int i = 0; i < iMax; i++)
+  for (int i = 0; i < tempCurrentPosition.size(); i++)
   {
     if (tempCurrentPosition[i] > 0 and tempSWR[i] < 3)
     {

@@ -1202,14 +1202,12 @@ void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBand
 //  This is done either by starting at stepper position 0, or using a calculated estimation.
 float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
 {
-  float oldMinSWR;
-  oldMinSWR = 100;
+  minSWR = 100;
   minSWRAuto = 100;
-  int i;
-  int32_t currPositionTemp;
+  int i = 0;
   updateMessageTop("                    Auto Tuning");
   if(calFlag == true) position = stepper.currentPosition();
-  // Backup 50 counts to approach from CW direction
+  // Backup 100 counts to approach from CW direction
   // This is an estimation of the position based on results from the initial calibration band ends positions.
   else position = -100 + data.workingData.bandLimitPositionCounts[band][0]
                  + static_cast<int> (static_cast<float>(frequency - data.workingData.bandEdges[band][0])/data.hertzPerStepperUnitVVC[band]);
@@ -1217,69 +1215,31 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   if(calFlag == false) { 
     PowerStepDdsCirRelay(true, frequency, true, true);
   }
-  // Compensate for the power-up stepper movement.
-  //stepper.setCurrentPosition(stepper.currentPosition() - 14); }
-  //stepper.ResetStepperToZero();
   //  Move the stepper to the approximate location based on the current frequency:
   stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
-  SWRMinPosition = 10000;
-  //position = stepper.currentPosition(); // Retrieve the entry position of the stepper.
-  // Power to all circuits for duration of AutoTune.
-  //PowerStepDdsCirRelay(true, frequency, true, true);
-  for (int i = 0; i < MAXNUMREADINGS; i++)
-  {                             // reset temp arrays - used to plot SWR vs frequency
-    tempSWR[i] = 0.0;           // Class member
-    tempCurrentPosition[i] = 0; // Class member
-  }
-  // Main loop to sweep for minimum SWR and save data for plotting.
-  for (i = 0; i < MAXNUMREADINGS; i++)
+  SWRMinPosition = 100000;
+    tempSWR.clear();           // Clear vectors.
+    tempCurrentPosition.clear();
+
+  while((stepper.currentPosition() < (SWRMinPosition + 50)) and (minSWR < (minSWRAuto + 1.5)))
   {
-
-    if (gpio_get(MAXSWITCH) == LOW)
-      break; // Break from this for loop due to limit switch closure.
-
     minSWR = swr.ReadSWRValue();                        // Save SWR value
     ShowSubmenuData(minSWR, dds.currentFrequency);      // Update display during sweep.
-    tempSWR[i] = minSWR;                                // Array of SWR values saved for plotting.
-    tempCurrentPosition[i] = stepper.currentPosition(); // Array of Count position values saved for plotting.
+    tempSWR.push_back(minSWR);
+    tempCurrentPosition.push_back(stepper.currentPosition());
     if (minSWR < minSWRAuto)
     {                                             // Test to find minimum SWR value
       minSWRAuto = minSWR;                        // If this measurement is lower, save it.
       SWRMinPosition = stepper.currentPosition(); // Save the stepper position.
       SWRMinIndex = i;                            // Save the array index of the minimum.
     }
-    /*  This is for 40M only!
-    if (minSWR > 3 and band == 0)
-    {                          // Fast step for 40M band above SWR = 3
-      position = position + 5; // This was reduced from 10 due to butterfly capacitor.
-      i = i + 5;               // Skip forward by 5.
-    }
-    else
-    {
-      */
+    i = i + 1;
       position = position + 1; // Increment forward by 1 step.
-    //}
     stepper.MoveStepperToPositionCorrected(position);
-//    if (stepper.currentPosition() > (SWRMinPosition + 10) and minSWR > (minSWRAuto + 1.5) and minSWRAuto < 3.5)
-      if (stepper.currentPosition() > (SWRMinPosition + 10) and minSWR > (minSWRAuto + 1.5))
-    {        // Test to find if position is after minimum
-      break; // if after minimum break out of for loop
-    }
-    //SWRFinalPosition = stepper.currentPosition(); // Save final value for calibrate to continue to find band end positions.  Needed???
-    if (i > 498)
-    { // Repeat loop if minimum is not found
-      i = 1;
-      position = stepper.currentPosition() - 50;
-    }
+  if (DetectMaxSwitch())  return 0.0; // 0 indicates failed AutoTune.
   } // end of min SWR search loop.
 
-  // Break to here if MAXSWITCH state change detected.
-  if (DetectMaxSwitch())
-    return 0.0; // 0 indicates failed AutoTune.
-
   // To this else if AutoTune is successful.
-  else
-  {
     stepper.MoveStepperToPositionCorrected(SWRMinPosition - 50); // back up position to take out backlash
     stepper.MoveStepperToPositionCorrected(SWRMinPosition);      // Move to final position in CW direction
     minSWR = swr.ReadSWRValue();                                 //  Measure VSWR in the final position.
@@ -1290,7 +1250,7 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
     updateMessageTop("               AutoTune Success");
     //  Compute the upper and lower frequencies at which SWR ~2:1.
     SWRdataAnalysis();
-  }
+
   return minSWR;
 }
 

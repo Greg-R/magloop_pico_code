@@ -182,7 +182,6 @@ int main()
   data.computeSlopes();
 
   //  Instantiate the Stepper Manager:
-  uint32_t position;
   StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
 
   //  Next instantiate the DDS.

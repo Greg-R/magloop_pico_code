@@ -873,7 +873,7 @@ void DisplayManagement::DoFirstCalibrate()
         {                                          // Move stepper in CW direction in larger steps for SWR > 4 (upper limit of the graph)
           position = position + data.coarse_sweep; // This value will depend on the capacitor used.
           ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-          stepper.MoveStepperToPositionCorrected(position);
+          stepper.MoveStepperToPosition(position);
           if (DetectMaxSwitch())
             return;
         }
@@ -1218,19 +1218,16 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   minSWRAuto = 100;
   int i = 0;
   updateMessageTop("                  Coarse Tuning");
-  if (calFlag == true)
-    position = stepper.currentPosition();
+  if (calFlag == true) position = stepper.currentPosition();
   // Backup data.backlash counts to approach from CW direction
   // This is an estimation of the position based on results from the initial calibration band ends positions.
-  else
+  else {
     position = -data.backlash + data.workingData.bandLimitPositionCounts[band][0] + static_cast<int>(static_cast<float>(frequency - data.workingData.bandEdges[band][0]) / data.hertzPerStepperUnitVVC[band]);
   // Power to the stepper, bridge, and relay, unless calibrating.  If calibrating, calibration routine will control power.
-  if (calFlag == false)
-  {
-    PowerStepDdsCirRelay(true, frequency, true, true);
-  }
+  PowerStepDdsCirRelay(true, frequency, true, true);
   //  Move the stepper to the approximate location based on the current frequency:
-  stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+  stepper.MoveStepperToPosition(position);
+}
   SWRMinPosition = 100000;
   tempSWR.clear(); // Clear vectors.
   tempCurrentPosition.clear();
@@ -1257,14 +1254,14 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
     }
     i = i + 1;
     position = position + 1; // Increment forward by 1 step.
-    stepper.MoveStepperToPositionCorrected(position);
+    stepper.MoveStepperToPosition(position);
     if (DetectMaxSwitch())
       return 0.0; // Monitor the max switch.  0 indicates failed AutoTune.
   }               // end of min SWR search loop.
 
   // Move to optimal position and report results.
-  stepper.MoveStepperToPositionCorrected(SWRMinPosition - data.backlash); // Back up position to take out backlash.
-  stepper.MoveStepperToPositionCorrected(SWRMinPosition);                 // Move to final position in CW direction.
+  stepper.MoveStepperToPosition(SWRMinPosition - data.backlash); // Back up position to take out backlash.
+  stepper.MoveStepperToPosition(SWRMinPosition);                 // Move to final position in CW direction.
   minSWR = swr.ReadSWRValue();                                            // Measure VSWR in the final position.
   // Power down all circuits except in calibrate mode.
   if (calFlag == false)
@@ -1324,7 +1321,7 @@ void DisplayManagement::ManualFrequencyControl(int whichBandOption)
     updateMessageBottom("     Freq: Adjust - AutoTune: Refine");
     dds.SendFrequency(frequency); // Redundant???
     position = stepper.currentPosition() + ((frequency - frequencyOld) / (data.hertzPerStepperUnitVVC[whichBandOption]));
-    stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+    stepper.MoveStepperToPosition(position); // Al 4-20-20
     int k = 0;
     frequencyEncoderMovement = 0;
     frequencyEncoderMovement2 = 0;
@@ -1345,7 +1342,7 @@ void DisplayManagement::ManualStepperControl()
 {
   long position;
   position = stepper.currentPosition() + menuEncoderMovement;
-  stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
+  stepper.MoveStepperToPosition(position);
   ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
   menuEncoderMovement = 0;
 }

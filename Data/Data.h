@@ -42,9 +42,14 @@ class Data
 public:
   // The following are parameters which must be "tuned" to the particular mechanics in use.
   // Refer to the documentation for setting these values.
-  const int zero_offset = 400;
-  const int backlash = 100;
+  const int zero_offset = 1500; // 600 for full step.
+  const int backlash = 200;
   const int coarse_sweep = 20;
+  const int accel = 2000;
+  const int speed = 500;
+  // Flags used to indicate switch closures.
+  bool maxclose;
+  bool zeroclose;
 
   //  These are fundamental size definitions used throughout the project.
   const int PRESETSPERBAND = 6; // Allow this many preset frequencies on each band

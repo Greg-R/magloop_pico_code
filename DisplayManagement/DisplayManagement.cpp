@@ -31,8 +31,8 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
-                                                                                                                                                                                                stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput)
+                                     StepperManagement &stepper, EEPROMClass& eeprom, Data& data, Button& enterbutton, Button& autotunebutton, Button& exitbutton, FrequencyInput& freqInput, TuneInputs& tuneInputs) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
+                                              stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 {
   startUpFlag = false;
   calFlag = false;
@@ -173,8 +173,8 @@ int DisplayManagement::manualTune()
       frequencyEncoderMovement = 0; // Doesn't reset to 0???
     }
     autotunebutton.buttonPushed(); // Poll autotunebutton.
-                                   // Is this MAXSWITCH protection needed here???
-    if (autotunebutton.pushed == true and (not lastautotunebutton) and gpio_get(MAXSWITCH))
+                                   // Is this data.maxswitch protection needed here???
+    if (autotunebutton.pushed == true and (not lastautotunebutton) and gpio_get(data.maxswitch))
     { // Redo the Autotune at new frequency/position
       // position = -80 + data.workingData.bandLimitPositionCounts[whichBandOption][0] + static_cast<int>(static_cast<float>(dds.currentFrequency - data.workingData.bandEdges[whichBandOption][0]) / data.hertzPerStepperUnitVVC[whichBandOption]);
       // stepper.MoveStepperToPositionCorrected(position); // Al 4-20-20
@@ -773,7 +773,7 @@ void DisplayManagement::DoNewCalibrate2() // Al modified 9-14-19.  Greg modified
 
       while (true)
       {
-        if (gpio_get(MAXSWITCH) != HIGH)
+        if (gpio_get(data.maxswitch) != HIGH)
         {                               // At the end stop switch?
           stepper.ResetStepperToZero(); // Reset back to zero
           return;
@@ -835,7 +835,7 @@ void DisplayManagement::DoFirstCalibrate()
   float currentSWR;
   bool lastexitbutton = true;
   EraseBelowMenu();
-  updateMessageBottom("                 Sweeping Stepper");
+  updateMessageTop("                 Sweeping Stepper");
   updateMessageBottom("                 Initial Calibration");
   bandBeingCalculated = 0;
   PowerStepDdsCirRelay(true, 0, false, false); //  Power up circuits.
@@ -864,18 +864,18 @@ void DisplayManagement::DoFirstCalibrate()
       while (true)
       {
 
-        if (DetectMaxSwitch())
-          return;
+        //if (Detectdata.maxswitch())
+        //  return;
 
         position = stepper.currentPosition();
         // Coarse sweep:
         while (swr.ReadSWRValue() > 4.0)
         {                                          // Move stepper in CW direction in larger steps for SWR > 4 (upper limit of the graph)
-          position = position + data.coarse_sweep; // This value will depend on the capacitor used.
+          position = position + data.workingData.coarse_sweep; // This value will depend on the capacitor used.
           ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
           stepper.MoveStepperToPosition(position);
-          if (DetectMaxSwitch())
-            return;
+        //  if (Detectdata.maxswitch())
+        //    return;
         }
         // AutoTune when SWR goes below 4.
         minSWRAuto = AutoTuneSWR(i, frequency); // AutoTuneSWR() returns 0 if failure.
@@ -965,7 +965,7 @@ void DisplayManagement::DoSingleBandCalibrate(int whichBandOption)
     // dds.SendFrequency(frequency);                     // Tell the DDS the edge frequency...
     while (true)
     {
-      if (gpio_get(MAXSWITCH) != HIGH)
+      if (gpio_get(data.maxswitch) != HIGH)
       {                               // At the end stop switch?
         stepper.ResetStepperToZero(); // Yep, so leave.
         return;
@@ -1079,7 +1079,6 @@ void DisplayManagement::ProcessPresets()
 
 // Used in ProcessPreset to select a particular preset frequency.
 // If the Enter button is pressed, the preset frequency can be changed and saved.
-// This must be translated into a state machine!
 int DisplayManagement::SelectPreset()
 {
   int frequency;
@@ -1151,7 +1150,6 @@ int DisplayManagement::SelectPreset()
         data.workingData.presetFrequencies[whichBandOption][submenuIndex] = frequency;
         eeprom.put(0, data.workingData);
         eeprom.commit();
-        // break;  // Want to stay within SelectPreset; do not leave this method!  Already within while loop here.
         //  Need to refresh graphics, because they were changed by ChangeFrequency!
         state = State::state0; // Refresh the graphics.
 
@@ -1214,15 +1212,15 @@ void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBand
 // This is done either by starting at stepper position 0, or using a calculated estimation.
 float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
 {
-  minSWR = 100;
-  minSWRAuto = 100;
+  minSWR = 100.0;
+  minSWRAuto = 3.0;
   int i = 0;
   updateMessageTop("                  Coarse Tuning");
   if (calFlag == true) position = stepper.currentPosition();
   // Backup data.backlash counts to approach from CW direction
   // This is an estimation of the position based on results from the initial calibration band ends positions.
   else {
-    position = -data.backlash + data.workingData.bandLimitPositionCounts[band][0] + static_cast<int>(static_cast<float>(frequency - data.workingData.bandEdges[band][0]) / data.hertzPerStepperUnitVVC[band]);
+    position = -data.workingData.backlash + data.workingData.bandLimitPositionCounts[band][0] + static_cast<int>(static_cast<float>(frequency - data.workingData.bandEdges[band][0]) / data.hertzPerStepperUnitVVC[band]);
   // Power to the stepper, bridge, and relay, unless calibrating.  If calibrating, calibration routine will control power.
   PowerStepDdsCirRelay(true, frequency, true, true);
   //  Move the stepper to the approximate location based on the current frequency:
@@ -1232,35 +1230,52 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   tempSWR.clear(); // Clear vectors.
   tempCurrentPosition.clear();
   updateMessageTop("                    Auto Tuning");
-  // The main autotune loop:
-  while (true)
+  // The coarse autotune loop:
+  while (minSWR > 3)
   {
-    minSWR = swr.ReadSWRValue();                   // Save SWR value
-    ShowSubmenuData(minSWR, dds.currentFrequency); // Update display during sweep.
-    tempSWR.push_back(minSWR);
-    tempCurrentPosition.push_back(stepper.currentPosition());
-    if (minSWR < minSWRAuto)
-    {                                             // Test to find minimum SWR value
+      position = position + data.workingData.coarse_sweep; // Increment forward by 
+      stepper.MoveStepperToPosition(position);
+      minSWR = swr.ReadSWRValue();                   // Save SWR value
+      ShowSubmenuData(minSWR, dds.currentFrequency); // Update display during sweep.
+  }
+  // The fine autotune loop:
+    while((minSWR < 3) & (stepper.currentPosition() < (SWRMinPosition + data.workingData.backlash)))
+    //if (minSWR < minSWRAuto)
+    {                
+                                   // Test to find minimum SWR value
+      minSWR = swr.ReadSWRValue();                   // Save SWR value
+      ShowSubmenuData(minSWR, dds.currentFrequency); // Update display during sweep.
+      if(minSWR < minSWRAuto)
+       {
       minSWRAuto = minSWR;                        // If this measurement is lower, save it.
       SWRMinPosition = stepper.currentPosition(); // Save the stepper position.
       SWRMinIndex = i;                            // Save the array index of the minimum.
     }
+      tempSWR.push_back(minSWR);
+      tempCurrentPosition.push_back(stepper.currentPosition());
+      i = i + 1;
+      position = position + 1; // Increment forward by 1 step.
+      stepper.MoveStepperToPosition(position);
+    }  // end while
+    
+
     // Decide if enough steps have been processed.  If so, leave the loop and finish up.
     // Skip this if SWR is high; the bridge is not accurate at high SWR and may have "noisy" output.
-    if (minSWR < 10.0)
-    {
-      if (((stepper.currentPosition() > (SWRMinPosition + 150)) or (minSWR > 5.0)) and ((minSWR - minSWRAuto) > 1.0))
-        break;
-    }
-    i = i + 1;
-    position = position + 1; // Increment forward by 1 step.
-    stepper.MoveStepperToPosition(position);
-    if (DetectMaxSwitch())
-      return 0.0; // Monitor the max switch.  0 indicates failed AutoTune.
-  }               // end of min SWR search loop.
+  //  if (minSWR < 10.0)
+  //  {
+  //    if (((stepper.currentPosition() > (SWRMinPosition + data.workingData.backlash)) or (minSWR > 3.0)) and ((minSWR - minSWRAuto) > 1.0))
+  //      if ((stepper.currentPosition() > (SWRMinPosition + data.workingData.backlash)))
+  //      break;
+  //  }
+    //i = i + 1;
+    //position = position + 2; // Increment forward by 1 step.
+    //stepper.MoveStepperToPosition(position);
+   // if (Detectdata.maxswitch())
+   //   return 0.0; // Monitor the max switch.  0 indicates failed AutoTune.
+  //}               // end of min SWR search loop.
 
   // Move to optimal position and report results.
-  stepper.MoveStepperToPosition(SWRMinPosition - data.backlash); // Back up position to take out backlash.
+  stepper.MoveStepperToPosition(SWRMinPosition - data.workingData.backlash); // Back up position to take out backlash.
   stepper.MoveStepperToPosition(SWRMinPosition);                 // Move to final position in CW direction.
   minSWR = swr.ReadSWRValue();                                            // Measure VSWR in the final position.
   // Power down all circuits except in calibrate mode.
@@ -1348,7 +1363,7 @@ void DisplayManagement::ManualStepperControl()
 }
 
 /*****
-  Purpose: Detect state change of MAXSWITCH.  Warn the user.
+  Purpose: Detect state change of data.maxswitch.  Warn the user.
            Back the stepper off the switch so that it goes back to normal state.
 
   Parameter list:
@@ -1362,7 +1377,7 @@ void DisplayManagement::ManualStepperControl()
 *****/
 int DisplayManagement::DetectMaxSwitch()
 {
-  if (gpio_get(MAXSWITCH) == LOW)
+  if (gpio_get(data.maxswitch) == LOW)
   {
     stepper.move(-300);
     stepper.runToPosition();
@@ -1395,7 +1410,7 @@ void DisplayManagement::CalibrationMachine()
 {
   int i;
   bool lastexitbutton = true;
-  std::string cals[] = {"Full Cal", "Band Cal", "Initial Cal"};
+  std::string cals[] = {"Initial Cal", "Zero Stepper", "Hardware Settings"};
   EraseBelowMenu();
   state = State::state0; // Enter state0.
   // menuIndex = mode::PRESETSMENU;         // Superfluous???
@@ -1409,21 +1424,20 @@ void DisplayManagement::CalibrationMachine()
         return;         // No selection in Calibrate menu; exit machine and return to top level.
       state = (State)i; // Cast i to State enum type.
       break;
-    case State::state1: // Full Calibration
-      DoNewCalibrate2();
+    case State::state1: // Initial Calibration
+      DoFirstCalibrate();   
       state = State::state0;
       lastexitbutton = true; // Must set true here, or will jump to top level.
       break;
-    case State::state2:           // Band Calibration
-      i = SelectBand(data.bands); // Select band
-      if (i == 4)
-        break;                  // No selection in Band menu; return to Calibration select without calibrating.
-      DoSingleBandCalibrate(i); // Band Calibration
+    case State::state2:           // Zero Stepper
+      PowerStepDdsCirRelay(true, 0, false, false);
+      stepper.ResetStepperToZero();
+      PowerStepDdsCirRelay(false, 0, false, false);
       state = State::state0;    // Return to Calibration select after exiting state2.
       lastexitbutton = true;    // Must set true here, or will jump to top level.
       break;
-    case State::state3: // Initial Calibration
-      DoFirstCalibrate();
+    case State::state3: // Hardware parameters
+      tuneInputs.SelectParameter();
       state = State::state0;
       lastexitbutton = true; // Must set true here, or will jump to top level.
       break;

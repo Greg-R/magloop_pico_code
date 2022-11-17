@@ -35,9 +35,9 @@ StepperManagement::StepperManagement(Data &data, AccelStepper::MotorInterfaceTyp
   //position = 2500;          // Default to approximately midrange.
   rotation = -1;
   setCurrentPosition(5000); //
-  setAcceleration(data.accel);   // Acceleration needs to be set high, with maximum speed limit.
-  setSpeed(data.speed);
-  setMaxSpeed(data.speed);
+  setAcceleration(data.workingData.accel);   // Acceleration needs to be set high, with maximum speed limit.
+  setSpeed(data.workingData.speed);
+  setMaxSpeed(data.workingData.speed);
 }
 
 // Revised version which includes ZEROSWITCH and MAXSWITCH detection.
@@ -48,24 +48,28 @@ void StepperManagement::MoveStepperToPosition(int32_t position)
 {
 // For switch protection, need to know which direction the stepper will move,
 // positive or negative direction.  Switch "recovery" will move the opposite direction.
-if((position - currentPosition()) > 0) rotation = 1;  // true is positive rotation.
+int32_t temp;
+temp = position - currentPosition();
+//if((position - currentPosition()) > 0) rotation = 1;  // true is positive rotation.
+if(temp > 0) rotation = 1;
+else rotation = -1;
 
   moveTo(position);
 
   while (distanceToGo() != 0)
   {
     run();
-    if ((gpio_get(MAXSWITCH) == false) or (gpio_get(ZEROSWITCH) == false))
+    if ((gpio_get(data.maxswitch) == false) or (gpio_get(data.zeroswitch) == false))
     {         
       // Set flag while switch is still closed.
-      if (gpio_get(MAXSWITCH) == false) data.maxclose = true;
-      if (gpio_get(ZEROSWITCH) == false) data.zeroclose =true;
+      if (gpio_get(data.maxswitch) == false) data.maxclose = true;
+      if (gpio_get(data.zeroswitch) == false) data.zeroclose =true;
       stop(); // Properly decelerate and stop the stepper.
       runToPosition();
-      // Rotate off switch.  Rotate in opposite direction.
-      move(-1 * rotation * data.zero_offset); //  Move the stepper off the zero switch.
+      // Rotate away from switch.  Rotate in opposite direction.
+      move(-1 * rotation * data.workingData.zero_offset); //  Move the stepper off the zero switch.
       runToPosition();
-      break;
+      break;  // Escape from loop.
     }
     }
   }
@@ -82,10 +86,11 @@ if((position - currentPosition()) > 0) rotation = 1;  // true is positive rotati
 void StepperManagement::ResetStepperToZero()
 {
   // Approache the zero switch slowly.
-  setMaxSpeed(data.speed/2);
+  setMaxSpeed(data.workingData.speed/2);
   MoveStepperToPosition(-100000);
-  setCurrentPosition(0); //  The stepper is now calibrated!
-  setMaxSpeed(data.speed); // Put maximum speed back to normal.
+  setCurrentPosition(0); //  The stepper is now calibrated!  This function sets speed to 0.
+  setSpeed(data.workingData.speed);
+  setMaxSpeed(data.workingData.speed); // Put maximum speed back to normal.
 }
 
 /*****

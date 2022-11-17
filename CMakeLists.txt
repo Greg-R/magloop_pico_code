@@ -42,6 +42,7 @@ add_subdirectory(DDS)
 add_subdirectory(SWR)
 add_subdirectory(DisplayManagement)
 add_subdirectory(FrequencyInput)
+add_subdirectory(TuneInputs)
 add_subdirectory(Button)
 add_subdirectory(Rotary)
 add_subdirectory(EEPROM)
@@ -67,6 +68,7 @@ target_link_libraries(magloop_pico
         SWR
         DisplayManagement
         FrequencyInput
+        TuneInputs
         Button
         Rotary
         EEPROM

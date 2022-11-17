@@ -104,21 +104,21 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
   while (true)
   { // Update frequency until user pushes AutoTune button.
     // Poll autotunebutton and exitbutton.
-    enterbutton.buttonPushed();
+   // enterbutton.buttonPushed();
     exitbutton.buttonPushed();
-    if (enterbutton.pushed & not lastenterbutton) {
-      lastenterbutton = enterbutton.pushed;
+    if (exitbutton.pushed & not lastexitbutton) {
+      lastexitbutton = enterbutton.pushed;
       break;  // Break out of the while loop.
     }
     // Make sure there is a proper transition of the enter button.
-      lastenterbutton = enterbutton.pushed;
+      lastexitbutton = exitbutton.pushed;
     //  Exit this menu, but make sure it is a proper edge transition:
-    if (exitbutton.pushed & not lastexitbutton)
-    {
-      frequency = 0;
-      return frequency;
-    }
-    lastexitbutton = exitbutton.pushed;
+    //if (exitbutton.pushed & not lastexitbutton)
+   // {
+   //   frequency = 0;
+   //   return frequency;
+   // }
+   // lastexitbutton = exitbutton.pushed;
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(1);
     tft.setFont(&FreeSerif24pt7b);

@@ -45,6 +45,7 @@
 #include "Data.h"
 #include "Button.h"
 #include "FrequencyInput.h"
+#include "TuneInputs.h"
 #include "FreeSerif9pt7b.h"
 #include "FreeSerif12pt7b.h"
 #include "FreeSerif24pt7b.h"
@@ -80,6 +81,7 @@ public:
     Button &autotunebutton;
     Button &exitbutton;
     FrequencyInput &freqInput;
+    TuneInputs& tuneInputs;
     int whichBandOption;  // This indicates the current band in use.
     float SWRValue;
     float SWRcurrent;
@@ -123,7 +125,7 @@ public:
     bool calFlag;
 
     DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data, 
-                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput);
+                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs& tuneInputs);
 
     void Splash(std::string version, std::string releaseDate);
 

@@ -40,13 +40,7 @@ class Data
 {
 
 public:
-  // The following are parameters which must be "tuned" to the particular mechanics in use.
-  // Refer to the documentation for setting these values.
-  const int zero_offset = 1500; // 600 for full step.
-  const int backlash = 200;
-  const int coarse_sweep = 20;
-  const int accel = 2000;
-  const int speed = 500;
+
   // Flags used to indicate switch closures.
   bool maxclose;
   bool zeroclose;
@@ -85,6 +79,13 @@ public:
     uint32_t currentFrequency = 7150000;
     uint32_t initialized = 0x55555555;
     uint32_t calibrated;
+  // The following are parameters which must be "tuned" to the particular mechanics in use.
+  // Refer to the documentation for setting these values.
+  int zero_offset = 1000; // 600 for full step.  1000 for half-step.  270 for dummy with 1/16 step.
+  int backlash = 70;
+  int coarse_sweep = 20;
+  int accel = 2000;
+  int speed = 500;
   } workingData;
 
   //  This should be made variable length arrays.
@@ -96,6 +97,9 @@ public:
   uint enterButton = 6;
   uint autotuneButton = 7;
   uint exitButton = 8;
+  // Zero and Maximum switches.
+  uint zeroswitch = 10;
+  uint maxswitch = 11;
   //  Power controls
   const int STEPPERSLEEPNOT = 9;
   const int OPAMPPOWER = 3;

@@ -43,6 +43,7 @@
 #include "Data/Data.h"
 #include "Button/Button.h"
 #include "FrequencyInput/FrequencyInput.h"
+#include "TuneInputs/TuneInputs.h"
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
@@ -193,9 +194,11 @@ int main()
 
   // Create a new experimental FrequencyInput object.
   FrequencyInput freqInput = FrequencyInput(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
+  // Create a new experimental TuneInputs object.
+  TuneInputs tuneInputs = TuneInputs(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
 
   // Instantiate the DisplayManagement object.  This object has many important methods.
-  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput);
+  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput, tuneInputs);
 
   // Power on all circuits except stepper and relay.  This is done early to allow circuits to stabilize before calibration.
   display.PowerStepDdsCirRelay(false, data.workingData.currentFrequency, true, false);
@@ -216,6 +219,15 @@ int main()
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
+    //  Now examine the data in the buffer to see if the EEPROM should be initialized.
+  //  There is a specific number written to the EEPROM when it is initialized.
+  if (data.workingData.initialized != 0x55555555)
+  {
+    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
+    eeprom.put(0, data.workingData);
+    eeprom.commit();
+  }
+
   //  Set stepper to zero:
   display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);
   display.updateMessageTop("                   Setting to Zero");
@@ -226,14 +238,6 @@ int main()
   display.PowerStepDdsCirRelay(true, 0, true, false);
   swr.ReadADCoffsets();
   display.PowerStepDdsCirRelay(false, 0, false, false); //  Power down all circuits.
-  //  Now examine the data in the buffer to see if the EEPROM should be initialized.
-  //  There is a specific number written to the EEPROM when it is initialized.
-  if (data.workingData.initialized != 0x55555555)
-  {
-    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
-    eeprom.put(0, data.workingData);
-    eeprom.commit();
-  }
 
   display.menuIndex = display.FREQMENU; // Begin in Frequency menu.
 

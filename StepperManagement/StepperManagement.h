@@ -34,27 +34,14 @@
 #include "AccelStepper.h"
 #include "Data.h"
 
-//  Set the GPIs for the limit switches.
-#define ZEROSWITCH 10
-#define MAXSWITCH 11
-const int YAXISSTART = 55; // For graphing purposes
-const int YAXISEND = 210;
-const int XAXISSTART = 25;
-const int XAXISEND = 315;
-
 // This class inherits from AccelStepper, which is an Arduino library.
 class StepperManagement : public AccelStepper
 {
 
 public:
- //  uint32_t currentBand;
- //  uint32_t stepperDirectionOld;
    int32_t rotation;
    float countPerHertz[3];
    float hertzPerStepperUnitAir[3];
-   //int32_t position;
-   //uint32_t stepperDistanceOld;
-   //uint32_t moveToStepperIndex;
    Data &data;
 
    //  This constructor duplicates the parameters of the AccelStepper constructor.

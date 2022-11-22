@@ -49,10 +49,8 @@
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 
 const std::string version = "main";
-const std::string releaseDate = "10-22-22";
+const std::string releaseDate = "11-21-22";
 
-//#define PRESETSMENU 1
-//#define CALIBRATEMENU 2
 #define PRESETSPERBAND 6 // Allow this many preset frequencies on each band
 #define MAXBANDS 3       // Can only process this many frequency bands
 
@@ -162,7 +160,6 @@ int main()
   // Subsequent power control will be done with the Power method in the DisplayManagement class.
   gpio_set_function(data.STEPPERSLEEPNOT, GPIO_FUNC_SIO);
   gpio_set_dir(data.STEPPERSLEEPNOT, GPIO_OUT);
-  // gpio_put(data.STEPPERSLEEPNOT, true); // Stepper set to active to allow reset to zero.
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);

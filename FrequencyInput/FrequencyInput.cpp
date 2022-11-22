@@ -81,9 +81,7 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
   tft.setCursor(insetMargin + 90, halfScreen + 80);
   tft.print("Frequency Encoder");
   tft.setCursor(insetMargin, halfScreen + 100);
-  //tft.print("Tune:");
   tft.setCursor(insetMargin + 90, halfScreen + 100);
-  //tft.print("AutoTune Button");
   tft.setCursor(insetMargin, halfScreen + 120);
   tft.print("Exit:");
   tft.setCursor(insetMargin + 90, halfScreen + 120);
@@ -107,18 +105,11 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
    // enterbutton.buttonPushed();
     exitbutton.buttonPushed();
     if (exitbutton.pushed & not lastexitbutton) {
-      lastexitbutton = enterbutton.pushed;
-      break;  // Break out of the while loop.
+  //    lastexitbutton = enterbutton.pushed;
+      break;  // Break out of the while loop.  Returns original frequency.
     }
     // Make sure there is a proper transition of the enter button.
       lastexitbutton = exitbutton.pushed;
-    //  Exit this menu, but make sure it is a proper edge transition:
-    //if (exitbutton.pushed & not lastexitbutton)
-   // {
-   //   frequency = 0;
-   //   return frequency;
-   // }
-   // lastexitbutton = exitbutton.pushed;
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(1);
     tft.setFont(&FreeSerif24pt7b);

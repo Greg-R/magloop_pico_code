@@ -31,8 +31,8 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass& eeprom, Data& data, Button& enterbutton, Button& autotunebutton, Button& exitbutton, FrequencyInput& freqInput, TuneInputs& tuneInputs) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
-                                              stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
+                                                                                                                                                                                                                        stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 {
   startUpFlag = false;
   calFlag = false;
@@ -614,7 +614,7 @@ void DisplayManagement::ShowSubmenuData(float SWR, int currentFrequency) // al m
   tft.print("SWR ");
   tft.setFont(&FreeSerif12pt7b);
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  if (SWR > 50.0 || SWR < .5)
+  if (SWR > 50.0 or SWR < .5)
   {                  // Real or bogus SWR?
     tft.print("??"); //...bogus
   }
@@ -864,18 +864,18 @@ void DisplayManagement::DoFirstCalibrate()
       while (true)
       {
 
-        //if (Detectdata.maxswitch())
-        //  return;
+        // if (Detectdata.maxswitch())
+        //   return;
 
         position = stepper.currentPosition();
         // Coarse sweep:
         while (swr.ReadSWRValue() > 4.0)
-        {                                          // Move stepper in CW direction in larger steps for SWR > 4 (upper limit of the graph)
+        {                                                      // Move stepper in CW direction in larger steps for SWR > 4 (upper limit of the graph)
           position = position + data.workingData.coarse_sweep; // This value will depend on the capacitor used.
           ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
           stepper.MoveStepperToPosition(position);
-        //  if (Detectdata.maxswitch())
-        //    return;
+          //  if (Detectdata.maxswitch())
+          //    return;
         }
         // AutoTune when SWR goes below 4.
         minSWRAuto = AutoTuneSWR(i, frequency); // AutoTuneSWR() returns 0 if failure.
@@ -1103,6 +1103,10 @@ int DisplayManagement::SelectPreset()
       EraseBelowMenu();
       tft.setTextSize(1);
       tft.setFont(&FreeSerif12pt7b);
+      tft.setCursor(175, 125);
+      tft.print("Press Enter to");
+      tft.setCursor(175, 155);
+      tft.print("adjust preset");
       tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Show presets for selected band
       for (int i = 0; i < PRESETSPERBAND; i++)
       {
@@ -1156,7 +1160,7 @@ int DisplayManagement::SelectPreset()
         //  lastenterbutton = enterbutton.pushed;
       }
       lastenterbutton = enterbutton.pushed;
-
+      lastexitbutton = exitbutton.pushed;
       break;
     default:
       break;
@@ -1216,68 +1220,54 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
   minSWRAuto = 3.0;
   int i = 0;
   updateMessageTop("                  Coarse Tuning");
-  if (calFlag == true) position = stepper.currentPosition();
+  if (calFlag == true)
+    position = stepper.currentPosition();
   // Backup data.backlash counts to approach from CW direction
   // This is an estimation of the position based on results from the initial calibration band ends positions.
-  else {
+  else
+  {
     position = -data.workingData.backlash + data.workingData.bandLimitPositionCounts[band][0] + static_cast<int>(static_cast<float>(frequency - data.workingData.bandEdges[band][0]) / data.hertzPerStepperUnitVVC[band]);
-  // Power to the stepper, bridge, and relay, unless calibrating.  If calibrating, calibration routine will control power.
-  PowerStepDdsCirRelay(true, frequency, true, true);
-  //  Move the stepper to the approximate location based on the current frequency:
-  stepper.MoveStepperToPosition(position);
-}
+    // Power to the stepper, bridge, and relay, unless calibrating.  If calibrating, calibration routine will control power.
+    PowerStepDdsCirRelay(true, frequency, true, true);
+    //  Move the stepper to the approximate location based on the current frequency:
+    stepper.MoveStepperToPosition(position);
+  }
   SWRMinPosition = 100000;
   tempSWR.clear(); // Clear vectors.
   tempCurrentPosition.clear();
   updateMessageTop("                    Auto Tuning");
   // The coarse autotune loop:
-  while (minSWR > 3)
+  while (minSWR > 2.9) // Need slight overlap with fine tune.
   {
-      position = position + data.workingData.coarse_sweep; // Increment forward by 
-      stepper.MoveStepperToPosition(position);
-      minSWR = swr.ReadSWRValue();                   // Save SWR value
-      ShowSubmenuData(minSWR, dds.currentFrequency); // Update display during sweep.
+    position = position + data.workingData.coarse_sweep; // Increment forward by
+    stepper.MoveStepperToPosition(position);
+    minSWR = swr.ReadSWRValue();                   // Save SWR value
+    ShowSubmenuData(minSWR, dds.currentFrequency); // Update display during sweep.
   }
   // The fine autotune loop:
-    while((minSWR < 3) & (stepper.currentPosition() < (SWRMinPosition + data.workingData.backlash)))
-    //if (minSWR < minSWRAuto)
-    {                
-                                   // Test to find minimum SWR value
-      minSWR = swr.ReadSWRValue();                   // Save SWR value
-      ShowSubmenuData(minSWR, dds.currentFrequency); // Update display during sweep.
-      if(minSWR < minSWRAuto)
-       {
+  while ((minSWR < 3) & (stepper.currentPosition() < (SWRMinPosition + data.workingData.backlash)))
+  // if (minSWR < minSWRAuto)
+  {
+    // Test to find minimum SWR value
+    minSWR = swr.ReadSWRValue();                   // Save SWR value
+    ShowSubmenuData(minSWR, dds.currentFrequency); // Update display during sweep.
+    if (minSWR < minSWRAuto)
+    {
       minSWRAuto = minSWR;                        // If this measurement is lower, save it.
       SWRMinPosition = stepper.currentPosition(); // Save the stepper position.
       SWRMinIndex = i;                            // Save the array index of the minimum.
     }
-      tempSWR.push_back(minSWR);
-      tempCurrentPosition.push_back(stepper.currentPosition());
-      i = i + 1;
-      position = position + 1; // Increment forward by 1 step.
-      stepper.MoveStepperToPosition(position);
-    }  // end while
-    
-
-    // Decide if enough steps have been processed.  If so, leave the loop and finish up.
-    // Skip this if SWR is high; the bridge is not accurate at high SWR and may have "noisy" output.
-  //  if (minSWR < 10.0)
-  //  {
-  //    if (((stepper.currentPosition() > (SWRMinPosition + data.workingData.backlash)) or (minSWR > 3.0)) and ((minSWR - minSWRAuto) > 1.0))
-  //      if ((stepper.currentPosition() > (SWRMinPosition + data.workingData.backlash)))
-  //      break;
-  //  }
-    //i = i + 1;
-    //position = position + 2; // Increment forward by 1 step.
-    //stepper.MoveStepperToPosition(position);
-   // if (Detectdata.maxswitch())
-   //   return 0.0; // Monitor the max switch.  0 indicates failed AutoTune.
-  //}               // end of min SWR search loop.
+    tempSWR.push_back(minSWR);
+    tempCurrentPosition.push_back(stepper.currentPosition());
+    i = i + 1;
+    position = position + 1; // Increment forward by 1 step.
+    stepper.MoveStepperToPosition(position);
+  } // end while
 
   // Move to optimal position and report results.
   stepper.MoveStepperToPosition(SWRMinPosition - data.workingData.backlash); // Back up position to take out backlash.
-  stepper.MoveStepperToPosition(SWRMinPosition);                 // Move to final position in CW direction.
-  minSWR = swr.ReadSWRValue();                                            // Measure VSWR in the final position.
+  stepper.MoveStepperToPosition(SWRMinPosition);                             // Move to final position in CW direction.
+  minSWR = swr.ReadSWRValue();                                               // Measure VSWR in the final position.
   // Power down all circuits except in calibrate mode.
   if (calFlag == false)
     PowerStepDdsCirRelay(false, 0, false, false);
@@ -1425,16 +1415,16 @@ void DisplayManagement::CalibrationMachine()
       state = (State)i; // Cast i to State enum type.
       break;
     case State::state1: // Initial Calibration
-      DoFirstCalibrate();   
+      DoFirstCalibrate();
       state = State::state0;
       lastexitbutton = true; // Must set true here, or will jump to top level.
       break;
-    case State::state2:           // Zero Stepper
+    case State::state2: // Zero Stepper
       PowerStepDdsCirRelay(true, 0, false, false);
       stepper.ResetStepperToZero();
       PowerStepDdsCirRelay(false, 0, false, false);
-      state = State::state0;    // Return to Calibration select after exiting state2.
-      lastexitbutton = true;    // Must set true here, or will jump to top level.
+      state = State::state0; // Return to Calibration select after exiting state2.
+      lastexitbutton = true; // Must set true here, or will jump to top level.
       break;
     case State::state3: // Hardware parameters
       tuneInputs.SelectParameter();
@@ -1573,8 +1563,12 @@ void DisplayManagement::SWRdataAnalysis()
 void DisplayManagement::PrintSWRlimits(std::pair<uint32_t, uint32_t> fpair)
 {
   tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(20, 135);
+  tft.setCursor(10, 135);
+  tft.print("flow = "); 
+  tft.setCursor(64, 135);
   tft.print(fpair.first);
-  tft.setCursor(150, 135);
+  tft.setCursor(160, 135);
+  tft.print("fhigh = "); 
+  tft.setCursor(218, 135);
   tft.print(fpair.second);
 }

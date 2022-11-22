@@ -42,10 +42,16 @@
 #include "GraphPlot.h"
 #include "Data.h"
 #include "Button.h"
+#include "FrequencyInput.h"
+#include "TuneInputs.h"
+#include "FreeSerif9pt7b.h"
+#include "FreeSerif12pt7b.h"
+#include "FreeSerif24pt7b.h"
 
-#include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
-#include "../Adafruit-GFX-Library/Fonts/FreeSerif12pt7b.h"
-#include "../Adafruit-GFX-Library/Fonts/FreeSerif24pt7b.h"
+extern int menuEncoderMovement;
+extern int frequencyEncoderMovement;
+extern int frequencyEncoderMovement2;
+extern int digitEncoderMovement;
 
 #define PRESETSPERBAND 6
 #define PIXELWIDTH 320
@@ -54,7 +60,6 @@
 #define MAXBANDS 3
 #define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
-//#define FREQMENU 0 // Menuing indexes
 #define MAXNUMREADINGS 500
 #define PIXELHEIGHT 240
 
@@ -69,31 +74,33 @@ public:
     StepperManagement &stepper;
     EEPROMClass &eeprom;
     Data &data;
-    int whichBandOption;  // This indicates the current band in use.
+    Button &enterbutton;
+    Button &autotunebutton;
+    Button &exitbutton;
+    FrequencyInput &freqInput;
+    TuneInputs &tuneInputs;
+    int whichBandOption; // This indicates the current band in use.
     float SWRValue;
     float SWRcurrent;
     float readSWRValue;
     int position;
     int positionTemp;
-    //int currentBand; // Is this used???
-    // Attempt to use an enum here totally failed.
-    //enum mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
-    //std::vector<mode> modes = {FREQMENU, PRESETSMENU, CALIBRATEMENU};
     int menuIndex;
     static constexpr int FREQMENU = 0;
     static constexpr int PRESETMENU = 1;
     static constexpr int CALIBRATEMENU = 2;
-    int submenuIndex;
+    int submenuIndex; // Does this really need to be a member?
     int SWRFinalPosition;
-    uint32_t SWRMinIndex;  // Array index for the SWR minimum.
+    uint32_t SWRMinIndex; // Array index for the SWR minimum.
     volatile int menuEncoderState;
     const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
     int stepperDirectionOld;
     uint32_t stepperDistanceOld;
     int iMax;
     const int arraySize = 500;
-    std::array<float, 500> tempSWR;  // Array of SWR measurements used by AutoTuneSWR.
-    std::array<int32_t, 500> tempCurrentPosition;  // Array of stepper positions used by AutoTuneSWR.
+    const size_t arg = 500;
+    std::vector<float> tempSWR;               // Vector of SWR measurements used by AutoTuneSWR.
+    std::vector<int32_t> tempCurrentPosition; // Vector of stepper positions used by AutoTuneSWR.
     int32_t SWRMinPosition;
     float minSWRAuto;
     float minSWR;
@@ -105,12 +112,11 @@ public:
         state3
     }; // Used to move between states in state machines.
     State state;
-    // Declare 3 pushbuttons.  This Class does de-bouncing.
-    Button enterbutton; //= Button(6);
-    Button autotunebutton; //= Button(7);
-    Button exitbutton; //= Button(8);
+    bool startUpFlag;
+    bool calFlag;
 
-    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data);
+    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
+                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);
 
     void Splash(std::string version, std::string releaseDate);
 
@@ -156,7 +162,7 @@ public:
 
     void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
 
-    float AutoTuneSWR();
+    float AutoTuneSWR(uint32_t band, uint32_t frequency);
 
     void ManualFrequencyControl(int whichBandOption);
 
@@ -166,12 +172,12 @@ public:
 
     void CalibrationMachine();
 
-    void Power(bool setpower, bool relayPower);
+    void PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower);
 
-    void PowerSWR(bool setpower);
+    // void PowerSWR(bool setpower);
 
     //  This is the return type for the SWRdataAnalysis function.
-    std::pair <uint32_t, uint32_t> fpair;
+    std::pair<uint32_t, uint32_t> fpair;
 
     void SWRdataAnalysis();
 

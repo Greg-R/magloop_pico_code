@@ -27,7 +27,7 @@
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 */
-//#define PICO_STACK_SIZE _u(0x1000)  // Uncomment if stack gets blown.  This doubles stack size.
+//#define PICO_STACK_SIZE _u(0x1000)  // Uncomment if stack gets blown.  This doubles stack size.//
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
 #include "hardware/timer.h"
@@ -42,21 +42,15 @@
 #include "EEPROM/EEPROM.h"
 #include "Data/Data.h"
 #include "Button/Button.h"
+#include "FrequencyInput/FrequencyInput.h"
+#include "TuneInputs/TuneInputs.h"
 
 #define PIXELWIDTH 320  // Display limits
 #define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 
 const std::string version = "main";
-const std::string releaseDate = "10-12-22";
+const std::string releaseDate = "11-21-22";
 
-//  Interface for the DDS object.  MOVED TO DATA OBJECT
-//#define DDS_RST 4
-//#define DDS_DATA 5
-//#define DDS_FQ_UD 12
-//#define WLCK 22
-
-//#define PRESETSMENU 1
-//#define CALIBRATEMENU 2
 #define PRESETSPERBAND 6 // Allow this many preset frequencies on each band
 #define MAXBANDS 3       // Can only process this many frequency bands
 
@@ -65,10 +59,11 @@ volatile uint32_t countEncoder;
 //  Instantiate the rotary encoder objects.
 Rotary menuEncoder = Rotary(20, 18); // Swap if encoder works in wrong direction.
 Rotary frequencyEncoder = Rotary(21, 17);
-extern int menuEncoderMovement;
-extern int frequencyEncoderMovement;
-extern int frequencyEncoderMovement2;
-extern int digitEncoderMovement;
+//  These variables should be extern in other files.
+int menuEncoderMovement;
+int frequencyEncoderMovement;
+int frequencyEncoderMovement2;
+int digitEncoderMovement;
 
 void encoderCallback(uint gpio, uint32_t events)
 {
@@ -152,12 +147,19 @@ int main()
   //  and GPIOs.
   Data data = Data();
 
+  //  Construct and initialize buttons.
+  Button enterbutton(data.enterButton);
+  Button autotunebutton(data.autotuneButton);
+  Button exitbutton(data.exitButton);
+  enterbutton.initialize();
+  exitbutton.initialize();
+  autotunebutton.initialize();
+
   // The stepper drive generates pulses unless put in sleep mode.
   // The pulses will cause HF RF interference.  Therefore, the sleep mode must be used.
   // Subsequent power control will be done with the Power method in the DisplayManagement class.
   gpio_set_function(data.STEPPERSLEEPNOT, GPIO_FUNC_SIO);
   gpio_set_dir(data.STEPPERSLEEPNOT, GPIO_OUT);
-  gpio_put(data.STEPPERSLEEPNOT, true); // Stepper set to active to allow reset to zero.
 
   //  Instantiate the display object.  Note that the SPI is handled in the display object.
   Adafruit_ILI9341 tft = Adafruit_ILI9341(PIN_CS, DISP_DC, -1);
@@ -170,15 +172,14 @@ int main()
   //  Instantiate the EEPROM object, which is actually composed of FLASH.
   EEPROMClass eeprom = EEPROMClass();
   //  Read the EEPROM and update the Data object.
-  eeprom.begin(256);  //  1 FLASH page which is 256 bytes.  Not sure this is required if using get and put methods.
- //  Now read the struct from Flash which is read into the Data object.
-  eeprom.get(0, data.workingData);  // Read the workingData struct from EEPROM.
-  
+  eeprom.begin(256);               //  1 FLASH page which is 256 bytes.  Not sure this is required if using get and put methods.
+                                   //  Now read the struct from Flash which is read into the Data object.
+  eeprom.get(0, data.workingData); // Read the workingData struct from EEPROM.
+
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
 
   //  Instantiate the Stepper Manager:
-  uint32_t position;
   StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
 
   //  Next instantiate the DDS.
@@ -188,11 +189,16 @@ int main()
   // Instantiate SWR object.  Read bridge offsets later when other circuits are active.
   SWR swr = SWR();
 
-  // Instantiate the DisplayManagement object.  This object has many important methods.
-  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data);
+  // Create a new experimental FrequencyInput object.
+  FrequencyInput freqInput = FrequencyInput(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
+  // Create a new experimental TuneInputs object.
+  TuneInputs tuneInputs = TuneInputs(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
 
-  // Power on all circuits except relay.  This is done early to allow circuits to stabilize before calibration.
-  display.Power(true, false);
+  // Instantiate the DisplayManagement object.  This object has many important methods.
+  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput, tuneInputs);
+
+  // Power on all circuits except stepper and relay.  This is done early to allow circuits to stabilize before calibration.
+  display.PowerStepDdsCirRelay(false, data.workingData.currentFrequency, true, false);
 
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
   display.Splash(version, releaseDate);
@@ -210,44 +216,25 @@ int main()
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
+    //  Now examine the data in the buffer to see if the EEPROM should be initialized.
+  //  There is a specific number written to the EEPROM when it is initialized.
+  if (data.workingData.initialized != 0x55555555)
+  {
+    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
+    eeprom.put(0, data.workingData);
+    eeprom.commit();
+  }
+
   //  Set stepper to zero:
-  display.updateMessageTop("                Resetting to Zero");
+  display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);
+  display.updateMessageTop("                   Setting to Zero");
   stepper.ResetStepperToZero();
 
   //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
   //  Note that this should be done as late as possible for circuits to stabilize.
-  dds.SendFrequency(0); // Is this redundant?
+  display.PowerStepDdsCirRelay(true, 0, true, false);
   swr.ReadADCoffsets();
-
-  //  Now examine the data in the buffer to see if the EEPROM should be initialized.
-  //  There is a specific number written to the EEPROM when it is initialized.
-  if(data.workingData.initialized != 0x55555555) {
-    data.writeDefaultValues();  //  Writes default values in to the dataStruct in the Data object.
-    eeprom.put(0, data.workingData);
-    eeprom.commit();
-  }
-  // Check if initial calibration has been run.  Inform user if not.
-  if(data.workingData.calibrated == 0) {
-   //  Inform user to run Initial Calibration.
-          tft.setCursor(30, 140);
-          tft.print("Please run Initial Calibration");
-          busy_wait_ms(5000);
-  }
-  else {
-  //  Retrieve the last used frequency and autotune.
-  currentFrequency = data.workingData.currentFrequency;
-  if(currentFrequency != 0) {
-  dds.SendFrequency(currentFrequency); // Set the DDSs
-  // Retrieve the last used frequency and autotune.
-  int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + float((dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0])) / float(data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
-  stepper.MoveStepperToPositionCorrected(position);
-  display.Power(true, true);
-  display.AutoTuneSWR();
-  display.Power(false, false);
-  }
-  }
-  
-  //enum class mode {FREQMENU, PRESETSMENU, CALIBRATEMENU};
+  display.PowerStepDdsCirRelay(false, 0, false, false); //  Power down all circuits.
 
   display.menuIndex = display.FREQMENU; // Begin in Frequency menu.
 
@@ -255,31 +242,28 @@ int main()
   while (true)
   {
     int i, submenuIndex;
-    // Turn on power.
-    // display.Power(true);
     //  Refresh display:
     display.ShowMainDisplay(display.menuIndex); //  This function erases the entire display.
-    //display.PowerSWR(true);                     //  Power up only SWR circuits.  This is done here to show accurate SWR in the top level menu.
-    //display.ShowSubmenuData(swr.ReadSWRValue(), dds.currentFrequency);
-    display.ShowSubmenuData(display.minSWR, dds.currentFrequency);
-    display.Power(false, false);                                             //  Power down all circuits.  This function is used since stepper will be active at start-up.
+    display.ShowSubmenuData(display.minSWR, data.workingData.currentFrequency);
+
     display.menuIndex = display.MakeMenuSelection(display.menuIndex); // Select one of the three top menu choices: Freq, Presets, 1st Cal.
 
     switch (display.menuIndex)
     {
-    case display.FREQMENU:         // Manual frequency selection selection and AutoTune.
+    case display.FREQMENU: // Manual frequency selection selection and AutoTune.
       display.frequencyMenuOption();
       break;
 
-    case display.PRESETMENU:      // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
-      display.ProcessPresets();  // Select a preselected frequency.  This should return a frequency???
+    case display.PRESETMENU:    // Preset frequencies by band - set in .ino file, variable: presetFrequencies[0][2];
+      display.ProcessPresets(); // Select a preselected frequency.  This should return a frequency???
       break;
 
-    case display.CALIBRATEMENU:    // Run calibration routines.
+    case display.CALIBRATEMENU: // Run calibration routines.
       display.CalibrationMachine();
       break;
 
     default:
+      display.menuIndex = 0;
       break;
     } // switch (menuIndex)
   }   // while(1)  (end of main loop)

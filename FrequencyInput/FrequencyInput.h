@@ -29,43 +29,77 @@
 */
 
 #pragma once
+#include <stdint.h>
+#include <string>
+#include <utility>
 #include <array>
 #include <vector>
-#include <stdint.h>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
-#include <string>
 #include "DDS.h"
+#include "SWR.h"
+#include "StepperManagement.h"
+#include "EEPROM.h"
+#include "GraphPlot.h"
 #include "Data.h"
+#include "Button.h"
+#include "FreeSerif9pt7b.h"
+#include "FreeSerif12pt7b.h"
+#include "FreeSerif24pt7b.h"
 
-#include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
+#define PRESETSPERBAND 6
+#define PIXELWIDTH 320
+#define INCREMENTPAD 22 // Used to display increment cursor
+#define MAXMENUES 3     // The menu selections are: Freq, Presets, 1st Cal
+#define MAXBANDS 3
+#define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
+#define TEXTLINESPACING 20
+#define MAXNUMREADINGS 500
+#define PIXELHEIGHT 240
 
-class GraphPlot
+extern int menuEncoderMovement;
+extern int frequencyEncoderMovement;
+extern int frequencyEncoderMovement2;
+extern int digitEncoderMovement;
+
+//  DisplayManagement inherits from class GraphPlot.
+class FrequencyInput
 {
 
 public:
-    const int YAXISSTART = 55; // For graphing purposes
-    const int YAXISEND = 170;  // Changed from original to adjust x-axis upward.
-    const int XAXISSTART = 25;
-    const int XAXISEND = 315;
-    const int PIXELWIDTH = 320; // Display limits
-    const int PIXELHEIGHT = 240;
-    const int TEXTLINESPACING = 20; // Pixel spacing per line with text size = 2
-
-    int xIncrement, yIncrement;
-    int xOld;
-
     Adafruit_ILI9341 &tft;
-    DDS &dds;
+    EEPROMClass &eeprom;
     Data &data;
+    Button &enterbutton;
+    Button &autotunebutton;
+    Button &exitbutton;
+    int whichBandOption;  // This indicates the current band in use.
+    float SWRValue;
+    float SWRcurrent;
+    float readSWRValue;
+    int position;
+    int menuIndex;
+    int submenuIndex;
+    volatile int menuEncoderState;
+    const int arraySize = 500;
+    enum class State
+    {
+        state0,
+        state1,
+        state2,
+        state3
+    }; // Used to move between states in state machines.
+    State state;
 
-  //  GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data);
-    GraphPlot(Adafruit_ILI9341 &tft, DDS &dds, Data &data);
+    FrequencyInput(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton);
 
-    void GraphAxis(int whichBandOption);
+    long ChangeFrequency(int bandIndex, long frequency);
 
-    void PlotNewStartingFrequency(int whichBandOption);
+    void EraseBelowMenu();
 
-    void PlotSWRValueNew(int whichBandOption, int iMax, std::vector<int32_t>& tempCurrentPosition, std::vector<float>& tempSWR, int32_t SWRMinPosition);
+    void updateMessageTop(std::string messageToPrint);
+
+    void updateMessageBottom(std::string messageToPrint);
+
 };

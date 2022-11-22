@@ -3,7 +3,7 @@
    "Microcontroller Projects for Amateur Radio by Jack Purdum, W8TEE, and
    Albert Peter, AC8GY" with the Raspberry Pi Pico.
    Copyright (C) 2022  Gregory Raven
-   
+
                                                     LICENSE AGREEMENT
 
   This program source code and its associated hardware design at subject to the GNU General Public License version 2,
@@ -41,12 +41,14 @@ class Data
 
 public:
 
-//  These are fundamental size definitions used throughout the project.
-//const int PRESETSMENU = 1;
-//const int CALIBRATEMENU = 2;
-const int PRESETSPERBAND = 6; // Allow this many preset frequencies on each band
-const int MAXBANDS = 3;       // Can only process this many frequency bands
- 
+  // Flags used to indicate switch closures.
+  bool maxclose;
+  bool zeroclose;
+
+  //  These are fundamental size definitions used throughout the project.
+  const int PRESETSPERBAND = 6; // Allow this many preset frequencies on each band
+  const int MAXBANDS = 3;       // Can only process this many frequency bands
+
   // Bands used:
 
   std::string bands[3] = {"40M", "30M", "20M"};
@@ -56,34 +58,48 @@ const int MAXBANDS = 3;       // Can only process this many frequency bands
   static const uint32_t HIGHEND30M = 10150000;
   static const uint32_t LOWEND20M = 14000000;
   static const uint32_t HIGHEND20M = 14350000;
-  uint32_t presetFrequencies[3][6] =
-      {
-          {7030000L, 7040000L, 7100000L, 7150000L, 7250000L, 7285000L},       // 40M
-          {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L}, // 30M
-          {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}  // 20M
-  };
 
-  struct dataStruct {
-  uint32_t bandLimitPositionCounts[3][2];
-  uint32_t bandEdges[3][2]; // = { // Band edges in Hz
-   //   {LOWEND40M, HIGHEND40M},
-   //   {LOWEND30M, HIGHEND30M},
-   //   {LOWEND20M, HIGHEND20M}};
-  uint32_t currentBand = 0;
-  uint32_t currentFrequency = 7150000;
-  uint32_t initialized = 0x55555555;
-  uint32_t calibrated;
+  // Preset frequency constants in the dataStruct are initial defaults; these defaults are saved to the
+  // EEPROM initially, but they can be overwritten later if the user desires.  The presets will always
+  // be read from the EEPROM.
+  struct dataStruct
+  {
+    uint32_t presetFrequencies[3][6] =
+        {
+            {7030000L, 7040000L, 7100000L, 7150000L, 7250000L, 7285000L},       // 40M
+            {10106000L, 10116000L, 10120000L, 10130000L, 10140000L, 10145000L}, // 30M
+            {14030000L, 14060000L, 14100000L, 14200000L, 14250000L, 14285000L}  // 20M
+    };
+    uint32_t bandLimitPositionCounts[3][2];
+    uint32_t bandEdges[3][2]; // = { // Band edges in Hz
+                              //   {LOWEND40M, HIGHEND40M},
+                              //   {LOWEND30M, HIGHEND30M},
+                              //   {LOWEND20M, HIGHEND20M}};
+    uint32_t currentBand = 0;
+    uint32_t currentFrequency = 7150000;
+    uint32_t initialized = 0x55555555;
+    uint32_t calibrated;
+  // The following are parameters which must be "tuned" to the particular mechanics in use.
+  // Refer to the documentation for setting these values.
+  int zero_offset = 1000; // 600 for full step.  1000 for half-step.  270 for dummy with 1/16 step.
+  int backlash = 70;
+  int coarse_sweep = 20;
+  int accel = 2000;
+  int speed = 500;
   } workingData;
 
   //  This should be made variable length arrays.
   float countPerHertz[3];
   float hertzPerStepperUnitVVC[3]; // Voltage Variable Cap
-  
+
   // GPIO assignments.
   //  Buttons
   uint enterButton = 6;
   uint autotuneButton = 7;
   uint exitButton = 8;
+  // Zero and Maximum switches.
+  uint zeroswitch = 10;
+  uint maxswitch = 11;
   //  Power controls
   const int STEPPERSLEEPNOT = 9;
   const int OPAMPPOWER = 3;

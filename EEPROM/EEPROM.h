@@ -86,5 +86,3 @@ protected:
     size_t _size = 0;
     bool _dirty = false;
 };
-
-//extern EEPROMClass EEPROM;

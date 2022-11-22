@@ -1216,7 +1216,6 @@ void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBand
 // This is done either by starting at stepper position 0, or using a calculated estimation.
 float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
 {
-  minSWR = 100.0;
   minSWRAuto = 3.0;
   int i = 0;
   updateMessageTop("                  Coarse Tuning");
@@ -1232,6 +1231,7 @@ float DisplayManagement::AutoTuneSWR(uint32_t band, uint32_t frequency)
     //  Move the stepper to the approximate location based on the current frequency:
     stepper.MoveStepperToPosition(position);
   }
+  minSWR = swr.ReadSWRValue(); // Initial read going into AutoTune.
   SWRMinPosition = 100000;
   tempSWR.clear(); // Clear vectors.
   tempCurrentPosition.clear();

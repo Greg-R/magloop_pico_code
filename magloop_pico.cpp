@@ -223,6 +223,7 @@ int main()
     data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
     eeprom.put(0, data.workingData);
     eeprom.commit();
+    eeprom.get(0, data.workingData); // Read the workingData struct from EEPROM.
   }
 
   //  Set stepper to zero:

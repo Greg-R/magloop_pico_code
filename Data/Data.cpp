@@ -89,7 +89,7 @@ void Data::writeDefaultValues()
    workingData.calibrated = 0;
 
    workingData.zero_offset = 1000;  // zero offset
-   workingData.backlash = 60;    // backlash
+   workingData.backlash = 100;    // backlash
    workingData.coarse_sweep = 20;    // coarse tune
    workingData.accel = 2000;  // acceleration
    workingData.speed = 500;   // speed

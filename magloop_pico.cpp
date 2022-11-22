@@ -171,10 +171,21 @@ int main()
 
   //  Instantiate the EEPROM object, which is actually composed of FLASH.
   EEPROMClass eeprom = EEPROMClass();
-  //  Read the EEPROM and update the Data object.
+
+    //  Read the EEPROM and update the Data object.
   eeprom.begin(256);               //  1 FLASH page which is 256 bytes.  Not sure this is required if using get and put methods.
                                    //  Now read the struct from Flash which is read into the Data object.
   eeprom.get(0, data.workingData); // Read the workingData struct from EEPROM.
+
+  //  Now examine the data in the buffer to see if the EEPROM should be initialized.
+  //  There is a specific number written to the EEPROM when it is initialized.
+  if (data.workingData.initialized != 0x55555555)
+  {
+    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
+    eeprom.put(0, data.workingData);
+    eeprom.commit();
+    eeprom.get(0, data.workingData); // Read the workingData struct from EEPROM.
+  }
 
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
@@ -216,15 +227,7 @@ int main()
   gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
   gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
-    //  Now examine the data in the buffer to see if the EEPROM should be initialized.
-  //  There is a specific number written to the EEPROM when it is initialized.
-  if (data.workingData.initialized != 0x55555555)
-  {
-    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
-    eeprom.put(0, data.workingData);
-    eeprom.commit();
-    eeprom.get(0, data.workingData); // Read the workingData struct from EEPROM.
-  }
+
 
   //  Set stepper to zero:
   display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);

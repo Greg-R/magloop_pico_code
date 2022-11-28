@@ -41,7 +41,6 @@
 #include "StepperManagement.h"
 #include "EEPROM.h"
 #include "GraphPlot.h"
-#include "DisplayUtility.h"
 #include "Data.h"
 #include "Button.h"
 #include "FrequencyInput.h"
@@ -66,7 +65,7 @@ extern int digitEncoderMovement;
 //#define PIXELHEIGHT 240
 
 //  DisplayManagement inherits from class GraphPlot.
-class DisplayManagement : public GraphPlot, public DisplayUtility
+class DisplayUtility
 {
 
 public:
@@ -96,8 +95,8 @@ public:
     uint32_t SWRMinIndex; // Array index for the SWR minimum.
     volatile int menuEncoderState;
     const std::string menuOptions[3] = {" Freq ", " Presets ", " Calibrate"};
-    int stepperDirectionOld;
-    uint32_t stepperDistanceOld;
+    //int stepperDirectionOld;
+    //uint32_t stepperDistanceOld;
     int iMax;
     const int arraySize = 500;
     const size_t arg = 500;
@@ -117,57 +116,74 @@ public:
     bool startUpFlag;
     bool calFlag;
 
-    DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
-                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);
+ //   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
+ //                     Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);
 
-    void Splash(std::string version, std::string releaseDate);
+   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
+                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);                      
 
-    void frequencyMenuOption();
+    //void Splash(std::string version, std::string releaseDate);
 
-    int manualTune();
+    //void frequencyMenuOption();
 
-    int32_t ChangeFrequency(int bandIndex, long frequency);
+    //int manualTune();
 
-    int MakeMenuSelection(int index);
+    //long ChangeFrequency(int bandIndex, long frequency);
 
-    //int SelectBand(const std::string bands[3]);
+    //int MakeMenuSelection(int index);
 
-    //void ShowMainDisplay(int whichMenuPage);
+    int SelectBand(const std::string bands[3]);
 
-    //void ShowSubmenuData(float SWR, int currentFrequency);
+    void EraseBelowMenu();
 
-    //void UpdateFrequency(int frequency);
+    void ErasePage();
 
-    //void UpdateSWR(float SWR, std::string msg);
+    void ShowMainDisplay(int whichMenuPage);
+
+    void ShowSubmenuData(float SWR, int currentFrequency);
+
+    void UpdateFrequency(int frequency);
+
+    void UpdateSWR(float SWR, std::string msg);
+
+    void updateMessageTop(std::string messageToPrint);
+
+    void updateMessageBottom(std::string messageToPrint);
 
     // The following 3 methods were consolidated from "Calibrate".
-    void DoNewCalibrate2();
+    //void DoNewCalibrate2();
 
-    void DoFirstCalibrate();
+    //void DoFirstCalibrate();
 
-    void DoSingleBandCalibrate(int whichBandOption);
+    //void DoSingleBandCalibrate(int whichBandOption);
 
     // The following 3 methods were consolidated from "Presets":
-    void ProcessPresets();
+    //void ProcessPresets();
 
-    int SelectPreset();
+    //int SelectPreset();
 
-    float AutoTuneSWR(uint32_t band, uint32_t frequency);
+    void RestorePreviousPresetChoice(int submenuIndex, int whichBandOption);
 
-    void ManualFrequencyControl(int whichBandOption);
+    void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
 
-    void ManualStepperControl();
+    //float AutoTuneSWR(uint32_t band, uint32_t frequency);
 
-    //int DetectMaxSwitch();
+    //void ManualFrequencyControl(int whichBandOption);
 
-    void CalibrationMachine();
+    //void ManualStepperControl();
 
-    //void PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower);
+    int DetectMaxSwitch();
+
+    //void CalibrationMachine();
+
+    void PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower);
+
+    // void PowerSWR(bool setpower);
 
     //  This is the return type for the SWRdataAnalysis function.
-    std::pair<uint32_t, uint32_t> fpair;
+    //std::pair<uint32_t, uint32_t> fpair;
 
-    void SWRdataAnalysis();
+    //void SWRdataAnalysis();
 
-    void PrintSWRlimits(std::pair<uint32_t, uint32_t> fpair);
+    //void PrintSWRlimits(std::pair<uint32_t, uint32_t> fpair);
 };

@@ -31,7 +31,7 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput, tuneInputs),tft(tft), dds(dds), swr(swr),
                                                                                                                                                                                                                         stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 {
   startUpFlag = false;
@@ -203,7 +203,7 @@ int DisplayManagement::manualTune()
 
   Dependencies:  DDS, SWR, Adafruit_ILI9341
 *****/
-long DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-8-19
+int32_t DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-8-19
 {
   int i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad;
   long defaultIncrement;
@@ -458,275 +458,6 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
   return index;
 }
 
-/*****
-  Purpose: To get a band menu choice
-  Argument list:
-    const std::string bands[3].  Example: {"40M", "30M", "20M"}
-  Return value:
-    int                       the menu selected
-
-  Dependencies:  Adafruit_ILI9341 tft
-*****/
-int DisplayManagement::SelectBand(const std::string bands[3])
-{
-  updateMessageTop("       Choose using Menu Encoder");
-  EraseBelowMenu(); // Redundant???
-  // int currBand[] = {40, 30, 20}; // Used???
-  int i, index, where = 0;
-  bool enterLastPushed = true; // Must be set to true or a false exit could occur.
-  bool exitLastPushed = true;
-  updateMessageBottom("             Press Enter to Select");
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif12pt7b);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  for (int i = 0; i < 3; i++)
-  {
-    tft.setCursor(110, 110 + i * 30);
-    tft.print(bands[i].c_str());
-  }
-  tft.setCursor(110, 110);
-  tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-  tft.print(bands[0].c_str());
-  index = 0;
-
-  // State Machine.  Calling this function enters this loop and stays until Enter or Exit is pressed.
-  while (true)
-  {
-    if (menuEncoderMovement)
-    {
-      if (menuEncoderMovement == 1)
-      {
-        index++;
-        if (index == 3)
-        { // wrap to first index
-          index = 0;
-        }
-      }
-      if (menuEncoderMovement == -1)
-      {
-        index--;
-        if (index < 0)
-        { // wrap to last index
-          index = 2;
-        }
-      }
-      menuEncoderMovement = 0;
-      tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-      for (int i = 0; i < 3; i++)
-      {
-        tft.setCursor(110, 110 + i * 30);
-        tft.print(bands[i].c_str());
-      }
-      tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-      tft.setCursor(110, 110 + index * 30);
-      tft.print(bands[index].c_str());
-    }
-    // Poll buttons.
-    enterbutton.buttonPushed();
-    exitbutton.buttonPushed();
-    if (enterbutton.pushed & not enterLastPushed)
-      break; // Exit the state machine if there was a false to true transition, return selected index.
-    enterLastPushed = enterbutton.pushed;
-    if (exitbutton.pushed & not exitLastPushed)
-      return index = 4; // 4 is a signal that the menu was exited from without making a selection.
-    exitLastPushed = exitbutton.pushed;
-  } // end while
-
-  // currentBand = currBand[index]; // Used???
-  //   eeprom.WriteCurrentBand(index);
-  //  data.workingData.currentBand = index;
-  //  eeprom.commit();
-  return index;
-}
-
-/*****
-  Purpose: To erase the display below the top two menu lines
-  Argument list:
-    void
-  Return value:
-    void
-*****/
-void DisplayManagement::EraseBelowMenu() // al mod 9-8-19
-{
-  tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-}
-
-/*****
-  Purpose: To erase the display page
-  Argument list:
-    void
-  Return value:
-    void
-*****/
-void DisplayManagement::ErasePage()
-{
-  tft.fillScreen(ILI9341_BLACK);
-}
-
-/*****
-  Purpose: To display the main menu page
-
-  Argument list:
-    int whichMenuPage         the currently displayed menu page
-
-  Return value:
-    void
-*****/
-void DisplayManagement::ShowMainDisplay(int whichMenuPage)
-{
-  int lastMenuPage = 0;
-  int i;
-  tft.setFont();
-  tft.setTextSize(2);
-  tft.fillScreen(ILI9341_BLACK);
-  for (i = 0; i < 3; i++)
-  {
-    if (i == whichMenuPage)
-    {
-      tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-    }
-    else
-    {
-      tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-    }
-    tft.setCursor(i * 100, 0);
-    tft.print(menuOptions[i].c_str());
-  }
-}
-
-/*****
-  Purpose: To display the SWR and frequency data
-  Argument list:
-    float SWR, the current SWR value to be displayed
-    int currentFrequency, the frequency to be displayed
-  Return value:
-    void
-*****/
-void DisplayManagement::ShowSubmenuData(float SWR, int currentFrequency) // al mod 9-8-19
-{
-  tft.setTextSize(1);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.fillRect(0, 23, PIXELWIDTH, 20, ILI9341_BLACK);
-  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-  tft.setCursor(0, 40);
-  tft.print("SWR ");
-  tft.setFont(&FreeSerif12pt7b);
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  if (SWR > 50.0 or SWR < .5)
-  {                  // Real or bogus SWR?
-    tft.print("??"); //...bogus
-  }
-  else
-  {
-    if (SWR > 9.9999)
-    {
-      tft.print(SWR, 2);
-    }
-    else
-    {
-      tft.print(SWR, 2); // real
-    }
-  }
-  UpdateFrequency(currentFrequency);
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-}
-
-/*****
-  Purpose: To rewrite the frequency display
-  Does not reset DDS to new frequency!
-  Argument list:
-
-  Return value:
-    void
-*****/
-void DisplayManagement::UpdateFrequency(int frequency)
-{
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.fillRect(140, 25, PIXELWIDTH, 20, ILI9341_BLACK);
-  tft.setCursor(100, 40);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.print("FREQ ");
-  tft.setFont(&FreeSerif12pt7b);
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.print(frequency);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  tft.print("  p ");
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.print(stepper.currentPosition());
-}
-
-/*****
-  Purpose: Update the SWR value
-
-  Argument list:
-    float SWR                 the current SWR value
-
-  Return value:
-    void
-*****/
-void DisplayManagement::UpdateSWR(float SWR, std::string msg)
-{
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.setCursor(60, 30);
-  if (msg.size() > 0)
-  {
-    tft.print(msg.c_str());
-  }
-  else
-  {
-    if (SWR > .5 && SWR < 50.0)
-    {
-      tft.print(SWR);
-    }
-    else
-    {
-      tft.print("> 50");
-    }
-  }
-}
-
-/*****
-  Purpose: Update Top Message Area
-
-  Argument list:
-    char message
-
-  Return value:
-    void
-*****/
-void DisplayManagement::updateMessageTop(std::string messageToPrint)
-{
-  tft.fillRect(0, 0, 320, 20, ILI9341_BLACK); // Erase top line.
-  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(10, 12);
-  tft.print(messageToPrint.c_str());
-}
-
-/*****
-  Purpose: Update Bottom Message Area
-
-  Argument list:
-    char message
-
-  Return value:
-    void
-*****/
-void DisplayManagement::updateMessageBottom(std::string messageToPrint)
-{
-  tft.fillRect(0, 200, 319, 240, ILI9341_BLACK); // Erase previous message.
-  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(10, 220);
-  tft.print(messageToPrint.c_str());
-}
 
 /*****
   Purpose: To set the band end point counts
@@ -1175,41 +906,6 @@ int DisplayManagement::SelectPreset()
   return frequency;
 }
 
-/*****
-  Purpose: To restore most recently highlighted preset choice
-
-  Parameter list:
-    Adafruit_ILI9341 tft      the display object
-    int submenuIndex
-    int whichBandOption
-
-  Return value:
-    void
-*****/
-void DisplayManagement::RestorePreviousPresetChoice(int submenuIndex, int whichBandOption)
-{
-  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // restore old background
-  tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
-}
-
-/*****
-  Purpose: To highlight new preset choice
-
-  Parameter list:
-    Adafruit_ILI9341 tft      the display object
-    int submenuIndex
-    int whichBandOption
-
-  Return value:
-    void
-*****/
-void DisplayManagement::HighlightNewPresetChoice(int submenuIndex, int whichBandOption)
-{
-  tft.setTextColor(ILI9341_MAGENTA, ILI9341_WHITE); // HIghlight new preset choice
-  tft.setCursor(65, 70 + submenuIndex * 30);
-  tft.print(data.workingData.presetFrequencies[whichBandOption][submenuIndex]);
-}
 
 // This is the primary auto-tuning state-machine which minimizes SWR.
 // The stepper should be positioned below the minimum SWR frequency.
@@ -1364,25 +1060,6 @@ void DisplayManagement::ManualStepperControl()
 
   CAUTION:
 
-*****/
-int DisplayManagement::DetectMaxSwitch()
-{
-  if (gpio_get(data.maxswitch) == LOW)
-  {
-    stepper.move(-300);
-    stepper.runToPosition();
-    for (int i = 0; i < 10; i++)
-    {
-      updateMessageTop("                  Upper Limit Hit!");
-      busy_wait_ms(1000);
-      tft.fillRect(90, 0, 300, 20, ILI9341_BLACK);
-      busy_wait_ms(1000);
-    }
-    return 1;
-  }
-  return 0;
-}
-
 /*****
   Purpose: Select and execute user selected Calibration algorithm.
            Manage the display, Enter and Exit buttons
@@ -1439,60 +1116,6 @@ void DisplayManagement::CalibrationMachine()
   }                                     // end while
 }
 
-/*****
-  Purpose: This function sets power on or off to all circuits, including the DDS.
-
-  Parameter list:
-    bool setpower
-
-  Return value:
-    void
-
-  CAUTION:
-
-*****/
-void DisplayManagement::PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower)
-{
-  gpio_put(data.STEPPERSLEEPNOT, stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
-                                                // Power down the DDS or set frequency.
-                                                // if (dds)
-  dds.SendFrequency(frequency);                 // Redundant?
-  // else
-  //   dds.SendFrequency(0);
-  //  Power down RF amplifier and SWR circuits.
-  gpio_put(data.OPAMPPOWER, circuitPower);
-  gpio_put(data.RFAMPPOWER, circuitPower);
-  gpio_put(data.RFRELAYPOWER, relayPower);
-  busy_wait_ms(500); //  Wait for relay to switch.
-}
-
-/*****
-  Purpose: This function sets power on or off to only SWR measuring circuits, including the DDS.
-           It does not affect the stepper driver sleep.
-
-  Parameter list:
-    bool setpower
-
-  Return value:
-    void
-
-  CAUTION:
-
-*****
-void DisplayManagement::PowerSWR(bool setpower)
-{
-  // Power down the DDS or set frequency.
-  if (setpower)
-    dds.SendFrequency(dds.currentFrequency); // Redundant?
-  else
-    dds.SendFrequency(0);
-  // Power down RF amplifier and SWR circuits.
-  gpio_put(data.OPAMPPOWER, setpower);
-  gpio_put(data.RFAMPPOWER, setpower);
-  gpio_put(data.RFRELAYPOWER, setpower);
-  busy_wait_ms(500); //  Wait for relay to switch.
-}
-*/
 
 /*****
   Purpose: This function analyzes the SWR data and determines the frequency

@@ -41,6 +41,7 @@ add_subdirectory(StepperManagement)
 add_subdirectory(DDS)
 add_subdirectory(SWR)
 add_subdirectory(DisplayManagement)
+add_subdirectory(DisplayUtility)
 add_subdirectory(FrequencyInput)
 add_subdirectory(TuneInputs)
 add_subdirectory(Button)
@@ -67,6 +68,7 @@ target_link_libraries(magloop_pico
         dds
         SWR
         DisplayManagement
+        DisplayUtility
         FrequencyInput
         TuneInputs
         Button

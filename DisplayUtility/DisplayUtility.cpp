@@ -35,8 +35,8 @@
 //                                    eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 
 DisplayUtility::DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper,
-                                     EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : tft(tft), dds(dds), swr(swr), stepper(stepper),
-                                    eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
+                                     EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton) : tft(tft), dds(dds), swr(swr), stepper(stepper),
+                                    eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
   startUpFlag = false;
   calFlag = false;
@@ -462,7 +462,7 @@ void DisplayUtility::ShowSubmenuData(float SWR, int currentFrequency) // al mod 
   tft.setTextSize(1);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.setFont(&FreeSerif9pt7b);
-  tft.fillRect(0, 23, PIXELWIDTH, 20, ILI9341_BLACK);
+  tft.fillRect(0, 23, data.PIXELWIDTH, 20, ILI9341_BLACK);
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   tft.setCursor(0, 40);
   tft.print("SWR ");
@@ -499,7 +499,7 @@ void DisplayUtility::UpdateFrequency(int frequency)
 {
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
-  tft.fillRect(140, 25, PIXELWIDTH, 20, ILI9341_BLACK);
+  tft.fillRect(140, 25, data.PIXELWIDTH, 20, ILI9341_BLACK);
   tft.setCursor(100, 40);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.print("FREQ ");

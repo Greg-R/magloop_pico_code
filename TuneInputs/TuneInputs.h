@@ -41,9 +41,10 @@
 #include "SWR.h"
 #include "StepperManagement.h"
 #include "EEPROM.h"
-#include "GraphPlot.h"
+//#include "GraphPlot.h"
 #include "Data.h"
 #include "Button.h"
+#include "DisplayUtility.h"
 #include "FreeSerif9pt7b.h"
 #include "FreeSerif12pt7b.h"
 #include "FreeSerif24pt7b.h"
@@ -66,9 +67,8 @@ extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
 extern int digitEncoderMovement;
 
-//  DisplayManagement inherits from class GraphPlot.
-class TuneInputs
-{
+//  TuneInputs inherits from class DisplayUtility.
+class TuneInputs : public DisplayUtility {
 
 public:
     Adafruit_ILI9341 &tft;
@@ -98,20 +98,20 @@ public:
     }; // Used to move between states in state machines.
     State state;
 
-    TuneInputs(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton);
+    TuneInputs(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data, DDS& dds, Button &enterbutton, Button &autotunebutton, Button &exitbutton);
 
     void SelectParameter();
 
     long ChangeFrequency(long frequency);
 
-    void EraseBelowMenu();
+    //void EraseBelowMenu();
 
-    void updateMessageTop(std::string messageToPrint);
+    //void updateMessageTop(std::string messageToPrint);
 
-    void updateMessageBottom(std::string messageToPrint);
+    //void updateMessageBottom(std::string messageToPrint);
 
-    void RestorePreviousPresetChoice(int submenuIndex);
+    void RestorePreviousChoice(int submenuIndex);
 
-    void HighlightNewPresetChoice(int submenuIndex);
+    void HighlightNextChoice(int submenuIndex);
 
 };

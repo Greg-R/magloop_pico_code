@@ -43,8 +43,8 @@
 #include "GraphPlot.h"
 #include "Data.h"
 #include "Button.h"
-#include "FrequencyInput.h"
-#include "TuneInputs.h"
+//#include "FrequencyInput.h"
+//#include "TuneInputs.h"
 #include "FreeSerif9pt7b.h"
 #include "FreeSerif12pt7b.h"
 #include "FreeSerif24pt7b.h"
@@ -64,7 +64,7 @@ extern int digitEncoderMovement;
 //#define MAXNUMREADINGS 500
 //#define PIXELHEIGHT 240
 
-//  DisplayManagement inherits from class GraphPlot.
+
 class DisplayUtility
 {
 
@@ -78,8 +78,8 @@ public:
     Button &enterbutton;
     Button &autotunebutton;
     Button &exitbutton;
-    FrequencyInput &freqInput;
-    TuneInputs &tuneInputs;
+    //FrequencyInput &freqInput;
+    //TuneInputs &tuneInputs;
     int whichBandOption; // This indicates the current band in use.
     float SWRValue;
     float SWRcurrent;
@@ -120,7 +120,7 @@ public:
  //                     Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);
 
    DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
-                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);                      
+                      Button &enterbutton, Button &autotunebutton, Button &exitbutton);                      
 
     //void Splash(std::string version, std::string releaseDate);
 

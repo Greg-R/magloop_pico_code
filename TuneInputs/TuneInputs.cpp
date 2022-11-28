@@ -31,8 +31,9 @@
 #include "TuneInputs.h"
 
 TuneInputs::TuneInputs(Adafruit_ILI9341 &tft,
-                               EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
-                                : tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
+                               EEPROMClass &eeprom, Data &data, DDS& dds, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
+                                : DisplayUtility(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton),
+                                  tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
   parameters[0] = data.workingData.zero_offset;
   parameters[1] = data.workingData.backlash;
@@ -95,20 +96,20 @@ void TuneInputs::SelectParameter()
     case State::state1: // This state reads the encoders and button pushes.
       if (menuEncoderMovement == 1)
       { // Turning clockwise
-        RestorePreviousPresetChoice(submenuIndex);
+        RestorePreviousChoice(submenuIndex);
         submenuIndex++;
         if (submenuIndex > 4)
           submenuIndex = 0;
-        HighlightNewPresetChoice(submenuIndex);
+        HighlightNextChoice(submenuIndex);
         menuEncoderMovement = 0;
       }
       if (menuEncoderMovement == -1)
       { // Tuning counter-clockwise
-        RestorePreviousPresetChoice(submenuIndex);
+        RestorePreviousChoice(submenuIndex);
         submenuIndex--;
         if (submenuIndex < 0)
           submenuIndex = 4;
-        HighlightNewPresetChoice(submenuIndex);
+        HighlightNextChoice(submenuIndex);
         menuEncoderMovement = 0;
       }
       // Go to the chosen parameter and change it.
@@ -336,22 +337,14 @@ long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
     void
   Return value:
     void
-*****/
+
 void TuneInputs::EraseBelowMenu() // al mod 9-8-19
 {
   tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
   tft.drawFastHLine(0, 45, 320, ILI9341_RED);
 }
 
-/*****
-  Purpose: Update Top Message Area
 
-  Argument list:
-    char message
-
-  Return value:
-    void
-*****/
 void TuneInputs::updateMessageTop(std::string messageToPrint)
 {
   tft.fillRect(0, 0, 320, 20, ILI9341_BLACK); // Erase top line.
@@ -363,15 +356,7 @@ void TuneInputs::updateMessageTop(std::string messageToPrint)
   tft.print(messageToPrint.c_str());
 }
 
-/*****
-  Purpose: Update Bottom Message Area
 
-  Argument list:
-    char message
-
-  Return value:
-    void
-*****/
 void TuneInputs::updateMessageBottom(std::string messageToPrint)
 {
   tft.fillRect(0, 200, 319, 240, ILI9341_BLACK); // Erase previous message.
@@ -382,15 +367,15 @@ void TuneInputs::updateMessageBottom(std::string messageToPrint)
   tft.print(messageToPrint.c_str());
 }
 
-
-void TuneInputs::RestorePreviousPresetChoice(int submenuIndex)
+*/
+void TuneInputs::RestorePreviousChoice(int submenuIndex)
 {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // restore old background
   tft.setCursor(215, 70 + submenuIndex * 30);
   tft.print(parameters[submenuIndex]);
 }
 
-void TuneInputs::HighlightNewPresetChoice(int submenuIndex)
+void TuneInputs::HighlightNextChoice(int submenuIndex)
 {
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_WHITE); // HIghlight new preset choice
   tft.setCursor(215, 70 + submenuIndex * 30);

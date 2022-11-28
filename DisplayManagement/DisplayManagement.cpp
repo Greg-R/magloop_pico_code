@@ -31,7 +31,7 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput, tuneInputs),tft(tft), dds(dds), swr(swr),
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton),tft(tft), dds(dds), swr(swr),
                                                                                                                                                                                                                         stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 {
   startUpFlag = false;

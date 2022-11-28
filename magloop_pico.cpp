@@ -192,7 +192,7 @@ int main()
   // Create a new experimental FrequencyInput object.
   FrequencyInput freqInput = FrequencyInput(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
   // Create a new experimental TuneInputs object.
-  TuneInputs tuneInputs = TuneInputs(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
+  TuneInputs tuneInputs = TuneInputs(tft, eeprom, data, dds, enterbutton, autotunebutton, exitbutton);
 
   // Instantiate the DisplayManagement object.  This object has many important methods.
   DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput, tuneInputs);

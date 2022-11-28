@@ -65,7 +65,7 @@ extern int digitEncoderMovement;
 //#define MAXNUMREADINGS 500
 //#define PIXELHEIGHT 240
 
-//  DisplayManagement inherits from class GraphPlot.
+//  DisplayManagement inherits from class GraphPlot and DisplayUtility.
 class DisplayManagement : public GraphPlot, public DisplayUtility
 {
 

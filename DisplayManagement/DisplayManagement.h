@@ -130,13 +130,13 @@ public:
 
     int MakeMenuSelection(int index);
 
-    //int SelectBand(const std::string bands[3]);
+    int SelectBand(const std::string bands[3]);
 
     //void ShowMainDisplay(int whichMenuPage);
 
     //void ShowSubmenuData(float SWR, int currentFrequency);
 
-    //void UpdateFrequency(int frequency);
+    void UpdateFrequency(int frequency);
 
     //void UpdateSWR(float SWR, std::string msg);
 

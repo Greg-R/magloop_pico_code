@@ -102,6 +102,8 @@ public:
   // Zero and Maximum switches.
   uint zeroswitch = 10;
   uint maxswitch = 11;
+  // Stepper position.  This is here because it is not always convenient to interogate the stepper object.
+  int32_t position;
   //  Power controls
   const int STEPPERSLEEPNOT = 9;
   const int OPAMPPOWER = 3;

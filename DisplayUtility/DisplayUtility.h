@@ -31,20 +31,18 @@
 #pragma once
 #include <stdint.h>
 #include <string>
-#include <array>
-#include <vector>
+//#include <array>
+//#include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
 #include "DDS.h"
 #include "SWR.h"
-#include "StepperManagement.h"
-#include "EEPROM.h"
-#include "GraphPlot.h"
+//#include "StepperManagement.h"
+//#include "EEPROM.h"
+//#include "GraphPlot.h"
 #include "Data.h"
-#include "Button.h"
-//#include "FrequencyInput.h"
-//#include "TuneInputs.h"
+//#include "Button.h"
 #include "FreeSerif9pt7b.h"
 #include "FreeSerif12pt7b.h"
 #include "FreeSerif24pt7b.h"
@@ -54,16 +52,6 @@ extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
 extern int digitEncoderMovement;
 
-//#define PRESETSPERBAND 6
-//#define PIXELWIDTH 320
-//#define INCREMENTPAD 22 // Used to display increment cursor
-//#define MAXMENUES 3     // The menu selections are: Freq, Presets, 1st Cal
-//#define MAXBANDS 3
-//#define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
-//#define TEXTLINESPACING 20
-//#define MAXNUMREADINGS 500
-//#define PIXELHEIGHT 240
-
 
 class DisplayUtility
 {
@@ -72,12 +60,12 @@ public:
     Adafruit_ILI9341 &tft;
     DDS &dds;
     SWR &swr;
-    StepperManagement &stepper;
-    EEPROMClass &eeprom;
+    //StepperManagement &stepper;
+    //EEPROMClass &eeprom;
     Data &data;
-    Button &enterbutton;
-    Button &autotunebutton;
-    Button &exitbutton;
+    //Button &enterbutton;
+    //Button &autotunebutton;
+    //Button &exitbutton;
     //FrequencyInput &freqInput;
     //TuneInputs &tuneInputs;
     int whichBandOption; // This indicates the current band in use.
@@ -100,8 +88,8 @@ public:
     int iMax;
     const int arraySize = 500;
     const size_t arg = 500;
-    std::vector<float> tempSWR;               // Vector of SWR measurements used by AutoTuneSWR.
-    std::vector<int32_t> tempCurrentPosition; // Vector of stepper positions used by AutoTuneSWR.
+    //std::vector<float> tempSWR;               // Vector of SWR measurements used by AutoTuneSWR.
+    //std::vector<int32_t> tempCurrentPosition; // Vector of stepper positions used by AutoTuneSWR.
     int32_t SWRMinPosition;
     float minSWRAuto;
     float minSWR;
@@ -116,23 +104,9 @@ public:
     bool startUpFlag;
     bool calFlag;
 
- //   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
- //                     Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);
+   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data);                      
 
-   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
-                      Button &enterbutton, Button &autotunebutton, Button &exitbutton);                      
-
-    //void Splash(std::string version, std::string releaseDate);
-
-    //void frequencyMenuOption();
-
-    //int manualTune();
-
-    //long ChangeFrequency(int bandIndex, long frequency);
-
-    //int MakeMenuSelection(int index);
-
-    int SelectBand(const std::string bands[3]);
+    //int SelectBand(const std::string bands[3]);
 
     void EraseBelowMenu();
 
@@ -142,7 +116,7 @@ public:
 
     void ShowSubmenuData(float SWR, int currentFrequency);
 
-    void UpdateFrequency(int frequency);
+  //  void UpdateFrequency(int frequency);
 
     void UpdateSWR(float SWR, std::string msg);
 
@@ -150,35 +124,15 @@ public:
 
     void updateMessageBottom(std::string messageToPrint);
 
-    // The following 3 methods were consolidated from "Calibrate".
-    //void DoNewCalibrate2();
-
-    //void DoFirstCalibrate();
-
-    //void DoSingleBandCalibrate(int whichBandOption);
-
-    // The following 3 methods were consolidated from "Presets":
-    //void ProcessPresets();
-
-    //int SelectPreset();
+    void updateMessageMiddle(std::string messageToPrint);
 
     void RestorePreviousPresetChoice(int submenuIndex, int whichBandOption);
 
     void HighlightNewPresetChoice(int submenuIndex, int whichBandOption);
 
-    //float AutoTuneSWR(uint32_t band, uint32_t frequency);
-
-    //void ManualFrequencyControl(int whichBandOption);
-
-    //void ManualStepperControl();
-
     int DetectMaxSwitch();
 
-    //void CalibrationMachine();
-
     void PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower);
-
-    // void PowerSWR(bool setpower);
 
     //  This is the return type for the SWRdataAnalysis function.
     //std::pair<uint32_t, uint32_t> fpair;

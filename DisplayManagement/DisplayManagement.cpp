@@ -31,7 +31,7 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton),tft(tft), dds(dds), swr(swr),
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, data), tft(tft), dds(dds), swr(swr),
                                                                                                                                                                                                                         stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 {
   startUpFlag = false;
@@ -41,20 +41,21 @@ DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
 void DisplayManagement::Splash(std::string version, std::string releaseDate)
 {
   tft.fillScreen(ILI9341_BLACK);
-  tft.setTextSize(2);
+  tft.setFont(&FreeSerif12pt7b);
+  tft.setTextSize(1);
   tft.setTextColor(ILI9341_MAGENTA, ILI9341_BLACK);
-  tft.setCursor(22, 20);
-  tft.print("Loop Antenna Controller");
+  tft.setCursor(1, 20);
+  tft.print("Pi Pico Loop Antenna Controller");
   tft.setCursor(37, 45);
   tft.print("by Gregory Raven KF5N");
   tft.setTextColor(ILI9341_RED, ILI9341_BLACK);
-  tft.setCursor(25, 73);
+  tft.setCursor(45, 73);
   tft.print("based on a project from");
-  tft.setCursor(15, 93);
+  tft.setCursor(40, 98);
   tft.print("Microcontroller Projects");
-  tft.setCursor(30, 110);
+  tft.setCursor(50, 123);
   tft.print("for Amateur Radio by");
-  tft.setCursor(65, 142);
+  tft.setCursor(65, 147);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.println("Al Peter  AC8GY");
   tft.setCursor(45, 168);
@@ -62,7 +63,7 @@ void DisplayManagement::Splash(std::string version, std::string releaseDate)
   tft.setCursor(75, 200);
   tft.print("Version ");
   tft.print(version.c_str());
-  tft.setCursor(35, 220);
+  tft.setCursor(40, 225);
   tft.print("Release Date ");
   tft.print(releaseDate.c_str());
   tft.setTextSize(2);
@@ -458,6 +459,114 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
   return index;
 }
 
+/*****
+  Purpose: To get a band menu choice
+  Argument list:
+    const std::string bands[3].  Example: {"40M", "30M", "20M"}
+  Return value:
+    int                       the menu selected
+
+  Dependencies:  Adafruit_ILI9341 tft
+*****/
+int DisplayManagement::SelectBand(const std::string bands[3])
+{
+  updateMessageTop("       Choose using Menu Encoder");
+  EraseBelowMenu(); // Redundant???
+  // int currBand[] = {40, 30, 20}; // Used???
+  int i, index, where = 0;
+  bool enterLastPushed = true; // Must be set to true or a false exit could occur.
+  bool exitLastPushed = true;
+  updateMessageBottom("             Press Enter to Select");
+  tft.setTextSize(1);
+  tft.setFont(&FreeSerif12pt7b);
+  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
+  for (int i = 0; i < 3; i++)
+  {
+    tft.setCursor(110, 110 + i * 30);
+    tft.print(bands[i].c_str());
+  }
+  tft.setCursor(110, 110);
+  tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
+  tft.print(bands[0].c_str());
+  index = 0;
+
+  // State Machine.  Calling this function enters this loop and stays until Enter or Exit is pressed.
+  while (true)
+  {
+    if (menuEncoderMovement)
+    {
+      if (menuEncoderMovement == 1)
+      {
+        index++;
+        if (index == 3)
+        { // wrap to first index
+          index = 0;
+        }
+      }
+      if (menuEncoderMovement == -1)
+      {
+        index--;
+        if (index < 0)
+        { // wrap to last index
+          index = 2;
+        }
+      }
+      menuEncoderMovement = 0;
+      tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
+      for (int i = 0; i < 3; i++)
+      {
+        tft.setCursor(110, 110 + i * 30);
+        tft.print(bands[i].c_str());
+      }
+      tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
+      tft.setCursor(110, 110 + index * 30);
+      tft.print(bands[index].c_str());
+    }
+    // Poll buttons.
+    enterbutton.buttonPushed();
+    exitbutton.buttonPushed();
+    if (enterbutton.pushed & not enterLastPushed)
+      break; // Exit the state machine if there was a false to true transition, return selected index.
+    enterLastPushed = enterbutton.pushed;
+    if (exitbutton.pushed & not exitLastPushed)
+      return index = 4; // 4 is a signal that the menu was exited from without making a selection.
+    exitLastPushed = exitbutton.pushed;
+  } // end while
+
+  // currentBand = currBand[index]; // Used???
+  //   eeprom.WriteCurrentBand(index);
+  //  data.workingData.currentBand = index;
+  //  eeprom.commit();
+  return index;
+}
+
+/*****
+  Purpose: To rewrite the frequency display
+  Does not reset DDS to new frequency!
+  Updates frequency and stepper position.
+  Does not update SWR!
+  Argument list:
+
+  Return value:
+    void
+*****/
+void DisplayManagement::UpdateFrequency(int frequency)
+{
+  tft.setTextSize(1);
+  tft.setFont(&FreeSerif9pt7b);
+  tft.fillRect(140, 25, data.PIXELWIDTH, 20, ILI9341_BLACK);
+  tft.setCursor(100, 40);
+  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
+  tft.print("FREQ ");
+  tft.setFont(&FreeSerif12pt7b);
+  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+  tft.print(frequency);
+  tft.setFont(&FreeSerif9pt7b);
+  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
+  tft.print("  p ");
+  tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
+  tft.print(stepper.currentPosition());
+}
 
 /*****
   Purpose: To set the band end point counts
@@ -567,11 +676,11 @@ void DisplayManagement::DoFirstCalibrate()
   bool lastexitbutton = true;
   EraseBelowMenu();
   updateMessageTop("                 Sweeping Stepper");
-  updateMessageBottom("                 Initial Calibration");
   bandBeingCalculated = 0;
   PowerStepDdsCirRelay(true, 0, false, false); //  Power up circuits.
   updateMessageTop("                   Setting to Zero");
   stepper.ResetStepperToZero();
+  updateMessageBottom("                 Initial Calibration");
   position = 0;
   tft.setFont(&FreeSerif9pt7b);
   tft.setTextSize(1);
@@ -579,7 +688,6 @@ void DisplayManagement::DoFirstCalibrate()
   tft.setCursor(0, 65);
   tft.print("Frequency               SWR       Count"); // Table header
   tft.setCursor(0, 90);                                 // Read to show mins...
-
   whichLine = 0;                                  // X coord for mins
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // Table data
 

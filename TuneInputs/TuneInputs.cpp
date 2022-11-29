@@ -32,7 +32,7 @@
 
 TuneInputs::TuneInputs(Adafruit_ILI9341 &tft,
                                EEPROMClass &eeprom, Data &data, DDS& dds, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
-                                : DisplayUtility(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton),
+                                : DisplayUtility(tft, dds, swr, data),
                                   tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
   parameters[0] = data.workingData.zero_offset;
@@ -197,7 +197,7 @@ long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
   digitSpacing = 28;
   insetMargin = 15;
   defaultIncrement = 1;
-  halfScreen = PIXELHEIGHT / 2 - 25;
+  halfScreen = data.PIXELHEIGHT / 2 - 25;
   bool lastexitbutton = true;
   bool lastenterbutton = true;
       digitEncoderMovement = 0;
@@ -262,7 +262,7 @@ long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
     // Handle movement of the cursor to the right.
     if (digitEncoderMovement == 1)
     { // Change frequency digit increment
-      tft.fillRect(0, halfScreen + 6, PIXELWIDTH * .90, 20, ILI9341_BLACK);
+      tft.fillRect(0, halfScreen + 6, data.PIXELWIDTH * .90, 20, ILI9341_BLACK);
       defaultIncrement = defaultIncrement/10;
       if (defaultIncrement < 1)
       { // Don't go too far right, reset defaultIncrement.
@@ -287,7 +287,7 @@ long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
       // Handle movement of the cursor to the left.
       if (digitEncoderMovement == -1)
       {
-        tft.fillRect(0, halfScreen + 6, PIXELWIDTH * .90, 20, ILI9341_BLACK);
+        tft.fillRect(0, halfScreen + 6, data.PIXELWIDTH * .90, 20, ILI9341_BLACK);
         defaultIncrement = defaultIncrement * 10;
         if (defaultIncrement > 1000)
         { // Don't go too far left
@@ -308,7 +308,7 @@ long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
     if (frequencyEncoderMovement)
     { // Change digit value
       frequency += (long)(frequencyEncoderMovement * defaultIncrement);
-      tft.fillRect(insetMargin, halfScreen - 35, PIXELWIDTH * .80, 40, ILI9341_BLACK);
+      tft.fillRect(insetMargin, halfScreen - 35, data.PIXELWIDTH * .80, 40, ILI9341_BLACK);
       // Increase or decrease the offset depending on the new value.  Can make this into a lambda?
         if((0 <= frequency) & (frequency < 10))  offset = 3;
         else if ((9 < frequency) & (frequency < 100)) offset = 2;

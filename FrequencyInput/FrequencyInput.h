@@ -49,14 +49,14 @@
 #include "FreeSerif24pt7b.h"
 
 #define PRESETSPERBAND 6
-#define PIXELWIDTH 320
+//#define PIXELWIDTH 320
 #define INCREMENTPAD 22 // Used to display increment cursor
 #define MAXMENUES 3     // The menu selections are: Freq, Presets, 1st Cal
 #define MAXBANDS 3
 #define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
 #define TEXTLINESPACING 20
 #define MAXNUMREADINGS 500
-#define PIXELHEIGHT 240
+//#define PIXELHEIGHT 240
 
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;

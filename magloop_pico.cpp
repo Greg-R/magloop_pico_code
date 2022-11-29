@@ -179,9 +179,6 @@ int main()
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
 
-  //  Instantiate the Stepper Manager:
-  StepperManagement stepper = StepperManagement(data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
-
   //  Next instantiate the DDS.
   DDS dds = DDS(data.DDS_RST, data.DDS_DATA, data.DDS_FQ_UD, data.WLCK);
   dds.DDSWakeUp(); // This resets the DDS, and it will have no output.
@@ -193,6 +190,9 @@ int main()
   FrequencyInput freqInput = FrequencyInput(tft, eeprom, data, enterbutton, autotunebutton, exitbutton);
   // Create a new experimental TuneInputs object.
   TuneInputs tuneInputs = TuneInputs(tft, eeprom, data, dds, enterbutton, autotunebutton, exitbutton);
+
+   //  Instantiate the Stepper Manager:
+  StepperManagement stepper = StepperManagement(tft, dds, swr, data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
 
   // Instantiate the DisplayManagement object.  This object has many important methods.
   DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput, tuneInputs);
@@ -227,7 +227,6 @@ int main()
 
   //  Set stepper to zero:
   display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);
-  display.updateMessageTop("                   Setting to Zero");
   stepper.ResetStepperToZero();
 
   //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.

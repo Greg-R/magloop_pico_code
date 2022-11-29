@@ -58,7 +58,7 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
   digitSpacing = 10;
   insetMargin = 20;
   defaultIncrement = 1000L;
-  halfScreen = PIXELHEIGHT / 2 - 25;
+  halfScreen = data.PIXELHEIGHT / 2 - 25;
   bool lastexitbutton = true;
   bool lastenterbutton = true;
   updateMessageTop("          Enter New Preset Frequency");
@@ -115,7 +115,7 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
     tft.setFont(&FreeSerif24pt7b);
     if (digitEncoderMovement == 1)
     { // Change frequency digit increment
-      tft.fillRect(0, halfScreen + 6, PIXELWIDTH * .90, 20, ILI9341_BLACK);
+      tft.fillRect(0, halfScreen + 6, data.PIXELWIDTH * .90, 20, ILI9341_BLACK);
       defaultIncrement /= 10;
       if (defaultIncrement < 1)
       { // Don't go too far right
@@ -138,7 +138,7 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
     {
       if (digitEncoderMovement == -1)
       {
-        tft.fillRect(0, halfScreen + 6, PIXELWIDTH * .90, 20, ILI9341_BLACK);
+        tft.fillRect(0, halfScreen + 6, data.PIXELWIDTH * .90, 20, ILI9341_BLACK);
         defaultIncrement *= 10;
         if (defaultIncrement > 1000000)
         { // Don't go too far right
@@ -160,7 +160,7 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
     { // Change digit value
       frequency += (long)(frequencyEncoderMovement * defaultIncrement);
      // position = stepper.ConvertFrequencyToStepperCount(frequency);
-      tft.fillRect(insetMargin, halfScreen - 35, PIXELWIDTH * .80, 40, ILI9341_BLACK);
+      tft.fillRect(insetMargin, halfScreen - 35, data.PIXELWIDTH * .80, 40, ILI9341_BLACK);
       tft.setCursor(insetMargin, halfScreen);
       tft.setTextSize(1);
       tft.setFont(&FreeSerif24pt7b);

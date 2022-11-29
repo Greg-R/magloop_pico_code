@@ -34,9 +34,7 @@
 //                                     EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), tft(tft), dds(dds), swr(swr),
 //                                    eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 
-DisplayUtility::DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper,
-                                     EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton) : tft(tft), dds(dds), swr(swr), stepper(stepper),
-                                    eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
+DisplayUtility::DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data) : tft(tft), dds(dds), swr(swr), data(data)
 {
   startUpFlag = false;
   calFlag = false;
@@ -312,86 +310,7 @@ int DisplayUtility::MakeMenuSelection(int index) // Al Mod 9-8-19
 }
 */
 
-/*****
-  Purpose: To get a band menu choice
-  Argument list:
-    const std::string bands[3].  Example: {"40M", "30M", "20M"}
-  Return value:
-    int                       the menu selected
 
-  Dependencies:  Adafruit_ILI9341 tft
-*****/
-int DisplayUtility::SelectBand(const std::string bands[3])
-{
-  updateMessageTop("       Choose using Menu Encoder");
-  EraseBelowMenu(); // Redundant???
-  // int currBand[] = {40, 30, 20}; // Used???
-  int i, index, where = 0;
-  bool enterLastPushed = true; // Must be set to true or a false exit could occur.
-  bool exitLastPushed = true;
-  updateMessageBottom("             Press Enter to Select");
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif12pt7b);
-  tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-  for (int i = 0; i < 3; i++)
-  {
-    tft.setCursor(110, 110 + i * 30);
-    tft.print(bands[i].c_str());
-  }
-  tft.setCursor(110, 110);
-  tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-  tft.print(bands[0].c_str());
-  index = 0;
-
-  // State Machine.  Calling this function enters this loop and stays until Enter or Exit is pressed.
-  while (true)
-  {
-    if (menuEncoderMovement)
-    {
-      if (menuEncoderMovement == 1)
-      {
-        index++;
-        if (index == 3)
-        { // wrap to first index
-          index = 0;
-        }
-      }
-      if (menuEncoderMovement == -1)
-      {
-        index--;
-        if (index < 0)
-        { // wrap to last index
-          index = 2;
-        }
-      }
-      menuEncoderMovement = 0;
-      tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
-      for (int i = 0; i < 3; i++)
-      {
-        tft.setCursor(110, 110 + i * 30);
-        tft.print(bands[i].c_str());
-      }
-      tft.setTextColor(ILI9341_BLUE, ILI9341_WHITE);
-      tft.setCursor(110, 110 + index * 30);
-      tft.print(bands[index].c_str());
-    }
-    // Poll buttons.
-    enterbutton.buttonPushed();
-    exitbutton.buttonPushed();
-    if (enterbutton.pushed & not enterLastPushed)
-      break; // Exit the state machine if there was a false to true transition, return selected index.
-    enterLastPushed = enterbutton.pushed;
-    if (exitbutton.pushed & not exitLastPushed)
-      return index = 4; // 4 is a signal that the menu was exited from without making a selection.
-    exitLastPushed = exitbutton.pushed;
-  } // end while
-
-  // currentBand = currBand[index]; // Used???
-  //   eeprom.WriteCurrentBand(index);
-  //  data.workingData.currentBand = index;
-  //  eeprom.commit();
-  return index;
-}
 
 /*****
   Purpose: To erase the display below the top two menu lines
@@ -450,7 +369,8 @@ void DisplayUtility::ShowMainDisplay(int whichMenuPage)
 }
 
 /*****
-  Purpose: To display the SWR and frequency data
+  Purpose: To display the SWR, frequency, and step data.
+  An auxiliary function, Update frequency, does the frequency and the step.
   Argument list:
     float SWR, the current SWR value to be displayed
     int currentFrequency, the frequency to be displayed
@@ -483,20 +403,7 @@ void DisplayUtility::ShowSubmenuData(float SWR, int currentFrequency) // al mod 
       tft.print(SWR, 2); // real
     }
   }
-  UpdateFrequency(currentFrequency);
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-}
-
-/*****
-  Purpose: To rewrite the frequency display
-  Does not reset DDS to new frequency!
-  Argument list:
-
-  Return value:
-    void
-*****/
-void DisplayUtility::UpdateFrequency(int frequency)
-{
+  //UpdateFrequency(currentFrequency);
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
   tft.fillRect(140, 25, data.PIXELWIDTH, 20, ILI9341_BLACK);
@@ -505,18 +412,22 @@ void DisplayUtility::UpdateFrequency(int frequency)
   tft.print("FREQ ");
   tft.setFont(&FreeSerif12pt7b);
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.print(frequency);
+  tft.print(currentFrequency);
   tft.setFont(&FreeSerif9pt7b);
   tft.setTextColor(ILI9341_GREEN, ILI9341_BLACK);
   tft.print("  p ");
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK);
-  tft.print(stepper.currentPosition());
+  tft.print(data.position);
+
+  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
 }
+
+
 
 
 /*****
   Purpose: Update the SWR value
-
+  Why not simply use a single function for SWR, frequency, and step???
   Argument list:
     float SWR                 the current SWR value
 
@@ -561,6 +472,26 @@ void DisplayUtility::updateMessageTop(std::string messageToPrint)
   tft.setTextSize(1);
   tft.setFont(&FreeSerif9pt7b);
   tft.setCursor(10, 12);
+  tft.print(messageToPrint.c_str());
+}
+
+/*****
+  Purpose: Update Middle Message Area
+
+  Argument list:
+    char message
+
+  Return value:
+    void
+*****/
+void DisplayUtility::updateMessageMiddle(std::string messageToPrint)
+{
+  tft.fillRect(0, 100, 319, 140, ILI9341_BLACK); // Erase top line.
+  //tft.drawFastHLine(0, 100, 319, ILI9341_RED);
+  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
+  tft.setTextSize(1);
+  tft.setFont(&FreeSerif9pt7b);
+  tft.setCursor(10, 120);
   tft.print(messageToPrint.c_str());
 }
 

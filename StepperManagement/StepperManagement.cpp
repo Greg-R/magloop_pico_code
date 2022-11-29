@@ -30,7 +30,8 @@
 
 #include "StepperManagement.h"
 
-StepperManagement::StepperManagement(Data &data, AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable) : data(data), AccelStepper(interface, pin1, pin2)
+StepperManagement::StepperManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data, AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable) :AccelStepper(interface, pin1, pin2),
+                                     DisplayUtility(tft, dds, swr, data), data(data)
 {
   // position = 2500;          // Default to approximately midrange.
   rotation = -1;
@@ -49,6 +50,8 @@ void StepperManagement::MoveStepperToPosition(int32_t position)
   // For switch protection, need to know which direction the stepper will move,
   // positive or negative direction.  Switch "recovery" will move the opposite direction.
   int32_t temp;
+  data.maxclose = false;
+  data.zeroclose = false;
   temp = position - currentPosition();
   // if((position - currentPosition()) > 0) rotation = 1;  // true is positive rotation.
   if (temp > 0)
@@ -61,6 +64,8 @@ void StepperManagement::MoveStepperToPosition(int32_t position)
   while (distanceToGo() != 0)
   {
     run();
+    data.position = currentPosition();  // Write the current stepper position to the data object.
+    // This code handles switch closures, both for calibration (zero), and maximum switch faults.
     if ((gpio_get(data.maxswitch) == false) or (gpio_get(data.zeroswitch) == false))
     {
       // Set flag while switch is still closed.
@@ -73,9 +78,22 @@ void StepperManagement::MoveStepperToPosition(int32_t position)
       // Rotate away from switch.  Rotate in opposite direction.
       move(-1 * rotation * data.workingData.zero_offset); //  Move the stepper off the zero switch.
       runToPosition();
+      data.position = currentPosition();  // Write the current stepper position to the data object.
       break; // Escape from loop.
     }
   }
+     if(data.maxclose) {
+     EraseBelowMenu();
+     updateMessageMiddle("   Maximum switch was closed, correct problem!!!");
+     busy_wait_ms(3000);
+     EraseBelowMenu();
+     }
+     if(data.zeroclose) {
+     EraseBelowMenu();
+     updateMessageMiddle("            Zero switch was closed");
+     busy_wait_ms(3000);
+     EraseBelowMenu();
+     }     
 }
 
 // A method to set the 0 position of the stepper motor.
@@ -87,6 +105,7 @@ void StepperManagement::MoveStepperToPosition(int32_t position)
 
 void StepperManagement::ResetStepperToZero()
 {
+  updateMessageTop("                   Setting to Zero");
   // Approach the zero switch slowly.
   setMaxSpeed(data.workingData.speed / 2);
   MoveStepperToPosition(-100000);

@@ -309,7 +309,7 @@ int DisplayUtility::DetectMaxSwitch()
 }
 
 
-int32_t DisplayUtility::UserNumericInput(int32_t number)
+int32_t DisplayUtility::UserNumericInput(Button button, int32_t number)
 {
   int32_t i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad, offset, cursorHome;
   int32_t defaultIncrement = 1;
@@ -323,23 +323,14 @@ int32_t DisplayUtility::UserNumericInput(int32_t number)
   halfScreen = data.PIXELHEIGHT / 2 - 25;
   bool lastexitbutton = true;
   bool lastenterbutton = true;
+  bool lastautotunebutton = true;
+  bool lastbutton = true;
   digitEncoderMovement = 0;
   menuEncoderMovement = 0;
 
 // Determine the size of the number:
 numberSize = std::to_string(number).size();
 offset = 10 - numberSize;
-/*
-       if((0 <= number) & (number < 10))  offset = 8;                    // 0 - 9
-        else if ((9 < number) & (number < 100)) offset = 7;              // 10 - 99
-        else if ((99 < number) & (number < 1000)) offset = 6;            // 100 - 999
-        else if ((999 < number) & (number < 10000)) offset = 5;          // 1000 - 9999
-        else if ((9999 < number) & (number < 100000)) offset = 4;        // 10000 - 99999
-        else if ((99999 < number) & (number < 1000000)) offset = 3;      // 100000 - 999999
-        else if ((999999 < number) & (number < 10000000)) offset = 2;    // 1000000 - 9999999
-        else if ((9999999 < number) & (number < 100000000)) offset = 1;  // 10000000 - 99999999
-        else offset = 0;
-*/
 
   // First, print the number and the cursor (underscore) to the display.
   tft.setTextSize(1);
@@ -356,14 +347,14 @@ offset = 10 - numberSize;
   tft.print(number);
   // State Machine for frequency input with encoders.
   while (true)
-  { // Update number until user pushes exit button.
+  { // Update number until user pushes button.
     // Poll exitbutton.
-    exitbutton.buttonPushed();
-    if (exitbutton.pushed & not lastexitbutton) {
-      lastexitbutton = exitbutton.pushed;
+    button.buttonPushed();
+    if (button.pushed & not lastbutton) {
+      lastbutton = button.pushed;
       break;  // Break out of the while loop.
     }
-    lastexitbutton = exitbutton.pushed;
+    lastbutton = button.pushed;
 
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(1);
@@ -423,19 +414,6 @@ offset = 10 - numberSize;
       numberSize = std::to_string(number).size();
       offset = 10 - numberSize;
 
-      /*
-      // Increase or decrease the offset depending on the new value.  Can make this into a lambda?
-       if((0 <= number) & (number < 10))  offset = 8;                    // 0 - 9
-        else if ((9 < number) & (number < 100)) offset = 7;              // 10 - 99
-        else if ((99 < number) & (number < 1000)) offset = 6;            // 100 - 999
-        else if ((999 < number) & (number < 10000)) offset = 5;          // 1000 - 9999
-        else if ((9999 < number) & (number < 100000)) offset = 4;        // 10000 - 99999
-        else if ((99999 < number) & (number < 1000000)) offset = 3;      // 100000 - 999999
-        else if ((999999 < number) & (number < 10000000)) offset = 2;    // 1000000 - 9999999
-        else if ((9999999 < number) & (number < 100000000)) offset = 1;  // 10000000 - 99999999
-        else offset = 0;
-        */
-     // tft.setCursor(insetMargin + digitSpacing * (7 - offset) + 15, halfScreen);
       tft.setCursor(10 + digitSpacing * offset, halfScreen);
       tft.setTextSize(1);
       tft.setFont(&FreeMono24pt7b);

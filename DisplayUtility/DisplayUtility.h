@@ -120,7 +120,7 @@ public:
     void ShowSubmenuData(float SWR, int currentFrequency);
 
   //  void UpdateFrequency(int frequency);
-    int32_t UserNumericInput(int32_t number);
+    int32_t UserNumericInput(Button button, int32_t number);
 
     void UpdateSWR(float SWR, std::string msg);
 

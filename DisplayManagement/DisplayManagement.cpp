@@ -341,7 +341,17 @@ int32_t DisplayManagement::ChangeFrequency(int bandIndex, int32_t frequency)
   tft.setTextColor(ILI9341_WHITE);
   return frequency;
   */
- frequency = UserNumericInput(frequency);
+
+ /*
+ A standard method for entering a numerical value using the menu and
+ frequency encoders.
+ This method has a button parameter so it can be used in different contexts.
+ For example, it may be used in an autotune context, whereby the autotune
+ button would begin the autotune process.  Or, for simpler numeric entry,
+ the exit button indicates the user is done entering the number.
+ 
+ */
+ frequency = UserNumericInput(autotunebutton, frequency);
  return frequency;
 }
 

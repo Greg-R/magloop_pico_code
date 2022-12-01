@@ -229,7 +229,7 @@ int32_t TuneInputs::ChangeFrequency(int32_t frequency) // Al Mod 9-8-19
   tft.print("Exit Button");
   // End of custom code for this function?
 
-return UserNumericInput(frequency);
+return UserNumericInput(exitbutton, frequency);
 }
 
 

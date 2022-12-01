@@ -32,7 +32,7 @@
 
 FrequencyInput::FrequencyInput(Adafruit_ILI9341 &tft,
                                Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
-                                : DisplayUtility(tft, dds, swr, data, exitbutton), tft(tft), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
+                                : DisplayUtility(tft, dds, swr, data), tft(tft), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
 }
 

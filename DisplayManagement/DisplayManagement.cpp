@@ -31,7 +31,7 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, data, exitbutton), tft(tft), dds(dds), swr(swr),
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, data), tft(tft), dds(dds), swr(swr),
                                                                                                                                                                                                                         stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 {
   startUpFlag = false;
@@ -245,113 +245,8 @@ int32_t DisplayManagement::ChangeFrequency(int bandIndex, int32_t frequency)
   tft.print("Exit Button");
   // Print the SWR limit frequencies to the display.
   PrintSWRlimits(fpair);
-  // End of custom graphics setup.  Now use generic UserInput method.
-
-  /*
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif24pt7b);
-  tft.setTextColor(ILI9341_WHITE);
-  tft.setCursor(insetMargin + (insetPad + incrementPad) + digitSpacing * 6 - 28, halfScreen + 5); // Assume 1KHz increment
-  tft.print("_");                                                                                 // underline selected character position
-  tft.setTextColor(ILI9341_GREEN);
-  tft.setCursor(insetMargin, halfScreen);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif24pt7b);
-  tft.print(frequency);
-  tft.setFont(&FreeSerif24pt7b);
-
-  
-
-  // State Machine for frequency input with encoders.
-  while (true)
-  { // Update frequency until user pushes AutoTune button.
-    // Poll autotunebutton and exitbutton.
-    autotunebutton.buttonPushed();
-    exitbutton.buttonPushed();
-    if (autotunebutton.pushed & not lastautotunebuttonPushed)
-      break;
-    // Make sure there is a proper transition of the autotune button.
-    lastautotunebuttonPushed = autotunebutton.pushed;
-    //  Exit this menu, but make sure it is a proper edge transition:
-    if (exitbutton.pushed & not lastexitbuttonPushed)
-    {
-      frequency = 0;
-      return frequency;
-    }
-    lastexitbuttonPushed = exitbutton.pushed;
-    tft.setTextColor(ILI9341_WHITE);
-    tft.setTextSize(1);
-    tft.setFont(&FreeSerif24pt7b);
-    if (digitEncoderMovement == 1)
-    { // Change frequency digit increment
-      tft.fillRect(0, halfScreen + 6, PIXELWIDTH * .90, 20, ILI9341_BLACK);
-      defaultIncrement /= 10;
-      if (defaultIncrement < 1)
-      { // Don't go too far right
-        defaultIncrement = 1L;
-      }
-      incrementPad += INCREMENTPAD;
-      if (defaultIncrement > 1000000L)
-      {
-        defaultIncrement = 1000000L;
-      }
-      if (incrementPad > INCREMENTPAD * 4)
-      { // Don't overshoot or...
-        incrementPad -= INCREMENTPAD;
-      }
-      tft.setCursor(insetMargin + (insetPad + incrementPad) + digitSpacing * 6 - 28, halfScreen + 5); // Assume 1KHz increment
-      tft.print("_");
-      digitEncoderMovement = 0;
-    }
-    else
-    {
-      if (digitEncoderMovement == -1)
-      {
-        tft.fillRect(0, halfScreen + 6, PIXELWIDTH * .90, 20, ILI9341_BLACK);
-        defaultIncrement *= 10;
-        if (defaultIncrement > 1000000)
-        { // Don't go too far right
-          defaultIncrement = 1000000L;
-        }
-        incrementPad -= INCREMENTPAD;
-        if (incrementPad < -INCREMENTPAD * 3) // Don't undershoot either
-          incrementPad += INCREMENTPAD;
-
-        tft.setCursor(insetMargin + (insetPad + incrementPad) + digitSpacing * 6 - 28, halfScreen + 5); // Assume 1KHz increment
-        tft.print("_");
-        digitEncoderMovement = 0;
-      }
-    }
-    tft.setTextColor(ILI9341_GREEN);
-    digitEncoderMovement = 0;
-    menuEncoderMovement = 0;
-    if (frequencyEncoderMovement)
-    { // Change digit value
-      frequency += (long)(frequencyEncoderMovement * defaultIncrement);
-      position = stepper.ConvertFrequencyToStepperCount(frequency);
-      tft.fillRect(insetMargin, halfScreen - 35, PIXELWIDTH * .80, 40, ILI9341_BLACK);
-      tft.setCursor(insetMargin, halfScreen);
-      tft.setTextSize(1);
-      tft.setFont(&FreeSerif24pt7b);
-      tft.print(frequency);
-      frequencyEncoderMovement = 0L; // Reset encoder flag
-    }
-  }                   // end while loop
-  tft.setTextSize(2); // Back to normal
-  tft.setTextColor(ILI9341_WHITE);
-  return frequency;
-  */
-
- /*
- A standard method for entering a numerical value using the menu and
- frequency encoders.
- This method has a button parameter so it can be used in different contexts.
- For example, it may be used in an autotune context, whereby the autotune
- button would begin the autotune process.  Or, for simpler numeric entry,
- the exit button indicates the user is done entering the number.
- 
- */
- frequency = UserNumericInput(autotunebutton, frequency);
+ // This method is inherited from the DisplayUtility class.
+ frequency = UserNumericInput(autotunebutton, exitbutton, frequency);
  return frequency;
 }
 
@@ -1006,7 +901,7 @@ int DisplayManagement::SelectPreset()
       if (enterbutton.pushed & not lastenterbutton)
       {
         frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex];
-        frequency = freqInput.ChangeFrequency(data.workingData.currentBand, frequency); // This will return the current or modified preset frequency.
+        frequency = ChangeFrequency(data.workingData.currentBand, frequency); // This will return the current or modified preset frequency.
         // Save the preset to the EEPROM.
         data.workingData.presetFrequencies[whichBandOption][submenuIndex] = frequency;
         eeprom.put(0, data.workingData);

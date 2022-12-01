@@ -32,7 +32,7 @@
 
 #include "DisplayUtility.h"
 
-DisplayUtility::DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data, Button& exitbutton) : tft(tft), dds(dds), swr(swr), data(data), exitbutton(exitbutton)
+DisplayUtility::DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data) : tft(tft), dds(dds), swr(swr), data(data)
 {
   startUpFlag = false;
   calFlag = false;
@@ -308,8 +308,16 @@ int DisplayUtility::DetectMaxSwitch()
   return 0;
 }
 
+/* 
+This method accepts numeric input from the user via the Menu and Frequency encoders.
+This is intended for generic input of integers.
+Note the two button parameters; buttonAccept enters and saves the number to EEPROM.
+buttonReject bails out of the while loop.
+If the two buttons are the same, the 2nd one (buttonReject) is ignored.
+This is useful in some contexts where you want to always accept the entry.
+*/
 
-int32_t DisplayUtility::UserNumericInput(Button button, int32_t number)
+int32_t DisplayUtility::UserNumericInput(Button buttonAccept, Button buttonReject, int32_t number)
 {
   int32_t i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad, offset, cursorHome;
   int32_t defaultIncrement = 1;
@@ -324,7 +332,8 @@ int32_t DisplayUtility::UserNumericInput(Button button, int32_t number)
   bool lastexitbutton = true;
   bool lastenterbutton = true;
   bool lastautotunebutton = true;
-  bool lastbutton = true;
+  bool lastAcceptButton = true;
+  bool lastRejectButton = true;
   digitEncoderMovement = 0;
   menuEncoderMovement = 0;
 
@@ -349,12 +358,19 @@ offset = 10 - numberSize;
   while (true)
   { // Update number until user pushes button.
     // Poll exitbutton.
-    button.buttonPushed();
-    if (button.pushed & not lastbutton) {
-      lastbutton = button.pushed;
+    buttonAccept.buttonPushed();
+    if (buttonAccept.pushed & not lastAcceptButton) {
+      lastAcceptButton = buttonAccept.pushed;
       break;  // Break out of the while loop.
     }
-    lastbutton = button.pushed;
+    lastAcceptButton = buttonAccept.pushed;
+
+    buttonReject.buttonPushed();
+    if (buttonReject.pushed & not lastRejectButton) {
+      lastRejectButton = buttonReject.pushed;
+      return number = 0;  // Exit, don't change, returning 0 means exit.
+    }
+    lastRejectButton = buttonReject.pushed;
 
     tft.setTextColor(ILI9341_WHITE);
     tft.setTextSize(1);

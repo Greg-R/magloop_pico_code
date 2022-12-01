@@ -32,7 +32,7 @@
 
 TuneInputs::TuneInputs(Adafruit_ILI9341 &tft,
                                EEPROMClass &eeprom, Data &data, DDS& dds, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
-                                : DisplayUtility(tft, dds, swr, data, exitbutton),
+                                : DisplayUtility(tft, dds, swr, data),
                                   tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
   parameters[0] = data.workingData.zero_offset;
@@ -229,7 +229,7 @@ int32_t TuneInputs::ChangeFrequency(int32_t frequency) // Al Mod 9-8-19
   tft.print("Exit Button");
   // End of custom code for this function?
 
-return UserNumericInput(exitbutton, frequency);
+return UserNumericInput(exitbutton, exitbutton, frequency);
 }
 
 

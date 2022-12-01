@@ -68,7 +68,7 @@ public:
     Data &data;
     //Button &enterbutton;
     //Button &autotunebutton;
-    Button &exitbutton;
+    //Button &exitbutton;
     //FrequencyInput &freqInput;
     //TuneInputs &tuneInputs;
     int whichBandOption; // This indicates the current band in use.
@@ -107,7 +107,7 @@ public:
     bool startUpFlag;
     bool calFlag;
 
-   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data, Button& exitbutton);                      
+   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data);                      
 
     //int SelectBand(const std::string bands[3]);
 
@@ -120,7 +120,7 @@ public:
     void ShowSubmenuData(float SWR, int currentFrequency);
 
   //  void UpdateFrequency(int frequency);
-    int32_t UserNumericInput(Button button, int32_t number);
+    int32_t UserNumericInput(Button buttonAccept, Button buttonReject, int32_t number);
 
     void UpdateSWR(float SWR, std::string msg);
 

@@ -102,13 +102,9 @@ public:
 
     void SelectParameter();
 
-    long ChangeFrequency(long frequency);
+    int32_t ChangeFrequency(int32_t frequency);
 
-    //void EraseBelowMenu();
-
-    //void updateMessageTop(std::string messageToPrint);
-
-    //void updateMessageBottom(std::string messageToPrint);
+    
 
     void RestorePreviousChoice(int submenuIndex);
 

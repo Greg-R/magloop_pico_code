@@ -32,7 +32,7 @@
 
 TuneInputs::TuneInputs(Adafruit_ILI9341 &tft,
                                EEPROMClass &eeprom, Data &data, DDS& dds, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
-                                : DisplayUtility(tft, dds, swr, data),
+                                : DisplayUtility(tft, dds, swr, data, exitbutton),
                                   tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
   parameters[0] = data.workingData.zero_offset;
@@ -153,12 +153,10 @@ void TuneInputs::SelectParameter()
           break;
         }
         lastexitbutton = true;  // Prevents exit button from skipping a level.
-        eeprom.put(0, data.workingData);
+        eeprom.put(0, data.workingData);  // Save parameters to EEPROM.
         eeprom.commit();
         //  Need to refresh graphics, because they were changed by ChangeFrequency!
         state = State::state0; // Refresh the graphics.
-
-        //  lastenterbutton = enterbutton.pushed;
       }
       lastenterbutton = enterbutton.pushed;
 
@@ -187,7 +185,7 @@ void TuneInputs::SelectParameter()
 
   Dependencies:  DDS, SWR, Adafruit_ILI9341
 *****/
-long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
+int32_t TuneInputs::ChangeFrequency(int32_t frequency) // Al Mod 9-8-19
 {
   int32_t i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad, offset;
   int32_t defaultIncrement = 1;
@@ -200,12 +198,12 @@ long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
   halfScreen = data.PIXELHEIGHT / 2 - 25;
   bool lastexitbutton = true;
   bool lastenterbutton = true;
-      digitEncoderMovement = 0;
-    menuEncoderMovement = 0;
-       if((0 <= frequency) & (frequency < 10))  offset = 3;
-        else if ((9 < frequency) & (frequency < 100)) offset = 2;
-        else if ((99 < frequency) & (frequency < 1000)) offset = 1;
-        else offset = 0;
+  digitEncoderMovement = 0;
+  menuEncoderMovement = 0;
+  //     if((0 <= frequency) & (frequency < 10))  offset = 3;
+  //      else if ((9 < frequency) & (frequency < 100)) offset = 2;
+  //      else if ((99 < frequency) & (frequency < 1000)) offset = 1;
+  //      else offset = 0;
   updateMessageTop("          Enter New Hardware Parameter");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   //  The following configures the display for parameter selection mode.
@@ -229,145 +227,14 @@ long TuneInputs::ChangeFrequency(long frequency) // Al Mod 9-8-19
   tft.print("Exit:");
   tft.setCursor(insetMargin + 90, halfScreen + 120);
   tft.print("Exit Button");
-  tft.setTextSize(1);
-  tft.setFont(&FreeMono24pt7b);
-  tft.setTextColor(ILI9341_WHITE);
-  // Initially place cursor under single digit.
-  tft.setCursor(100 + digitSpacing * 3, halfScreen + 5); // Assume 1KHz increment
-  tft.print("_");                                                                                 // underline selected character position
-  tft.setTextColor(ILI9341_GREEN);
-  //tft.setCursor(insetMargin + digitSpacing * (7 - offset) + 15, halfScreen);
-  tft.setCursor(100 + digitSpacing * offset, halfScreen);
-  //tft.setCursor(0, halfScreen);
-  tft.setTextSize(1);
-  tft.setFont(&FreeMono24pt7b);
-  tft.print(frequency);
-  //tft.setCursor(17, halfScreen + 35);
-  //tft.print(frequency);
-  // State Machine for frequency input with encoders.
-  while (true)
-  { // Update parameter until user pushes exit button.
-    // Poll enterbutton and exitbutton.
-    //enterbutton.buttonPushed();
-    exitbutton.buttonPushed();
-    if (exitbutton.pushed & not lastexitbutton) {
-      lastexitbutton = exitbutton.pushed;
-      break;  // Break out of the while loop.
-    }
+  // End of custom code for this function?
 
-    lastexitbutton = exitbutton.pushed;
-    tft.setTextColor(ILI9341_WHITE);
-    tft.setTextSize(1);
-    tft.setFont(&FreeMono24pt7b);
-    // Handle movement of the cursor to the right.
-    if (digitEncoderMovement == 1)
-    { // Change frequency digit increment
-      tft.fillRect(0, halfScreen + 6, data.PIXELWIDTH * .90, 20, ILI9341_BLACK);
-      defaultIncrement = defaultIncrement/10;
-      if (defaultIncrement < 1)
-      { // Don't go too far right, reset defaultIncrement.
-        defaultIncrement = 1;
-      }
-      else cursorOffset = cursorOffset + digitSpacing; // Move cursor to the right.
-      // Don't allow increments > 1000.
-      if (defaultIncrement > 1000)
-      {
-        defaultIncrement = 1000;
-      }
-      if (cursorOffset > digitSpacing * 4)
-      { // Don't overshoot or...
-        cursorOffset = cursorOffset - digitSpacing;
-      }
-      tft.setCursor(100 + digitSpacing * 3 + cursorOffset, halfScreen + 5); // Assume 1KHz increment
-      tft.print("_");
-      digitEncoderMovement = 0;
-    }
-    else
-    {
-      // Handle movement of the cursor to the left.
-      if (digitEncoderMovement == -1)
-      {
-        tft.fillRect(0, halfScreen + 6, data.PIXELWIDTH * .90, 20, ILI9341_BLACK);
-        defaultIncrement = defaultIncrement * 10;
-        if (defaultIncrement > 1000)
-        { // Don't go too far left
-          defaultIncrement = 1000;
-        }
-        else cursorOffset = cursorOffset - digitSpacing; // Move cursor to the left.
-        if (cursorOffset < -digitSpacing * 3) // Don't undershoot either
-          cursorOffset = cursorOffset + digitSpacing;
-
-        tft.setCursor(100 + digitSpacing * 3 + cursorOffset, halfScreen + 5); // Assume 1KHz increment
-        tft.print("_");
-        digitEncoderMovement = 0;
-      }
-    }
-    tft.setTextColor(ILI9341_GREEN);
-    digitEncoderMovement = 0;
-    menuEncoderMovement = 0;
-    if (frequencyEncoderMovement)
-    { // Change digit value
-      frequency += (long)(frequencyEncoderMovement * defaultIncrement);
-      tft.fillRect(insetMargin, halfScreen - 35, data.PIXELWIDTH * .80, 40, ILI9341_BLACK);
-      // Increase or decrease the offset depending on the new value.  Can make this into a lambda?
-        if((0 <= frequency) & (frequency < 10))  offset = 3;
-        else if ((9 < frequency) & (frequency < 100)) offset = 2;
-        else if ((99 < frequency) & (frequency < 1000)) offset = 1;
-        else offset = 0;
-     // tft.setCursor(insetMargin + digitSpacing * (7 - offset) + 15, halfScreen);
-      tft.setCursor(100 + digitSpacing * offset, halfScreen);
-      tft.setTextSize(1);
-      tft.setFont(&FreeMono24pt7b);
-      tft.print(frequency);
-      frequencyEncoderMovement = 0; // Reset encoder flag
-    }
-  }                   // end while loop
-
-  tft.setTextSize(2); // Back to normal
-  tft.setTextColor(ILI9341_WHITE);
-     digitEncoderMovement = 0;
-    menuEncoderMovement = 0;
-  return frequency;
+return UserNumericInput(frequency);
 }
 
 
-/*****
-  Purpose: To erase the display below the top two menu lines
-  Argument list:
-    void
-  Return value:
-    void
-
-void TuneInputs::EraseBelowMenu() // al mod 9-8-19
-{
-  tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-}
 
 
-void TuneInputs::updateMessageTop(std::string messageToPrint)
-{
-  tft.fillRect(0, 0, 320, 20, ILI9341_BLACK); // Erase top line.
-  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(10, 12);
-  tft.print(messageToPrint.c_str());
-}
-
-
-void TuneInputs::updateMessageBottom(std::string messageToPrint)
-{
-  tft.fillRect(0, 200, 319, 240, ILI9341_BLACK); // Erase previous message.
-  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(10, 220);
-  tft.print(messageToPrint.c_str());
-}
-
-*/
 void TuneInputs::RestorePreviousChoice(int submenuIndex)
 {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // restore old background

@@ -31,8 +31,8 @@
 #include "FrequencyInput.h"
 
 FrequencyInput::FrequencyInput(Adafruit_ILI9341 &tft,
-                               EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
-                                : tft(tft), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
+                               Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton)
+                                : DisplayUtility(tft, dds, swr, data, exitbutton), tft(tft), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton)
 {
 }
 
@@ -49,7 +49,7 @@ FrequencyInput::FrequencyInput(Adafruit_ILI9341 &tft,
 
   Dependencies:  DDS, SWR, Adafruit_ILI9341
 *****/
-long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-8-19
+int32_t FrequencyInput::ChangeFrequency(int bandIndex, int32_t frequency) // Al Mod 9-8-19
 {
   int i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad;
   long defaultIncrement;
@@ -171,57 +171,4 @@ long FrequencyInput::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-
   tft.setTextSize(2); // Back to normal
   tft.setTextColor(ILI9341_WHITE);
   return frequency;
-}
-
-
-/*****
-  Purpose: To erase the display below the top two menu lines
-  Argument list:
-    void
-  Return value:
-    void
-*****/
-void FrequencyInput::EraseBelowMenu() // al mod 9-8-19
-{
-  tft.fillRect(0, 46, 340, 231, ILI9341_BLACK);
-  tft.drawFastHLine(0, 45, 320, ILI9341_RED);
-}
-
-/*****
-  Purpose: Update Top Message Area
-
-  Argument list:
-    char message
-
-  Return value:
-    void
-*****/
-void FrequencyInput::updateMessageTop(std::string messageToPrint)
-{
-  tft.fillRect(0, 0, 320, 20, ILI9341_BLACK); // Erase top line.
-  tft.drawFastHLine(0, 20, 320, ILI9341_RED);
-  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(10, 12);
-  tft.print(messageToPrint.c_str());
-}
-
-/*****
-  Purpose: Update Bottom Message Area
-
-  Argument list:
-    char message
-
-  Return value:
-    void
-*****/
-void FrequencyInput::updateMessageBottom(std::string messageToPrint)
-{
-  tft.fillRect(0, 200, 319, 240, ILI9341_BLACK); // Erase previous message.
-  tft.setTextColor(ILI9341_CYAN, ILI9341_BLACK);
-  tft.setTextSize(1);
-  tft.setFont(&FreeSerif9pt7b);
-  tft.setCursor(10, 220);
-  tft.print(messageToPrint.c_str());
 }

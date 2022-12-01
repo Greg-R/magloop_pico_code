@@ -30,8 +30,8 @@
 
 #include "StepperManagement.h"
 
-StepperManagement::StepperManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data, AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable) :AccelStepper(interface, pin1, pin2),
-                                     DisplayUtility(tft, dds, swr, data), data(data)
+StepperManagement::StepperManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data, Button& exitbutton, AccelStepper::MotorInterfaceType interface, uint8_t pin1, uint8_t pin2, uint8_t pin3, uint8_t pin4, bool enable) :AccelStepper(interface, pin1, pin2),
+                                     DisplayUtility(tft, dds, swr, data, exitbutton), data(data), exitbutton(exitbutton)
 {
   // position = 2500;          // Default to approximately midrange.
   rotation = -1;

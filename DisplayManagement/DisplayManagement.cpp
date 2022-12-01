@@ -31,7 +31,7 @@
 #include "DisplayManagement.h"
 
 DisplayManagement::DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr,
-                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, data), tft(tft), dds(dds), swr(swr),
+                                     StepperManagement &stepper, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs) : GraphPlot(tft, dds, data), DisplayUtility(tft, dds, swr, data, exitbutton), tft(tft), dds(dds), swr(swr),
                                                                                                                                                                                                                         stepper(stepper), eeprom(eeprom), data(data), enterbutton(enterbutton), autotunebutton(autotunebutton), exitbutton(exitbutton), freqInput(freqInput), tuneInputs(tuneInputs)
 {
   startUpFlag = false;
@@ -204,7 +204,7 @@ int DisplayManagement::manualTune()
 
   Dependencies:  DDS, SWR, Adafruit_ILI9341
 *****/
-int32_t DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al Mod 9-8-19
+int32_t DisplayManagement::ChangeFrequency(int bandIndex, int32_t frequency)
 {
   int i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad;
   long defaultIncrement;
@@ -243,6 +243,11 @@ int32_t DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al 
   tft.print("Exit:");
   tft.setCursor(insetMargin + 90, halfScreen + 120);
   tft.print("Exit Button");
+  // Print the SWR limit frequencies to the display.
+  PrintSWRlimits(fpair);
+  // End of custom graphics setup.  Now use generic UserInput method.
+
+  /*
   tft.setTextSize(1);
   tft.setFont(&FreeSerif24pt7b);
   tft.setTextColor(ILI9341_WHITE);
@@ -254,8 +259,8 @@ int32_t DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al 
   tft.setFont(&FreeSerif24pt7b);
   tft.print(frequency);
   tft.setFont(&FreeSerif24pt7b);
-  // Print the SWR limit frequencies to the display.
-  PrintSWRlimits(fpair);
+
+  
 
   // State Machine for frequency input with encoders.
   while (true)
@@ -335,6 +340,9 @@ int32_t DisplayManagement::ChangeFrequency(int bandIndex, long frequency) // Al 
   tft.setTextSize(2); // Back to normal
   tft.setTextColor(ILI9341_WHITE);
   return frequency;
+  */
+ frequency = UserNumericInput(frequency);
+ return frequency;
 }
 
 /*****

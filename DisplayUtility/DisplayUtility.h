@@ -42,10 +42,13 @@
 //#include "EEPROM.h"
 //#include "GraphPlot.h"
 #include "Data.h"
-//#include "Button.h"
+#include "Button.h"
 #include "FreeSerif9pt7b.h"
 #include "FreeSerif12pt7b.h"
 #include "FreeSerif24pt7b.h"
+#include "FreeMono9pt7b.h"
+#include "FreeMono12pt7b.h"
+#include "FreeMono24pt7b.h"
 
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
@@ -65,7 +68,7 @@ public:
     Data &data;
     //Button &enterbutton;
     //Button &autotunebutton;
-    //Button &exitbutton;
+    Button &exitbutton;
     //FrequencyInput &freqInput;
     //TuneInputs &tuneInputs;
     int whichBandOption; // This indicates the current band in use.
@@ -104,7 +107,7 @@ public:
     bool startUpFlag;
     bool calFlag;
 
-   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data);                      
+   DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &data, Button& exitbutton);                      
 
     //int SelectBand(const std::string bands[3]);
 
@@ -117,6 +120,7 @@ public:
     void ShowSubmenuData(float SWR, int currentFrequency);
 
   //  void UpdateFrequency(int frequency);
+    int32_t UserNumericInput(int32_t number);
 
     void UpdateSWR(float SWR, std::string msg);
 

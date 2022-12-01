@@ -40,7 +40,8 @@
 #include "DDS.h"
 #include "SWR.h"
 #include "StepperManagement.h"
-#include "EEPROM.h"
+//#include "EEPROM.h"
+#include "DisplayUtility.h"
 #include "GraphPlot.h"
 #include "Data.h"
 #include "Button.h"
@@ -63,13 +64,13 @@ extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
 extern int digitEncoderMovement;
 
-//  DisplayManagement inherits from class GraphPlot.
-class FrequencyInput
+//  FrequencyInput inherits from class DisplayUtility.
+class FrequencyInput: public DisplayUtility
 {
 
 public:
     Adafruit_ILI9341 &tft;
-    EEPROMClass &eeprom;
+    //EEPROMClass &eeprom;
     Data &data;
     Button &enterbutton;
     Button &autotunebutton;
@@ -82,7 +83,7 @@ public:
     int menuIndex;
     int submenuIndex;
     volatile int menuEncoderState;
-    const int arraySize = 500;
+    //const int arraySize = 500;
     enum class State
     {
         state0,
@@ -92,14 +93,10 @@ public:
     }; // Used to move between states in state machines.
     State state;
 
-    FrequencyInput(Adafruit_ILI9341 &tft, EEPROMClass &eeprom, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton);
+    FrequencyInput(Adafruit_ILI9341 &tft, Data &data, Button &enterbutton, Button &autotunebutton, Button &exitbutton);
 
-    long ChangeFrequency(int bandIndex, long frequency);
+    int32_t ChangeFrequency(int bandIndex, int32_t frequency);
 
-    void EraseBelowMenu();
-
-    void updateMessageTop(std::string messageToPrint);
-
-    void updateMessageBottom(std::string messageToPrint);
+    //int32_t UserNumericInput(int32_t number);
 
 };

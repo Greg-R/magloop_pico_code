@@ -4,4 +4,4 @@ target_sources(steppermanagement INTERFACE StepperManagement.cpp StepperManageme
 
 target_link_libraries(steppermanagement INTERFACE stepper)
 
-target_include_directories(steppermanagement INTERFACE ../AccelStepper ../Data)
+target_include_directories(steppermanagement INTERFACE ../AccelStepper ../Button ../Data)

@@ -42,7 +42,6 @@
 #include "EEPROM/EEPROM.h"
 #include "Data/Data.h"
 #include "Button/Button.h"
-#include "FrequencyInput/FrequencyInput.h"
 #include "TuneInputs/TuneInputs.h"
 
 #define PIXELWIDTH 320  // Display limits
@@ -186,8 +185,6 @@ int main()
   // Instantiate SWR object.  Read bridge offsets later when other circuits are active.
   SWR swr = SWR();
 
-  // Create a new experimental FrequencyInput object.
-  FrequencyInput freqInput = FrequencyInput(tft, data, enterbutton, autotunebutton, exitbutton);
   // Create a new experimental TuneInputs object.
   TuneInputs tuneInputs = TuneInputs(tft, eeprom, data, dds, enterbutton, autotunebutton, exitbutton);
   
@@ -195,7 +192,7 @@ int main()
   StepperManagement stepper = StepperManagement(tft, dds, swr, data, AccelStepper::MotorInterfaceType::DRIVER, 0, 1);
 
   // Instantiate the DisplayManagement object.  This object has many important methods.
-  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, freqInput, tuneInputs);
+  DisplayManagement display = DisplayManagement(tft, dds, swr, stepper, eeprom, data, enterbutton, autotunebutton, exitbutton, tuneInputs);
 
   // Power on all circuits except stepper and relay.  This is done early to allow circuits to stabilize before calibration.
   display.PowerStepDdsCirRelay(false, data.workingData.currentFrequency, true, false);

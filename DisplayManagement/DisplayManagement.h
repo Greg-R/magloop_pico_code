@@ -31,7 +31,6 @@
 #pragma once
 #include <stdint.h>
 #include <string>
-#include <array>
 #include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
@@ -44,7 +43,6 @@
 #include "DisplayUtility.h"
 #include "Data.h"
 #include "Button.h"
-#include "FrequencyInput.h"
 #include "TuneInputs.h"
 #include "FreeSerif9pt7b.h"
 #include "FreeSerif12pt7b.h"
@@ -54,16 +52,6 @@ extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
 extern int frequencyEncoderMovement2;
 extern int digitEncoderMovement;
-
-//#define PRESETSPERBAND 6
-//#define PIXELWIDTH 320
-//#define INCREMENTPAD 22 // Used to display increment cursor
-//#define MAXMENUES 3     // The menu selections are: Freq, Presets, 1st Cal
-//#define MAXBANDS 3
-//#define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
-//#define TEXTLINESPACING 20
-//#define MAXNUMREADINGS 500
-//#define PIXELHEIGHT 240
 
 //  DisplayManagement inherits from class GraphPlot and DisplayUtility.
 class DisplayManagement : public GraphPlot, public DisplayUtility
@@ -79,7 +67,6 @@ public:
     Button &enterbutton;
     Button &autotunebutton;
     Button &exitbutton;
-    FrequencyInput &freqInput;
     TuneInputs &tuneInputs;
     int whichBandOption; // This indicates the current band in use.
     float SWRValue;
@@ -106,6 +93,7 @@ public:
     int32_t SWRMinPosition;
     float minSWRAuto;
     float minSWR;
+    const float TARGETMAXSWR = 5.5;
     enum class State
     {
         state0,
@@ -118,7 +106,7 @@ public:
     bool calFlag;
 
     DisplayManagement(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, StepperManagement &stepper, EEPROMClass &eeprom, Data &data,
-                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, FrequencyInput &freqInput, TuneInputs &tuneInputs);
+                      Button &enterbutton, Button &autotunebutton, Button &exitbutton, TuneInputs &tuneInputs);
 
     void Splash(std::string version, std::string releaseDate);
 
@@ -132,16 +120,7 @@ public:
 
     int SelectBand(const std::string bands[3]);
 
-    //void ShowMainDisplay(int whichMenuPage);
-
-    //void ShowSubmenuData(float SWR, int currentFrequency);
-
     void UpdateFrequency(int frequency);
-
-    //void UpdateSWR(float SWR, std::string msg);
-
-    // The following 3 methods were consolidated from "Calibrate".
-    void DoNewCalibrate2();
 
     void DoFirstCalibrate();
 
@@ -158,11 +137,7 @@ public:
 
     void ManualStepperControl();
 
-    //int DetectMaxSwitch();
-
     void CalibrationMachine();
-
-    //void PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower);
 
     //  This is the return type for the SWRdataAnalysis function.
     std::pair<uint32_t, uint32_t> fpair;

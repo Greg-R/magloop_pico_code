@@ -48,6 +48,7 @@ public:
   //  These are fundamental size definitions used throughout the project.
   const int PRESETSPERBAND = 6; // Allow this many preset frequencies on each band
   const int MAXBANDS = 3;       // Can only process this many frequency bands
+  const int MAXMENUES = 3;
   const int PIXELWIDTH = 320;   // Display pixels width.
   const int PIXELHEIGHT = 240;  // Display pixels height.
 

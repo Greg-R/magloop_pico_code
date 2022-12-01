@@ -33,7 +33,6 @@
 #include <string>
 #include <utility>
 #include <array>
-#include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
@@ -41,7 +40,6 @@
 #include "SWR.h"
 #include "StepperManagement.h"
 #include "EEPROM.h"
-//#include "GraphPlot.h"
 #include "Data.h"
 #include "Button.h"
 #include "DisplayUtility.h"
@@ -51,16 +49,6 @@
 #include "FreeMono9pt7b.h"
 #include "FreeMono12pt7b.h"
 #include "FreeMono24pt7b.h"
-
-#define PRESETSPERBAND 6
-//#define PIXELWIDTH 320
-//#define INCREMENTPAD 22 // Used to display increment cursor
-#define MAXMENUES 3     // The menu selections are: Freq, Presets, 1st Cal
-#define MAXBANDS 3
-#define TARGETMAXSWR 5.5 // Originally set to 2.5, increased for debugging.
-#define TEXTLINESPACING 20
-#define MAXNUMREADINGS 500
-//#define PIXELHEIGHT 240
 
 extern int menuEncoderMovement;
 extern int frequencyEncoderMovement;
@@ -87,7 +75,6 @@ public:
     volatile int menuEncoderState;
     std::array<std::string, 5> parameterNames;
     std::array<int32_t, 5> parameters; //={data.workingData.zero_offset, data.workingData.backlash, data.workingData.coarse_sweep, data.workingData.accel, data.workingData.speed};
-    //const int arraySize = 500;
     std::array<int32_t, 5> hardware;
     enum class State
     {
@@ -103,8 +90,6 @@ public:
     void SelectParameter();
 
     int32_t ChangeFrequency(int32_t frequency);
-
-    
 
     void RestorePreviousChoice(int submenuIndex);
 

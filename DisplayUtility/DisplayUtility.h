@@ -31,16 +31,11 @@
 #pragma once
 #include <stdint.h>
 #include <string>
-//#include <array>
-//#include <vector>
 #include "pico/stdlib.h"
 #include "Adafruit_ILI9341.h"
 #include "Arduino.h"
 #include "DDS.h"
 #include "SWR.h"
-//#include "StepperManagement.h"
-//#include "EEPROM.h"
-//#include "GraphPlot.h"
 #include "Data.h"
 #include "Button.h"
 #include "FreeSerif9pt7b.h"

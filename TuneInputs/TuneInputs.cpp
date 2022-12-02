@@ -200,10 +200,6 @@ int32_t TuneInputs::ChangeFrequency(int32_t frequency) // Al Mod 9-8-19
   bool lastenterbutton = true;
   digitEncoderMovement = 0;
   menuEncoderMovement = 0;
-  //     if((0 <= frequency) & (frequency < 10))  offset = 3;
-  //      else if ((9 < frequency) & (frequency < 100)) offset = 2;
-  //      else if ((99 < frequency) & (frequency < 1000)) offset = 1;
-  //      else offset = 0;
   updateMessageTop("          Enter New Hardware Parameter");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   //  The following configures the display for parameter selection mode.
@@ -220,20 +216,15 @@ int32_t TuneInputs::ChangeFrequency(int32_t frequency) // Al Mod 9-8-19
   tft.setCursor(insetMargin + 90, halfScreen + 80);
   tft.print("Frequency Encoder");
   tft.setCursor(insetMargin, halfScreen + 100);
-  //tft.print("Tune:");
   tft.setCursor(insetMargin + 90, halfScreen + 100);
-  //tft.print("AutoTune Button");
   tft.setCursor(insetMargin, halfScreen + 120);
   tft.print("Exit:");
   tft.setCursor(insetMargin + 90, halfScreen + 120);
   tft.print("Exit Button");
-  // End of custom code for this function?
+  // End of custom code for this function.
 
 return UserNumericInput(exitbutton, exitbutton, frequency);
 }
-
-
-
 
 void TuneInputs::RestorePreviousChoice(int submenuIndex)
 {

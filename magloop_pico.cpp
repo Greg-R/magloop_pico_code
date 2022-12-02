@@ -44,14 +44,7 @@
 #include "Button/Button.h"
 #include "TuneInputs/TuneInputs.h"
 
-#define PIXELWIDTH 320  // Display limits
-#define PIXELHEIGHT 240 // These are the post-rotation dimensions.
 
-const std::string version = "main";
-const std::string releaseDate = "11-21-22";
-
-#define PRESETSPERBAND 6 // Allow this many preset frequencies on each band
-#define MAXBANDS 3       // Can only process this many frequency bands
 
 volatile uint8_t result;
 volatile uint32_t countEncoder;
@@ -198,7 +191,7 @@ int main()
   display.PowerStepDdsCirRelay(false, data.workingData.currentFrequency, true, false);
 
   // Show "Splash" screen for 5 seconds.  This also allows circuits to stabilize.
-  display.Splash(version, releaseDate);
+  display.Splash(data.version, data.releaseDate);
   busy_wait_ms(3000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 

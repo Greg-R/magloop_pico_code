@@ -29,7 +29,6 @@
 */
 
 #pragma once
-#include <array>
 #include <vector>
 #include <stdint.h>
 #include "pico/stdlib.h"
@@ -38,8 +37,7 @@
 #include <string>
 #include "DDS.h"
 #include "Data.h"
-
-#include "../Adafruit-GFX-Library/Fonts/FreeSerif9pt7b.h"
+#include "FreeSerif9pt7b.h"
 
 class GraphPlot
 {

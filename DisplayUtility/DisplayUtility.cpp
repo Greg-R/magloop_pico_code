@@ -36,6 +36,10 @@ DisplayUtility::DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &
 {
   startUpFlag = false;
   calFlag = false;
+  //menuEncoder = Rotary(20, 18); // Swap if encoder works in wrong direction.
+  //frequencyEncoder = Rotary(21, 17);
+  menuEncoder.begin(true, false);
+  frequencyEncoder.begin(true, false);
 }
 
 /*****
@@ -353,6 +357,8 @@ int32_t DisplayUtility::UserNumericInput(Button buttonAccept, Button buttonRejec
   // State Machine for frequency input with encoders.
   while (true)
   { // Update number until user pushes button.
+  menuEncoderPoll();
+  freqEncoderPoll();
     // Poll accept button.
     buttonAccept.buttonPushed();
     if (buttonAccept.pushed & not lastAcceptButton)
@@ -472,4 +478,54 @@ void DisplayUtility::PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency,
   gpio_put(data.RFAMPPOWER, circuitPower);
   gpio_put(data.RFRELAYPOWER, relayPower);
   busy_wait_ms(500); //  Wait for relay to switch.
+}
+
+
+void DisplayUtility::menuEncoderPoll()
+{
+  uint8_t result;
+  //if ((gpio == 18) || (gpio == 20))
+ // {
+    result = menuEncoder.process();
+    if (result != 0)
+    {
+      switch (result)
+      {
+      case DIR_CW:
+        menuEncoderMovement = 1;
+        digitEncoderMovement = 1;
+        break;
+      case DIR_CCW:
+        menuEncoderMovement = -1;
+        digitEncoderMovement = -1;
+        break;
+      }
+    }
+  }
+ 
+
+void DisplayUtility::freqEncoderPoll()
+{
+  uint8_t result;
+  
+    result = frequencyEncoder.process();
+    if (result != 0)
+    {
+      switch (result)
+      {
+      case DIR_CW:
+        frequencyEncoderMovement++;
+        frequencyEncoderMovement2 = 1;
+        break;
+      case DIR_CCW:
+        frequencyEncoderMovement--;
+        frequencyEncoderMovement2 = -1;
+        break;
+      }
+    }
+  
+ // if (result == DIR_CW)
+ //   countEncoder = countEncoder + 1;
+ // if (result == DIR_CCW)
+ //   countEncoder = countEncoder - 1;
 }

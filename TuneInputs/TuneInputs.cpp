@@ -52,7 +52,6 @@ void TuneInputs::SelectParameter()
   int frequency;
   bool lastexitbutton = true;
   bool lastenterbutton = true;
-  //bool lastautotunebutton = true;
   int32_t parameter;
   
   menuEncoderState = 0;
@@ -94,6 +93,7 @@ void TuneInputs::SelectParameter()
       break;
 
     case State::state1: // This state reads the encoders and button pushes.
+    menuEncoderPoll();
       if (menuEncoderMovement == 1)
       { // Turning clockwise
         RestorePreviousChoice(submenuIndex);
@@ -121,31 +121,31 @@ void TuneInputs::SelectParameter()
         {
           case 0:
             parameter = data.workingData.zero_offset;
-            parameter = ChangeFrequency(parameter);
+            parameter = ChangeParameter(parameter);
             data.workingData.zero_offset = parameter;
             parameters[0] = parameter;
             break;
           case 1:
             parameter = data.workingData.backlash;
-            parameter = ChangeFrequency(parameter);
+            parameter = ChangeParameter(parameter);
             data.workingData.backlash = parameter;
             parameters[1] = parameter;
             break;
           case 2:
             parameter = data.workingData.coarse_sweep;
-            parameter = ChangeFrequency(parameter);
+            parameter = ChangeParameter(parameter);
             data.workingData.coarse_sweep = parameter;
             parameters[2] = parameter;
             break;
           case 3:
             parameter = data.workingData.accel;
-            parameter = ChangeFrequency(parameter);
+            parameter = ChangeParameter(parameter);
             data.workingData.accel = parameter;
             parameters[3] = parameter;
             break;
           case 4:
             parameter = data.workingData.speed;
-            parameter = ChangeFrequency(parameter);
+            parameter = ChangeParameter(parameter);
             data.workingData.speed = parameter;
             parameters[4] = parameter;
             break;
@@ -185,7 +185,7 @@ void TuneInputs::SelectParameter()
 
   Dependencies:  DDS, SWR, Adafruit_ILI9341
 *****/
-int32_t TuneInputs::ChangeFrequency(int32_t frequency) // Al Mod 9-8-19
+int32_t TuneInputs::ChangeParameter(int32_t frequency) // Al Mod 9-8-19
 {
   int32_t i, changeDigit, digitSpacing, halfScreen, incrementPad, insetMargin, insetPad, offset;
   int32_t defaultIncrement = 1;

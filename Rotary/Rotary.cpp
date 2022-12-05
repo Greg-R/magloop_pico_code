@@ -76,7 +76,7 @@ const unsigned char ttable[7][4] = {
 /*
  * Constructor. Each arg is the pin number for each encoder contact.
  */
-Rotary::Rotary(char _pin1, char _pin2)
+Rotary::Rotary(int _pin1, int _pin2)
 {
   // Assign variables.
   pin1 = _pin1;

@@ -50,10 +50,10 @@
 #include "FreeMono12pt7b.h"
 #include "FreeMono24pt7b.h"
 
-extern int menuEncoderMovement;
-extern int frequencyEncoderMovement;
-extern int frequencyEncoderMovement2;
-extern int digitEncoderMovement;
+//extern int menuEncoderMovement;
+//extern int frequencyEncoderMovement;
+//extern int frequencyEncoderMovement2;
+//extern int digitEncoderMovement;
 
 //  TuneInputs inherits from class DisplayUtility.
 class TuneInputs : public DisplayUtility {
@@ -89,7 +89,7 @@ public:
 
     void SelectParameter();
 
-    int32_t ChangeFrequency(int32_t frequency);
+    int32_t ChangeParameter(int32_t frequency);
 
     void RestorePreviousChoice(int submenuIndex);
 

@@ -13,8 +13,8 @@
  *
  */
 
-#ifndef Rotary_h
-#define Rotary_h
+//#ifndef Rotary_h
+//#define Rotary_h
 
 #include "Arduino.h"
 #include "pico/stdlib.h"
@@ -33,7 +33,7 @@
 class Rotary
 {
 public:
-  Rotary(char, char);
+  Rotary(int _pin1, int _pin2);
   unsigned char process();
   void begin(bool internalPullup = true, bool flipLogicForPulldown = false);
   uint8_t result;
@@ -45,4 +45,4 @@ private:
   unsigned char inverter;
 };
 
-#endif
+//#endif

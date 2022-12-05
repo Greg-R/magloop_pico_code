@@ -38,68 +38,11 @@
 #include "StepperManagement/StepperManagement.h"
 #include "DDS/DDS.h"
 #include "SWR/SWR.h"
-#include "Rotary/Rotary.h"
 #include "EEPROM/EEPROM.h"
 #include "Data/Data.h"
 #include "Button/Button.h"
 #include "TuneInputs/TuneInputs.h"
 
-
-
-volatile uint8_t result;
-volatile uint32_t countEncoder;
-//  Instantiate the rotary encoder objects.
-Rotary menuEncoder = Rotary(20, 18); // Swap if encoder works in wrong direction.
-Rotary frequencyEncoder = Rotary(21, 17);
-//  These variables should be extern in other files.
-int menuEncoderMovement;
-int frequencyEncoderMovement;
-int frequencyEncoderMovement2;
-int digitEncoderMovement;
-
-void encoderCallback(uint gpio, uint32_t events)
-{
-  if ((gpio == 18) || (gpio == 20))
-  {
-    result = menuEncoder.process();
-    if (result != 0)
-    {
-      switch (result)
-      {
-      case DIR_CW:
-        menuEncoderMovement = 1;
-        digitEncoderMovement = 1;
-        break;
-      case DIR_CCW:
-        menuEncoderMovement = -1;
-        digitEncoderMovement = -1;
-        break;
-      }
-    }
-  }
-  else if ((gpio == 17) || (gpio == 21))
-  {
-    result = frequencyEncoder.process();
-    if (result != 0)
-    {
-      switch (result)
-      {
-      case DIR_CW:
-        frequencyEncoderMovement++;
-        frequencyEncoderMovement2 = 1;
-        break;
-      case DIR_CCW:
-        frequencyEncoderMovement--;
-        frequencyEncoderMovement2 = -1;
-        break;
-      }
-    }
-  }
-  if (result == DIR_CW)
-    countEncoder = countEncoder + 1;
-  if (result == DIR_CCW)
-    countEncoder = countEncoder - 1;
-}
 
 int main()
 {
@@ -194,17 +137,6 @@ int main()
   display.Splash(data.version, data.releaseDate);
   busy_wait_ms(3000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
-
-  // Set up the Menu and Frequency encoders:
-  menuEncoder.begin(true, false);
-  frequencyEncoder.begin(true, false);
-  // Encoder interrupts:
-  uint32_t events = 0x0000000C; // Rising and falling edges.
-  countEncoder = 0;
-  gpio_set_irq_enabled_with_callback(17, events, 1, &encoderCallback);
-  gpio_set_irq_enabled_with_callback(18, events, 1, &encoderCallback);
-  gpio_set_irq_enabled_with_callback(20, events, 1, &encoderCallback);
-  gpio_set_irq_enabled_with_callback(21, events, 1, &encoderCallback);
 
     //  Now examine the data in the buffer to see if the EEPROM should be initialized.
   //  There is a specific number written to the EEPROM when it is initialized.

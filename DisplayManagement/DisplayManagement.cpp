@@ -318,6 +318,7 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
     if (enterbutton.pushed)
       break; // Looking for a low to high transition here!
              //   lastPushed = enterbutton.pushed;
+    menuEncoderPoll();
     if (menuEncoderMovement)
     { // Must be i (CW) or -1 (CCW)
       if (menuEncoderMovement == 1)
@@ -391,6 +392,7 @@ int DisplayManagement::SelectBand(const std::string bands[3])
   // State Machine.  Calling this function enters this loop and stays until Enter or Exit is pressed.
   while (true)
   {
+    menuEncoderPoll();
     if (menuEncoderMovement)
     {
       if (menuEncoderMovement == 1)
@@ -753,6 +755,7 @@ int DisplayManagement::SelectPreset()
       break;
 
     case State::state1: // This state reads the encoders and button pushes.
+      menuEncoderPoll();
       if (menuEncoderMovement == 1)
       { // Turning clockwise
         RestorePreviousPresetChoice(submenuIndex, whichBandOption);
@@ -777,7 +780,9 @@ int DisplayManagement::SelectPreset()
       if (enterbutton.pushed & not lastenterbutton)
       {
         frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex];
-        frequency = ChangeFrequency(data.workingData.currentBand, frequency); // This will return the current or modified preset frequency.
+     //   frequency = ChangeFrequency(data.workingData.currentBand, frequency); // This will return the current or modified preset frequency.
+     //   frequency = UserNumericInput(exitbutton, exitbutton, frequency);
+     frequency = tuneInputs.ChangeParameter(frequency);
         // Save the preset to the EEPROM.
         data.workingData.presetFrequencies[whichBandOption][submenuIndex] = frequency;
         eeprom.put(0, data.workingData);

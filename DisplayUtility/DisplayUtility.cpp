@@ -40,6 +40,11 @@ DisplayUtility::DisplayUtility(Adafruit_ILI9341 &tft, DDS &dds, SWR &swr, Data &
   //frequencyEncoder = Rotary(21, 17);
   menuEncoder.begin(true, false);
   frequencyEncoder.begin(true, false);
+  menuEncoderMovement = 0;
+frequencyEncoderMovement = 0;
+frequencyEncoderMovement2 = 0;
+digitEncoderMovement = 0;
+
 }
 
 /*****

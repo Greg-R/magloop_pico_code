@@ -199,8 +199,8 @@ int32_t DisplayManagement::ChangeFrequency(int bandIndex, int32_t frequency)
   insetMargin = 20;
   defaultIncrement = 1000L;
   halfScreen = PIXELHEIGHT / 2 - 25;
-  bool lastexitbuttonPushed = true;
-  bool lastautotunebuttonPushed = true;
+  //bool lastexitbuttonPushed = true;
+  //bool lastautotunebuttonPushed = true;
   updateMessageTop("                 Enter Frequency");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0)

@@ -111,6 +111,15 @@ int main()
                                    //  Now read the struct from Flash which is read into the Data object.
   eeprom.get(0, data.workingData); // Read the workingData struct from EEPROM.
 
+  //  Now examine the data in the buffer to see if the EEPROM should be initialized.
+  //  There is a specific number written to the EEPROM when it is initialized.
+  if (data.workingData.initialized != 0x55555555)
+  {
+    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
+    eeprom.put(0, data.workingData);
+    eeprom.commit();
+  }
+
   // Slopes can't be computed until the actual values are loaded from FLASH:
   data.computeSlopes();
 
@@ -138,14 +147,7 @@ int main()
   busy_wait_ms(3000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 
-    //  Now examine the data in the buffer to see if the EEPROM should be initialized.
-  //  There is a specific number written to the EEPROM when it is initialized.
-  if (data.workingData.initialized != 0x55555555)
-  {
-    data.writeDefaultValues(); //  Writes default values in to the dataStruct in the Data object.
-    eeprom.put(0, data.workingData);
-    eeprom.commit();
-  }
+
 
   //  Set stepper to zero:
   display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);

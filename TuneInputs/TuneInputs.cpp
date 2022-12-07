@@ -45,8 +45,9 @@ TuneInputs::TuneInputs(Adafruit_ILI9341 &tft,
 }
 
 
-// Used in ProcessPreset to select a particular preset frequency.
+// Used in Hardware Settings to select a parameter.
 // If the Enter button is pressed, the hardware parameter can be changed and saved.
+// Exit saves and moves back up to the Calibrate menu.
 void TuneInputs::SelectParameter()
 {
   int frequency;
@@ -226,6 +227,7 @@ int32_t TuneInputs::ChangeParameter(int32_t frequency) // Al Mod 9-8-19
 return UserNumericInput(exitbutton, exitbutton, frequency);
 }
 
+// These functions are slightly different than the ones in the DisplayUtility class.
 void TuneInputs::RestorePreviousChoice(int submenuIndex)
 {
   tft.setTextColor(ILI9341_WHITE, ILI9341_BLACK); // restore old background

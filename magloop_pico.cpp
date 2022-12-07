@@ -147,8 +147,6 @@ int main()
   busy_wait_ms(3000);
   tft.fillScreen(ILI9341_BLACK); // Clear display.
 
-
-
   //  Set stepper to zero:
   display.PowerStepDdsCirRelay(true, data.workingData.currentFrequency, true, false);
   stepper.ResetStepperToZero();

@@ -142,14 +142,12 @@ int DisplayManagement::manualTune()
 {
   bool lastautotunebutton = true;
   bool lastexitbutton = true;
-  // Power(true);
   while (true)
   {
     exitbutton.buttonPushed(); // Poll exitbutton.
 
     if (exitbutton.pushed and not lastexitbutton)
     {
-      //  Power(false);
       return dds.currentFrequency; // Exit manual tuning.
     }
     if (menuEncoderMovement != 0)
@@ -199,8 +197,6 @@ int32_t DisplayManagement::ChangeFrequency(int bandIndex, int32_t frequency)
   insetMargin = 20;
   defaultIncrement = 1000L;
   halfScreen = PIXELHEIGHT / 2 - 25;
-  //bool lastexitbuttonPushed = true;
-  //bool lastautotunebuttonPushed = true;
   updateMessageTop("                 Enter Frequency");
   tft.drawFastHLine(0, 20, 320, ILI9341_RED);
   if (bandIndex == 0)
@@ -304,9 +300,6 @@ int DisplayManagement::MakeMenuSelection(int index) // Al Mod 9-8-19
 
         dds.SendFrequency(currentFrequency); // Set the DDSs
                                              // Retrieve the last used frequency and autotune.
-        // int32_t position = -25 + data.workingData.bandLimitPositionCounts[data.workingData.currentBand][0] + static_cast<int>(static_cast<float>(dds.currentFrequency - data.workingData.bandEdges[data.workingData.currentBand][0]) / data.hertzPerStepperUnitVVC[data.workingData.currentBand]);
-        // Power(true, true);
-        // stepper.MoveStepperToPositionCorrected(position);
         AutoTuneSWR(data.workingData.currentBand, dds.currentFrequency);
         // Set startUpFlag to true.  This is used to skip this process after one-time use.
         startUpFlag = true;
@@ -689,8 +682,6 @@ void DisplayManagement::ProcessPresets()
         state = State::state1; // User pushed exit, return to band select.
       break;
     case State::state3: // Run AutoTuneSWR() at the selected preset frequency.
-      // Power(true, true);      // Power up circuits.
-      // dds.SendFrequency(frequency);
       this->data.workingData.currentFrequency = frequency;
       eeprom.put(0, data.workingData);
       eeprom.commit();
@@ -780,8 +771,6 @@ int DisplayManagement::SelectPreset()
       if (enterbutton.pushed & not lastenterbutton)
       {
         frequency = data.workingData.presetFrequencies[whichBandOption][submenuIndex];
-     //   frequency = ChangeFrequency(data.workingData.currentBand, frequency); // This will return the current or modified preset frequency.
-     //   frequency = UserNumericInput(exitbutton, exitbutton, frequency);
      frequency = tuneInputs.ChangeParameter(frequency);
         // Save the preset to the EEPROM.
         data.workingData.presetFrequencies[whichBandOption][submenuIndex] = frequency;
@@ -789,7 +778,6 @@ int DisplayManagement::SelectPreset()
         eeprom.commit();
         //  Need to refresh graphics, because they were changed by ChangeFrequency!
         state = State::state0; // Refresh the graphics.
-
         //  lastenterbutton = enterbutton.pushed;
       }
       lastenterbutton = enterbutton.pushed;
@@ -949,17 +937,6 @@ void DisplayManagement::ManualStepperControl()
   menuEncoderMovement = 0;
 }
 
-/*****
-  Purpose: Detect state change of data.maxswitch.  Warn the user.
-           Back the stepper off the switch so that it goes back to normal state.
-
-  Parameter list:
-
-
-  Return value:
-    int
-
-  CAUTION:
 
 /*****
   Purpose: Select and execute user selected Calibration algorithm.
@@ -1065,10 +1042,7 @@ void DisplayManagement::SWRdataAnalysis()
   fcenter = dds.currentFrequency;
   flow = fcenter - (SWRMinPosition - tempCurrentPosition[posLowIndex]) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.workingData.currentBand]);
   fhigh = fcenter + (tempCurrentPosition[posHighIndex] - SWRMinPosition) * static_cast<int32_t>(this->data.hertzPerStepperUnitVVC[this->data.workingData.currentBand]);
-  //  flow    = SWRMinPosition - tempCurrentPosition[posLowIndex];
-  // fhigh   = tempCurrentPosition[posHighIndex] - SWRMinPosition;
   fpair = {flow, fhigh};
-  //  return fpair;
 }
 
 /*****

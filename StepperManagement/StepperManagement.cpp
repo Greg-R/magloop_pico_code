@@ -84,9 +84,12 @@ void StepperManagement::MoveStepperToPosition(int32_t position)
   }
      if(data.maxclose) {
      EraseBelowMenu();
-     updateMessageMiddle("   Maximum switch was closed, correct problem!!!");
-     busy_wait_ms(3000);
-     EraseBelowMenu();
+     updateMessageMiddle("   Maximum switch was closed, correct      problem!!!");
+     // Cut power to halt controller.
+     PowerStepDdsCirRelay(false, 0, false, false);
+     return;
+     //busy_wait_ms(3000);
+     //EraseBelowMenu();
      }
      if(data.zeroclose) {
      EraseBelowMenu();

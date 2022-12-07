@@ -472,17 +472,31 @@ int32_t DisplayUtility::UserNumericInput(Button buttonAccept, Button buttonRejec
 *****/
 void DisplayUtility::PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency, bool circuitPower, bool relayPower)
 {
-  gpio_put(data.STEPPERSLEEPNOT, stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
-                                                // Power down the DDS or set frequency.
-                                                // if (dds)
-  dds.SendFrequency(frequency);                 // Redundant?
-  // else
-  //   dds.SendFrequency(0);
-  //  Power down RF amplifier and SWR circuits.
+  // Power up versus power down sequency needs to be different so that receiver doesn't emit noise burst.
+  // Going into AutoTune, turn on the stepper last.
+  if(stepperPower & circuitPower) {
   gpio_put(data.OPAMPPOWER, circuitPower);
   gpio_put(data.RFAMPPOWER, circuitPower);
   gpio_put(data.RFRELAYPOWER, relayPower);
-  busy_wait_ms(500); //  Wait for relay to switch.
+  gpio_put(data.STEPPERSLEEPNOT, stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
+  }
+  // Coming out of AutoTune, turn off the stepper first.
+  if(!stepperPower & !circuitPower) {
+  gpio_put(data.STEPPERSLEEPNOT, stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
+  gpio_put(data.OPAMPPOWER, circuitPower);
+  gpio_put(data.RFAMPPOWER, circuitPower);
+  gpio_put(data.RFRELAYPOWER, relayPower);
+
+  }
+
+                                                // Power down the DDS or set frequency.
+                                                // if (dds)
+  dds.SendFrequency(frequency);                 // Redundant?
+  //  Power down RF amplifier and SWR circuits.
+  //gpio_put(data.OPAMPPOWER, circuitPower);
+  //gpio_put(data.RFAMPPOWER, circuitPower);
+  //gpio_put(data.RFRELAYPOWER, relayPower);
+  busy_wait_ms(500); //  Wait for relay to switch and DDS to stabilize.
 }
 
 

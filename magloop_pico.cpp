@@ -153,7 +153,7 @@ int main()
 
   //  Now measure the ADC (SWR bridge) offsets with the DDS inactive.
   //  Note that this should be done as late as possible for circuits to stabilize.
-  display.PowerStepDdsCirRelay(true, 0, true, false);
+  display.PowerStepDdsCirRelay(true, 0, true, true);
   swr.ReadADCoffsets();
   display.PowerStepDdsCirRelay(false, 0, false, false); //  Power down all circuits.
 

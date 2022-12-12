@@ -108,7 +108,7 @@ void DisplayManagement::frequencyMenuOption()
       state = State::state2;                                                // Proceed to manual frequency adjustment state.
       break;
     case State::state2:
-      frequency = ChangeFrequency(whichBandOption, frequency); // Alter the frequency using encoders.  Enter button returns frequency.
+       frequency = ChangeFrequency(whichBandOption, frequency); // Alter the frequency using encoders.  Enter button returns frequency.
       // Exit frequency change if a zero is returned.  The user pushed Exit.
       if (frequency == 0)
       {

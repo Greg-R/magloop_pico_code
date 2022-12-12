@@ -478,24 +478,32 @@ void DisplayUtility::PowerStepDdsCirRelay(bool stepperPower, uint32_t frequency,
   gpio_put(data.OPAMPPOWER, circuitPower);
   gpio_put(data.RFAMPPOWER, circuitPower);
   gpio_put(data.RFRELAYPOWER, relayPower);
-  gpio_put(data.STEPPERSLEEPNOT, stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
+  gpio_put(data.STEPPERSLEEPNOT, not stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
   }
   // Coming out of AutoTune, turn off the stepper first.
-  if(!stepperPower & !circuitPower) {
-  gpio_put(data.STEPPERSLEEPNOT, stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
+  else if(!stepperPower & !circuitPower) {
+  gpio_put(data.STEPPERSLEEPNOT, not stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
   gpio_put(data.OPAMPPOWER, circuitPower);
   gpio_put(data.RFAMPPOWER, circuitPower);
   gpio_put(data.RFRELAYPOWER, relayPower);
-
+  }
+  // This is for functions like ResetStepperToZero().
+  else if(stepperPower) {
+  gpio_put(data.STEPPERSLEEPNOT, not stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
+  gpio_put(data.OPAMPPOWER, circuitPower);
+  gpio_put(data.RFAMPPOWER, circuitPower);
+  gpio_put(data.RFRELAYPOWER, relayPower);
+  }
+  else if(!stepperPower) {
+  gpio_put(data.STEPPERSLEEPNOT, not stepperPower); //  Deactivating the stepper driver is important to reduce RFI.
+  gpio_put(data.OPAMPPOWER, circuitPower);
+  gpio_put(data.RFAMPPOWER, circuitPower);
+  gpio_put(data.RFRELAYPOWER, relayPower);
   }
 
                                                 // Power down the DDS or set frequency.
                                                 // if (dds)
   dds.SendFrequency(frequency);                 // Redundant?
-  //  Power down RF amplifier and SWR circuits.
-  //gpio_put(data.OPAMPPOWER, circuitPower);
-  //gpio_put(data.RFAMPPOWER, circuitPower);
-  //gpio_put(data.RFRELAYPOWER, relayPower);
   busy_wait_ms(500); //  Wait for relay to switch and DDS to stabilize.
 }
 
